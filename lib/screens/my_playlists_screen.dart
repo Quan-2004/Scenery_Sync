@@ -46,7 +46,7 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
                   child: Icon(
                     Icons.queue_music_rounded,
                     size: 80,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -59,7 +59,7 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
               Container(
                 margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
@@ -228,13 +228,13 @@ class _PlaylistCard extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               Colors.white,
-              AppColors.secondary.withOpacity(0.2),
+              AppColors.secondary.withValues(alpha: 0.2),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -260,7 +260,7 @@ class _PlaylistCard extends StatelessWidget {
                   right: 8,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(

@@ -163,7 +163,9 @@ class _LoginScreenState extends State<LoginScreen>
                               borderRadius: BorderRadius.circular(25),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -383,8 +385,8 @@ class _LoginScreenState extends State<LoginScreen>
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        disabledBackgroundColor: AppColors.primary.withOpacity(
-                          0.6,
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.6,
                         ),
                       ),
                       child: _isLoading
@@ -416,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen>
                     children: [
                       Expanded(
                         child: Divider(
-                          color: AppColors.textMuted.withOpacity(0.3),
+                          color: AppColors.textMuted.withValues(alpha: 0.3),
                           thickness: 1,
                         ),
                       ),
@@ -433,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       Expanded(
                         child: Divider(
-                          color: AppColors.textMuted.withOpacity(0.3),
+                          color: AppColors.textMuted.withValues(alpha: 0.3),
                           thickness: 1,
                         ),
                       ),
@@ -529,7 +531,7 @@ class _SocialButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        side: BorderSide(color: AppColors.textMuted.withOpacity(0.3)),
+        side: BorderSide(color: AppColors.textMuted.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

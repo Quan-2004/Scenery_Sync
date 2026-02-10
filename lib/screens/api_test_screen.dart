@@ -83,7 +83,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Search for songs, artists...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                 prefixIcon: const Icon(Icons.search, color: Colors.white),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear, color: Colors.white),
@@ -93,7 +93,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                   },
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.2),
+                fillColor: Colors.white.withValues(alpha: 0.2),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -118,7 +118,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                             Icon(
                               Icons.music_off_rounded,
                               size: 80,
-                              color: AppColors.textMuted.withOpacity(0.5),
+                              color: AppColors.textMuted.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             const Text(
@@ -165,7 +165,7 @@ class _TrackCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -185,7 +185,7 @@ class _TrackCard extends StatelessWidget {
                     return Container(
                       width: 60,
                       height: 60,
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       child: const Icon(
                         Icons.music_note,
                         color: AppColors.primary,
@@ -196,7 +196,7 @@ class _TrackCard extends StatelessWidget {
               : Container(
                   width: 60,
                   height: 60,
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   child: const Icon(
                     Icons.music_note,
                     color: AppColors.primary,
@@ -249,7 +249,7 @@ class _TrackCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(

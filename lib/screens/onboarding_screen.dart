@@ -120,7 +120,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 8,
-                          shadowColor: AppColors.primary.withOpacity(0.4),
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
                         ),
                         child: const Text(
                           'Get Started',
@@ -144,7 +144,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 8,
-                          shadowColor: AppColors.primary.withOpacity(0.4),
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -190,14 +190,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        (page['color'] as Color).withOpacity(0.2),
-                        (page['color'] as Color).withOpacity(0.1),
+                        (page['color'] as Color).withValues(alpha: 0.2),
+                        (page['color'] as Color).withValues(alpha: 0.1),
                       ],
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: (page['color'] as Color).withOpacity(0.3),
+                        color: (page['color'] as Color).withValues(alpha: 0.3),
                         blurRadius: 30,
                         offset: const Offset(0, 15),
                       ),

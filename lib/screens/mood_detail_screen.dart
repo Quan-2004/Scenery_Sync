@@ -46,7 +46,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
             leading: Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
@@ -73,7 +73,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                         width: 200,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -85,7 +85,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                         width: 250,
                         height: 250,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -102,7 +102,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                               width: 70,
                               height: 70,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(18),
                               ),
                               child: Icon(
@@ -130,7 +130,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -184,7 +184,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -203,7 +203,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -308,7 +308,7 @@ class _PlaylistCardState extends State<_PlaylistCard> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
@@ -330,7 +330,7 @@ class _PlaylistCardState extends State<_PlaylistCard> {
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             height: 160,
-                            color: widget.accentColor.withOpacity(0.2),
+                            color: widget.accentColor.withValues(alpha: 0.2),
                             child: Icon(
                               Icons.music_note_rounded,
                               size: 50,
@@ -352,7 +352,7 @@ class _PlaylistCardState extends State<_PlaylistCard> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: widget.accentColor.withOpacity(0.5),
+                              color: widget.accentColor.withValues(alpha: 0.5),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -389,7 +389,7 @@ class _PlaylistCardState extends State<_PlaylistCard> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted.withOpacity(0.7),
+                          color: AppColors.textMuted.withValues(alpha: 0.7),
                         ),
                       ),
                     ],

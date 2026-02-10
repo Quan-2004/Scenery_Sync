@@ -110,7 +110,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -172,8 +172,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                         boxShadow: [
                           BoxShadow(
                             color: _isActive
-                                ? AppColors.primary.withOpacity(0.3)
-                                : Colors.black.withOpacity(0.05),
+                                ? AppColors.primary.withValues(alpha: 0.3)
+                                : Colors.black.withValues(alpha: 0.05),
                             blurRadius: 30,
                             offset: const Offset(0, 15),
                           ),
@@ -190,7 +190,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                                 child: Container(
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(_isActive ? 0.2 : 0.5),
+                                    color: Colors.white.withValues(alpha: _isActive ? 0.2 : 0.5),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -324,7 +324,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   elevation: 8,
-                                  shadowColor: Colors.red.withOpacity(0.3),
+                                  shadowColor: Colors.red.withValues(alpha: 0.3),
                                 ),
                                 icon: const Icon(Icons.stop_rounded),
                                 label: const Text(
@@ -390,7 +390,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -425,7 +425,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -438,8 +438,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.2),
-                  AppColors.secondary.withOpacity(0.2),
+                  AppColors.primary.withValues(alpha: 0.2),
+                  AppColors.secondary.withValues(alpha: 0.2),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
@@ -499,7 +499,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -512,8 +512,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withOpacity(0.2),
-                      AppColors.secondary.withOpacity(0.2),
+                      AppColors.primary.withValues(alpha: 0.2),
+                      AppColors.secondary.withValues(alpha: 0.2),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),

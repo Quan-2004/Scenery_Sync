@@ -55,8 +55,8 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
             end: Alignment.bottomRight,
             colors: [
               Colors.black,
-              AppColors.primary.withOpacity(0.3),
-              AppColors.secondary.withOpacity(0.3),
+              AppColors.primary.withValues(alpha: 0.3),
+              AppColors.secondary.withValues(alpha: 0.3),
               Colors.black,
             ],
           ),
@@ -74,7 +74,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -111,7 +111,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -164,7 +164,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                             overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                             activeTrackColor: Colors.white,
-                            inactiveTrackColor: Colors.white.withOpacity(0.2),
+                            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
                             thumbColor: Colors.white,
                           ),
                           child: Slider(
@@ -181,14 +181,14 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                                 '1:24',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                               ),
                               Text(
                                 '3:20',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -311,8 +311,8 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                AppColors.primary.withOpacity(0.6),
-                AppColors.secondary.withOpacity(0.3),
+                AppColors.primary.withValues(alpha: 0.6),
+                AppColors.secondary.withValues(alpha: 0.3),
                 Colors.transparent,
               ],
             ),
@@ -332,7 +332,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3 - (index * 0.1)),
+                      color: Colors.white.withValues(alpha: 0.3 - (index * 0.1)),
                       width: 2,
                     ),
                   ),
@@ -375,7 +375,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
                     boxShadow: [
                       BoxShadow(
                         color: (index % 2 == 0 ? AppColors.primary : AppColors.secondary)
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         blurRadius: 10,
                       ),
                     ],
@@ -393,7 +393,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
     return Container(
       padding: EdgeInsets.all(large ? 12 : 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
@@ -421,7 +421,7 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.4),
+              color: AppColors.primary.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -449,8 +449,8 @@ class _AudioVisualizerScreenState extends State<AudioVisualizerScreen>
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? Colors.white : Colors.transparent,

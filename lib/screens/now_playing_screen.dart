@@ -29,7 +29,7 @@ class NowPlayingScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
+                    AppColors.secondary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -94,7 +94,7 @@ class _Header extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
-                  color: AppColors.primary.withOpacity(0.8),
+                  color: AppColors.primary.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -192,7 +192,7 @@ class _Header extends StatelessWidget {
       height: 48,
       width: 48,
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withOpacity(0.5),
+        color: AppColors.surfaceLight.withValues(alpha: 0.5),
         shape: BoxShape.circle,
       ),
       child: IconButton(
@@ -228,11 +228,11 @@ class _AlbumArt extends StatelessWidget {
               top: 20,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 40,
                       offset: const Offset(0, 20),
                     ),
@@ -250,7 +250,7 @@ class _AlbumArt extends StatelessWidget {
                   color: AppColors.surfaceLight,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       blurRadius: 40,
                       offset: const Offset(0, 10),
                     ),
@@ -395,7 +395,7 @@ class _ProgressBarState extends State<_ProgressBar> {
                 activeTrackColor: AppColors.primary,
                 inactiveTrackColor: AppColors.surfaceLight,
                 thumbColor: AppColors.primary,
-                overlayColor: AppColors.primary.withOpacity(0.2),
+                overlayColor: AppColors.primary.withValues(alpha: 0.2),
               ),
               child: Slider(
                 value: _sliderValue,
@@ -519,7 +519,7 @@ class _PlaybackControls extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withValues(alpha: 0.4),
                     blurRadius: 30,
                     offset: const Offset(0, 8),
                   ),
@@ -704,7 +704,7 @@ class _UpNextList extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -780,7 +780,7 @@ class _UpNextList extends StatelessWidget {
                 }
               },
               icon: const Icon(Icons.remove_circle_outline_rounded, size: 20),
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
           ],
         ),
@@ -801,7 +801,7 @@ class _DeviceSelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
           )
         ],

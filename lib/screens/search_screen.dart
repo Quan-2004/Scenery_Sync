@@ -199,7 +199,7 @@ class _SearchScreenState extends State<SearchScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
+                    AppColors.secondary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -328,7 +328,7 @@ class _Header extends StatelessWidget {
               border: Border.all(color: AppColors.surfaceLight, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                 ),
               ],
@@ -366,7 +366,7 @@ class _SearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -389,7 +389,7 @@ class _SearchBar extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Artists, Songs, Lyrics and more',
                 hintStyle: TextStyle(
-                  color: AppColors.textMuted.withOpacity(0.7),
+                  color: AppColors.textMuted.withValues(alpha: 0.7),
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -487,8 +487,8 @@ class _FilterChips extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: isSelected
-                          ? AppColors.primary.withOpacity(0.25)
-                          : Colors.black.withOpacity(0.05),
+                          ? AppColors.primary.withValues(alpha: 0.25)
+                          : Colors.black.withValues(alpha: 0.05),
                       blurRadius: isSelected ? 12 : 4,
                       offset: const Offset(0, 4),
                     ),
@@ -554,7 +554,7 @@ class _EmptyState extends StatelessWidget {
           width: 120,
           height: 120,
           decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.3),
+            color: AppColors.secondary.withValues(alpha: 0.3),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -601,7 +601,7 @@ class _SearchResults extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.3),
+              color: AppColors.secondary.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -650,7 +650,7 @@ class _SearchResults extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -732,7 +732,7 @@ class _SearchResultItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -750,7 +750,7 @@ class _SearchResultItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -830,7 +830,7 @@ class _SearchResultItem extends StatelessWidget {
                               color: AppColors.textMuted,
                               decoration: TextDecoration.underline,
                               decorationColor:
-                                  AppColors.textMuted.withOpacity(0.3),
+                                  AppColors.textMuted.withValues(alpha: 0.3),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1004,7 +1004,7 @@ class _SearchSuggestionsSection extends StatelessWidget {
               color: AppColors.textMain,
             ),
             backgroundColor: AppColors.cardBackground,
-            side: BorderSide(color: AppColors.divider.withOpacity(0.3)),
+            side: BorderSide(color: AppColors.divider.withValues(alpha: 0.3)),
             onPressed: () => onSuggestionTap(search),
           )).toList(),
         ),
@@ -1022,7 +1022,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Chill\nVibes',
         'searchQuery': 'chill lofi',
-        'bgColor': const Color(0xFFFFD8D8).withOpacity(0.6),
+        'bgColor': const Color(0xFFFFD8D8).withValues(alpha: 0.6),
         'textColor': const Color(0xFF8B4848),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuD9fxCh6ix0aWLgour1YPDsqEAdkSI_q85A_PQ-r-IpV15bFAnCSroUA2hJvtpfEecrMtv6AED61ldXvgn4uH-IiRnElltY4h_YrxbBlPx3BnrGwXGEC9aE1okxT9imLOMmawLxC-IYRS_ABtMvc3IXv7FwqF2kmLHHLjcq9SxUET6r8oSBK48CJcInyPnZPeWVO9owgW3QrGXXfzWiJtRErdJyzR2cQ_vRGO1JqxYeoT2y70dxJyRIhCrL-u-OB3Ed4A9wPIaxQw',
@@ -1030,7 +1030,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Pop\nHits',
         'searchQuery': 'pop hits',
-        'bgColor': const Color(0xFFD8E6FF).withOpacity(0.6),
+        'bgColor': const Color(0xFFD8E6FF).withValues(alpha: 0.6),
         'textColor': const Color(0xFF485E8B),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuD4zTvs1ZSng5Zs-6SN5e6BY4THURyLABqJuRzTseMfznR7cdc845lQnuxW_Byz_ueROCw2Hi8LXbQB_UR16NDwRAkvGIQGq4UYgSDdkZwtqAhbJSSR0LO4GYw1U9XAcqiEZUIrpVEOh07cioPqi1a42PawaVEWvSbkbqTmdUHo7oM-W1uR3o5oWQZPdph52lmM_rZAKUB2TtCdBP82GoLoClCKT7MmwfYAq0qdj7O6Unr5NCwYW8o4kMrGa1m_DtQjKdF2xDxXSw',
@@ -1038,7 +1038,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Focus\nFlow',
         'searchQuery': 'study focus',
-        'bgColor': const Color(0xFFE6FFD8).withOpacity(0.6),
+        'bgColor': const Color(0xFFE6FFD8).withValues(alpha: 0.6),
         'textColor': const Color(0xFF538B48),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuAmtFifzozcQm7xAGiCL7_6Icz5OfmgQWrbVoM4jjIdaOwTrkGuVQBLHWYPVVl9KRG_eGN6qkbhIRxMzltH10xZUD1QvtBeAwFhEMq66Mk7TPZUgzzMy9oj9_OTYdmYXISguXLBSZp4MDLLhyrM7XuBFnhroFY7-npxaToy02371fr_CCidrCgPkI6CeLJPaz0JXvkLQR52PbbKa83XvoNM2l4F5Z0FYd3xtzsQF5Wj-ydFhTa2lHb92aaWFpkPlJAzR_1vTDVaVQ',
@@ -1046,7 +1046,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Jazz\nClub',
         'searchQuery': 'jazz',
-        'bgColor': const Color(0xFFFFF4D8).withOpacity(0.6),
+        'bgColor': const Color(0xFFFFF4D8).withValues(alpha: 0.6),
         'textColor': const Color(0xFF8B7848),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC0twC4bcYkDO_Ks18aY0qp5CTNDlfne1DHEy86WFtTl5AGTHEcFCOIBANtP_w1AmYviNfj9jrQ4svLAER01_WSQ9mTnYs4199WII8b2ASOEJp2SPHkjL88UbfbXPsHM85vqFl3uDkzkGQ6BvMzTbp6RqE0jWYOE2z7Ppsq_MfOCjK84lhjE0oBxxPbnnGLNw9WjIDH6fCXfMqWe43k0EmAHbLqNZXgLGDXaPXnk6QSWMI2rcRmPPHoavM7RqKKPYmpV4-2KLxUGg',
@@ -1054,7 +1054,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Rock\nLegends',
         'searchQuery': 'rock',
-        'bgColor': const Color(0xFFFFE6D8).withOpacity(0.6),
+        'bgColor': const Color(0xFFFFE6D8).withValues(alpha: 0.6),
         'textColor': const Color(0xFF8B5E48),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuD9fxCh6ix0aWLgour1YPDsqEAdkSI_q85A_PQ-r-IpV15bFAnCSroUA2hJvtpfEecrMtv6AED61ldXvgn4uH-IiRnElltY4h_YrxbBlPx3BnrGwXGEC9aE1okxT9imLOMmawLxC-IYRS_ABtMvc3IXv7FwqF2kmLHHLjcq9SxUET6r8oSBK48CJcInyPnZPeWVO9owgW3QrGXXfzWiJtRErdJyzR2cQ_vRGO1JqxYeoT2y70dxJyRIhCrL-u-OB3Ed4A9wPIaxQw',
@@ -1062,7 +1062,7 @@ class _DiscoverSection extends StatelessWidget {
       {
         'title': 'Hip Hop\nBeats',
         'searchQuery': 'hip hop',
-        'bgColor': const Color(0xFFE8D8FF).withOpacity(0.6),
+        'bgColor': const Color(0xFFE8D8FF).withValues(alpha: 0.6),
         'textColor': const Color(0xFF5E488B),
         'image':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuD4zTvs1ZSng5Zs-6SN5e6BY4THURyLABqJuRzTseMfznR7cdc845lQnuxW_Byz_ueROCw2Hi8LXbQB_UR16NDwRAkvGIQGq4UYgSDdkZwtqAhbJSSR0LO4GYw1U9XAcqiEZUIrpVEOh07cioPqi1a42PawaVEWvSbkbqTmdUHo7oM-W1uR3o5oWQZPdph52lmM_rZAKUB2TtCdBP82GoLoClCKT7MmwfYAq0qdj7O6Unr5NCwYW8o4kMrGa1m_DtQjKdF2xDxXSw',
@@ -1158,7 +1158,7 @@ class _AllCategoriesSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.3),
+              color: AppColors.textMuted.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1266,7 +1266,7 @@ class _CategoryCardState extends State<_CategoryCard> {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(_isPressed ? 0.02 : 0.05),
+                color: Colors.black.withValues(alpha: _isPressed ? 0.02 : 0.05),
                 blurRadius: _isPressed ? 5 : 10,
                 offset: Offset(0, _isPressed ? 2 : 4),
               ),
@@ -1298,7 +1298,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -1412,7 +1412,7 @@ class _GenreDetailScreenState extends State<_GenreDetailScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                               ),
                             ],
@@ -1505,7 +1505,7 @@ class _ArtistResults extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -1560,7 +1560,7 @@ class _ArtistResults extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1578,7 +1578,7 @@ class _ArtistResults extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.15),
+                              color: AppColors.primary.withValues(alpha: 0.15),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1687,7 +1687,7 @@ class _AlbumResults extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -1739,7 +1739,7 @@ class _AlbumResults extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1755,7 +1755,7 @@ class _AlbumResults extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.15),
+                            color: AppColors.primary.withValues(alpha: 0.15),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -1823,7 +1823,7 @@ class _AlbumResults extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.5),
+                        color: AppColors.secondary.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1880,7 +1880,7 @@ class _PlaylistSuggestions extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -1923,7 +1923,7 @@ class _PlaylistSuggestions extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1941,7 +1941,7 @@ class _PlaylistSuggestions extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.primary.withOpacity(0.8),
+                            AppColors.primary.withValues(alpha: 0.8),
                             AppColors.secondary,
                           ],
                         ),

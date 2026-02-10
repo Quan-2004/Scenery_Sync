@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../screens/now_playing_screen.dart';
 import '../models/music_models.dart';
-import '../services/audio_player_service.dart' show AudioPlayerService, RepeatMode;
+import '../services/audio_player_service.dart'
+    show AudioPlayerService, RepeatMode;
 
 class DynamicIslandPlayer extends StatefulWidget {
   const DynamicIslandPlayer({super.key});
@@ -153,9 +154,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
   Future<void> _togglePlayPause() async {
     final player = AudioPlayerService.instance;
     if (player.currentTrack == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có bài đang phát.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chưa có bài đang phát.')));
       return;
     }
 
@@ -166,6 +167,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
         await player.play();
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Không điều khiển được phát nhạc: $e')),
       );
@@ -178,7 +180,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isLiked ? '❤️ Added to Liked Songs' : '💔 Removed from Liked Songs'),
+        content: Text(
+          _isLiked ? '❤️ Added to Liked Songs' : '💔 Removed from Liked Songs',
+        ),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -189,43 +193,44 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
 
   Future<void> _toggleShuffle() async {
     await AudioPlayerService.instance.toggleShuffle();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isShuffled ? '🔀 Shuffle ON' : '➡️ Shuffle OFF'),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isShuffled ? '🔀 Shuffle ON' : '➡️ Shuffle OFF'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _toggleRepeat() async {
     await AudioPlayerService.instance.toggleRepeat();
-    if (mounted) {
-      final mode = _repeatMode == 0 ? 'OFF' : _repeatMode == 1 ? 'ALL' : 'ONE';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('🔁 Repeat $mode'),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    if (!context.mounted) return;
+    final mode = _repeatMode == 0
+        ? 'OFF'
+        : _repeatMode == 1
+        ? 'ALL'
+        : 'ONE';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🔁 Repeat $mode'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _skipPrevious() async {
     try {
       await AudioPlayerService.instance.skipToPrevious();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: $e'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
     }
   }
 
@@ -233,40 +238,43 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     try {
       await AudioPlayerService.instance.skipToNext();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: $e'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
     }
   }
 
   void _openNowPlaying() {
     if (_track == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có bài đang phát.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chưa có bài đang phát.')));
       return;
     }
 
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const NowPlayingScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const NowPlayingScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             ),
           );
@@ -286,19 +294,17 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final safeAreaTop = MediaQuery.of(context).padding.top;
-    
+
     return Stack(
       children: [
         if (_isExpanded)
           Positioned.fill(
             child: GestureDetector(
               onTap: _toggleExpanded,
-              child: Container(
-                color: Colors.transparent,
-              ),
+              child: Container(color: Colors.transparent),
             ),
           ),
-        
+
         Positioned(
           top: safeAreaTop + 8,
           left: _isExpanded ? 16 : screenWidth / 2 - 100,
@@ -327,7 +333,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                     borderRadius: BorderRadius.circular(borderRadius),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 20,
                         spreadRadius: 2,
                         offset: const Offset(0, 8),
@@ -338,7 +344,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(borderRadius),
-                      child: _isExpanded ? _buildExpandedView() : _buildCompactView(),
+                      child: _isExpanded
+                          ? _buildExpandedView()
+                          : _buildCompactView(),
                     ),
                   ),
                 );
@@ -352,8 +360,12 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
 
   Widget _buildCompactView() {
     final track = _track;
-    final title = track?.name.trim().isNotEmpty == true ? track!.name : 'Unknown';
-    final artist = track?.artistName.trim().isNotEmpty == true ? track!.artistName : 'Unknown Artist';
+    final title = track?.name.trim().isNotEmpty == true
+        ? track!.name
+        : 'Unknown';
+    final artist = track?.artistName.trim().isNotEmpty == true
+        ? track!.artistName
+        : 'Unknown Artist';
     final artUrl = track?.imageUrl.trim() ?? '';
 
     return Padding(
@@ -370,10 +382,10 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                 height: 28,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -422,7 +434,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                 Text(
                   artist,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 9,
                   ),
                   maxLines: 1,
@@ -431,11 +443,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
               ],
             ),
           ),
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: _buildWaveform(),
-          ),
+          SizedBox(width: 24, height: 24, child: _buildWaveform()),
         ],
       ),
     );
@@ -443,8 +451,12 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
 
   Widget _buildExpandedView() {
     final track = _track;
-    final title = track?.name.trim().isNotEmpty == true ? track!.name : 'Unknown';
-    final artist = track?.artistName.trim().isNotEmpty == true ? track!.artistName : 'Unknown Artist';
+    final title = track?.name.trim().isNotEmpty == true
+        ? track!.name
+        : 'Unknown';
+    final artist = track?.artistName.trim().isNotEmpty == true
+        ? track!.artistName
+        : 'Unknown Artist';
     final artUrl = track?.imageUrl.trim() ?? '';
     // Sử dụng duration thực tế từ AudioPlayer thay vì track.durationMs
     final totalMs = _totalDuration.inMilliseconds;
@@ -476,7 +488,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.4),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -489,7 +503,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
-                                      color: AppColors.primary.withOpacity(0.2),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       child: const Icon(
                                         Icons.album_rounded,
                                         color: AppColors.primary,
@@ -523,7 +539,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                                 Text(
                                   artist,
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6),
+                                    color: Colors.white.withValues(alpha: 0.6),
                                     fontSize: 12,
                                   ),
                                   maxLines: 1,
@@ -539,14 +555,18 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: _isLiked 
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.1),
+                              color: _isLiked
+                                  ? AppColors.primary.withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              _isLiked ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
-                              color: _isLiked ? AppColors.primary : Colors.white,
+                              _isLiked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_outline_rounded,
+                              color: _isLiked
+                                  ? AppColors.primary
+                                  : Colors.white,
                               size: 18,
                             ),
                           ),
@@ -559,12 +579,20 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                         SliderTheme(
                           data: SliderThemeData(
                             trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 6,
+                            ),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 12,
+                            ),
                             activeTrackColor: AppColors.primary,
-                            inactiveTrackColor: Colors.white.withOpacity(0.2),
+                            inactiveTrackColor: Colors.white.withValues(
+                              alpha: 0.2,
+                            ),
                             thumbColor: Colors.white,
-                            overlayColor: AppColors.primary.withOpacity(0.2),
+                            overlayColor: AppColors.primary.withValues(
+                              alpha: 0.2,
+                            ),
                           ),
                           child: Slider(
                             value: _progress,
@@ -574,7 +602,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                                 _progress = value;
                               });
                               AudioPlayerService.instance.seek(
-                                Duration(milliseconds: (totalMs * value).round()),
+                                Duration(
+                                  milliseconds: (totalMs * value).round(),
+                                ),
                               );
                             },
                           ),
@@ -587,7 +617,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                               Text(
                                 _formatDuration(_currentPosition),
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -595,7 +625,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                               Text(
                                 _formatDuration(_totalDuration),
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 11,
                                 ),
                               ),
@@ -609,7 +639,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildControlButton(
-                          _isShuffled ? Icons.shuffle_on_rounded : Icons.shuffle_rounded,
+                          _isShuffled
+                              ? Icons.shuffle_on_rounded
+                              : Icons.shuffle_rounded,
                           _toggleShuffle,
                           size: 20,
                           isActive: _isShuffled,
@@ -620,7 +652,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                           size: 28,
                         ),
                         _buildControlButton(
-                          _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          _isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
                           _togglePlayPause,
                           size: 32,
                           isPrimary: true,
@@ -631,11 +665,11 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                           size: 28,
                         ),
                         _buildControlButton(
-                          _repeatMode == 0 
+                          _repeatMode == 0
                               ? Icons.repeat_rounded
                               : _repeatMode == 1
-                                  ? Icons.repeat_on_rounded
-                                  : Icons.repeat_one_rounded,
+                              ? Icons.repeat_on_rounded
+                              : Icons.repeat_one_rounded,
                           _toggleRepeat,
                           size: 20,
                           isActive: _repeatMode > 0,
@@ -647,17 +681,23 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                       children: [
                         Icon(
                           Icons.volume_down_rounded,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           size: 20,
                         ),
                         Expanded(
                           child: SliderTheme(
                             data: SliderThemeData(
                               trackHeight: 2,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 5,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 10,
+                              ),
                               activeTrackColor: AppColors.primary,
-                              inactiveTrackColor: Colors.white.withOpacity(0.2),
+                              inactiveTrackColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
                               thumbColor: Colors.white,
                             ),
                             child: Slider(
@@ -667,14 +707,16 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                                   _volume = value;
                                 });
                                 // Điều chỉnh volume thực tế
-                                AudioPlayerService.instance.player.setVolume(value);
+                                AudioPlayerService.instance.player.setVolume(
+                                  value,
+                                );
                               },
                             ),
                           ),
                         ),
                         Icon(
                           Icons.volume_up_rounded,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           size: 20,
                         ),
                       ],
@@ -706,20 +748,23 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
           color: isPrimary
               ? Colors.white
               : isActive
-                  ? AppColors.primary.withOpacity(0.25)
-                  : Colors.transparent,
+              ? AppColors.primary.withValues(alpha: 0.25)
+              : Colors.transparent,
           shape: BoxShape.circle,
           border: isActive && !isPrimary
-              ? Border.all(color: AppColors.primary.withOpacity(0.3), width: 1)
+              ? Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  width: 1,
+                )
               : null,
         ),
         child: Icon(
           icon,
-          color: isPrimary 
-              ? Colors.black 
-              : isActive 
-                  ? AppColors.primary 
-                  : Colors.white,
+          color: isPrimary
+              ? Colors.black
+              : isActive
+              ? AppColors.primary
+              : Colors.white,
           size: size,
         ),
       ),
@@ -736,18 +781,19 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
             final baseHeight = 4.0;
             final maxHeight = 16.0;
             final animValue = _waveAnimationController.value;
-            
+
             double height = baseHeight;
             if (_isPlaying) {
               if (index == 0) {
                 height = baseHeight + (maxHeight - baseHeight) * animValue;
               } else if (index == 1) {
-                height = baseHeight + (maxHeight - baseHeight) * (1 - animValue);
+                height =
+                    baseHeight + (maxHeight - baseHeight) * (1 - animValue);
               } else {
                 height = baseHeight + (maxHeight - baseHeight) * animValue;
               }
             }
-            
+
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
               width: 3,
@@ -758,17 +804,19 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                   end: Alignment.topCenter,
                   colors: [
                     AppColors.primary,
-                    AppColors.primary.withOpacity(0.6),
+                    AppColors.primary.withValues(alpha: 0.6),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(2),
-                boxShadow: _isPlaying ? [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ] : null,
+                boxShadow: _isPlaying
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
             );
           }),

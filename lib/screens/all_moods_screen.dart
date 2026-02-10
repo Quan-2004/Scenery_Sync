@@ -87,7 +87,10 @@ class _AllMoodsScreenState extends State<AllMoodsScreen> {
             backgroundColor: AppColors.backgroundLight,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textMain),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textMain,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -112,15 +115,9 @@ class _AllMoodsScreenState extends State<AllMoodsScreen> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return _MoodGridCard(
-                    mood: allMoods[index],
-                    index: index,
-                  );
-                },
-                childCount: allMoods.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return _MoodGridCard(mood: allMoods[index], index: index);
+              }, childCount: allMoods.length),
             ),
           ),
         ],
@@ -133,10 +130,7 @@ class _MoodGridCard extends StatefulWidget {
   final Map<String, dynamic> mood;
   final int index;
 
-  const _MoodGridCard({
-    required this.mood,
-    required this.index,
-  });
+  const _MoodGridCard({required this.mood, required this.index});
 
   @override
   State<_MoodGridCard> createState() => _MoodGridCardState();
@@ -157,7 +151,8 @@ class _MoodGridCardState extends State<_MoodGridCard> {
           MaterialPageRoute(
             builder: (context) => PlaylistDetailScreen(
               playlistName: widget.mood['title'],
-              playlistCover: 'https://picsum.photos/seed/${widget.index}/400/400',
+              playlistCover:
+                  'https://picsum.photos/seed/${widget.index}/400/400',
               songCount: 50,
             ),
           ),
@@ -186,7 +181,7 @@ class _MoodGridCardState extends State<_MoodGridCard> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: widget.mood['gradient'][0].withOpacity(0.4),
+                color: widget.mood['gradient'][0].withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -202,7 +197,7 @@ class _MoodGridCardState extends State<_MoodGridCard> {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -214,7 +209,7 @@ class _MoodGridCardState extends State<_MoodGridCard> {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -240,7 +235,7 @@ class _MoodGridCardState extends State<_MoodGridCard> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

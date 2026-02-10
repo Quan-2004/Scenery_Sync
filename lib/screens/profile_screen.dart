@@ -410,7 +410,7 @@ class _ProfileCardState extends State<_ProfileCard> {
               width: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
               ),
               child: Icon(
                 Icons.person_outline,
@@ -433,7 +433,7 @@ class _ProfileCardState extends State<_ProfileCard> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textMuted.withOpacity(0.8),
+                color: AppColors.textMuted.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 16),
@@ -822,7 +822,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -877,7 +877,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1472,13 +1472,13 @@ class _UploadMusicSectionState extends State<_UploadMusicSection> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.primary.withOpacity(0.1),
-              AppColors.secondary.withOpacity(0.1),
+              AppColors.primary.withValues(alpha: 0.1),
+              AppColors.secondary.withValues(alpha: 0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -1743,7 +1743,7 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
                     width: 2,
                   ),
                   backgroundColor: _selectedImageName != null
-                      ? AppColors.primary.withOpacity(0.1)
+                      ? AppColors.primary.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1799,7 +1799,7 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
                     width: 2,
                   ),
                   backgroundColor: _selectedAudioName != null
-                      ? AppColors.primary.withOpacity(0.1)
+                      ? AppColors.primary.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2037,7 +2037,7 @@ class _ManageTracksScreenState extends State<_ManageTracksScreen> {
                   Icon(
                     Icons.music_off_rounded,
                     size: 80,
-                    color: AppColors.textMuted.withOpacity(0.5),
+                    color: AppColors.textMuted.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -2068,7 +2068,7 @@ class _ManageTracksScreenState extends State<_ManageTracksScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -2089,7 +2089,7 @@ class _ManageTracksScreenState extends State<_ManageTracksScreen> {
                                   height: 56,
                                   width: 56,
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.2),
+                                    color: AppColors.primary.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -2103,7 +2103,7 @@ class _ManageTracksScreenState extends State<_ManageTracksScreen> {
                               height: 56,
                               width: 56,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(

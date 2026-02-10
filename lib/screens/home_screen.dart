@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
+                    AppColors.secondary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -241,7 +241,7 @@ class _HeaderSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted.withOpacity(0.7),
+                      color: AppColors.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -264,7 +264,7 @@ class _HeaderSection extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -310,7 +310,7 @@ class _HeaderSection extends StatelessWidget {
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -390,7 +390,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (notif['color'] as Color).withOpacity(0.15),
+                color: (notif['color'] as Color).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -424,7 +424,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
               notif['time'] as String,
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textMuted.withOpacity(0.7),
+                color: AppColors.textMuted.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -502,12 +502,12 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   tileColor: isRead
                       ? Colors.transparent
-                      : AppColors.primary.withOpacity(0.05),
+                      : AppColors.primary.withValues(alpha: 0.05),
                   leading: Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (notif['color'] as Color).withOpacity(0.15),
+                      color: (notif['color'] as Color).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -557,7 +557,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                         notif['time'] as String,
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textMuted.withOpacity(0.7),
+                          color: AppColors.textMuted.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -606,7 +606,7 @@ class _ProfileSheet extends StatelessWidget {
               border: Border.all(color: AppColors.primary, width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -631,7 +631,7 @@ class _ProfileSheet extends StatelessWidget {
             'alex.morgan@email.com',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textMuted.withOpacity(0.8),
+              color: AppColors.textMuted.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 24),
@@ -720,7 +720,7 @@ class _ProfileSheet extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 13,
-            color: AppColors.textMuted.withOpacity(0.7),
+            color: AppColors.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -740,8 +740,8 @@ class _ProfileSheet extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: isDestructive
-              ? const Color(0xFFE74C3C).withOpacity(0.1)
-              : AppColors.primary.withOpacity(0.1),
+              ? const Color(0xFFE74C3C).withValues(alpha: 0.1)
+              : AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
@@ -760,7 +760,7 @@ class _ProfileSheet extends StatelessWidget {
       ),
       trailing: Icon(
         Icons.chevron_right_rounded,
-        color: AppColors.textMuted.withOpacity(0.5),
+        color: AppColors.textMuted.withValues(alpha: 0.5),
       ),
       onTap: onTap,
     );
@@ -807,7 +807,7 @@ class _TimeBasedGreeting extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: AppColors.textMuted.withOpacity(0.8),
+              color: AppColors.textMuted.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -952,7 +952,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: playlist['gradient'][0].withOpacity(0.4),
+                  color: playlist['gradient'][0].withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                   spreadRadius: -5,
@@ -984,7 +984,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -996,7 +996,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -1012,7 +1012,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
+                            color: Colors.white.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -1041,7 +1041,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1061,7 +1061,7 @@ class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -1152,7 +1152,7 @@ class _HeroCardState extends State<_HeroCard>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   offset: const Offset(0, 20),
                   blurRadius: 40,
                   spreadRadius: -12,
@@ -1181,10 +1181,10 @@ class _HeroCardState extends State<_HeroCard>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: const Text(
@@ -1226,7 +1226,7 @@ class _HeroCardState extends State<_HeroCard>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -1421,12 +1421,12 @@ class _GenreItemState extends State<_GenreItem>
                 height: 68,
                 width: 68,
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.4),
+                  color: widget.color.withValues(alpha: 0.4),
                   shape: BoxShape.circle,
                   boxShadow: _isPressed
                       ? [
                           BoxShadow(
-                            color: widget.color.withOpacity(0.4),
+                            color: widget.color.withValues(alpha: 0.4),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -1587,7 +1587,7 @@ class _DailyMixCardState extends State<_DailyMixCard> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(
+                            color: Colors.black.withValues(alpha: 
                               _isPressed ? 0.05 : 0.1,
                             ),
                             blurRadius: _isPressed ? 5 : 10,
@@ -1603,7 +1603,7 @@ class _DailyMixCardState extends State<_DailyMixCard> {
                             height: 36,
                             width: 36,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -1756,12 +1756,12 @@ class _QuickActionsSection extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+            colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1980,7 +1980,7 @@ class _MoodCardState extends State<_MoodCard> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: widget.gradient[0].withOpacity(0.4),
+                color: widget.gradient[0].withValues(alpha: 0.4),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -1996,7 +1996,7 @@ class _MoodCardState extends State<_MoodCard> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -2008,7 +2008,7 @@ class _MoodCardState extends State<_MoodCard> {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -2025,7 +2025,7 @@ class _MoodCardState extends State<_MoodCard> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(widget.icon, color: Colors.white, size: 26),
@@ -2179,7 +2179,7 @@ class _ArtistCardState extends State<_ArtistCard> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -2191,7 +2191,7 @@ class _ArtistCardState extends State<_ArtistCard> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: AppColors.primary.withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                           child: const Icon(
                             Icons.person,
                             size: 60,

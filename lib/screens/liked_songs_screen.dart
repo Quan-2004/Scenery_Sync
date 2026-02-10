@@ -49,14 +49,14 @@ class _LikedSongsScreenState extends State<LikedSongsScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.3),
-                            Colors.white.withOpacity(0.1),
+                            Colors.white.withValues(alpha: 0.3),
+                            Colors.white.withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -83,7 +83,7 @@ class _LikedSongsScreenState extends State<LikedSongsScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -130,7 +130,7 @@ class _LikedSongsScreenState extends State<LikedSongsScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -216,7 +216,7 @@ class _SongTileState extends State<_SongTile> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -236,7 +236,7 @@ class _SongTileState extends State<_SongTile> {
                     return Container(
                       width: 56,
                       height: 56,
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       child: const Icon(
                         Icons.music_note_rounded,
                         color: AppColors.primary,
@@ -266,7 +266,7 @@ class _SongTileState extends State<_SongTile> {
                       widget.song['artist']!,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textMuted.withOpacity(0.7),
+                        color: AppColors.textMuted.withValues(alpha: 0.7),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -280,7 +280,7 @@ class _SongTileState extends State<_SongTile> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted.withOpacity(0.6),
+                  color: AppColors.textMuted.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(width: 12),

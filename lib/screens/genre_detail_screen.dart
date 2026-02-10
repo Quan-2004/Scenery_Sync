@@ -84,7 +84,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                     end: Alignment.bottomRight,
                     colors: [
                       widget.genreColor,
-                      widget.genreColor.withOpacity(0.7),
+                      widget.genreColor.withValues(alpha: 0.7),
                     ],
                   ),
                 ),
@@ -98,7 +98,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Icon(
@@ -121,7 +121,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                         '${_songs.length} songs',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -260,7 +260,7 @@ class _ActionButtonState extends State<_ActionButton> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withOpacity(0.3),
+                color: widget.color.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -330,7 +330,7 @@ class _SongItemState extends State<_SongItem> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -343,7 +343,7 @@ class _SongItemState extends State<_SongItem> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: widget.genreColor.withOpacity(0.1),
+                  color: widget.genreColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -365,8 +365,8 @@ class _SongItemState extends State<_SongItem> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      widget.genreColor.withOpacity(0.3),
-                      widget.genreColor.withOpacity(0.1),
+                      widget.genreColor.withValues(alpha: 0.3),
+                      widget.genreColor.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),

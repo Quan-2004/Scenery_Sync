@@ -64,7 +64,7 @@ class _MySongsScreenState extends State<MySongsScreen> {
                   child: Icon(
                     Icons.music_note_rounded,
                     size: 80,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -77,7 +77,7 @@ class _MySongsScreenState extends State<MySongsScreen> {
               Container(
                 margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: PopupMenuButton<String>(
@@ -189,7 +189,7 @@ class _MySongsScreenState extends State<MySongsScreen> {
             end: Alignment.bottomRight,
             colors: [
               Colors.white,
-              AppColors.secondary.withOpacity(0.3),
+              AppColors.secondary.withValues(alpha: 0.3),
             ],
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -203,7 +203,7 @@ class _MySongsScreenState extends State<MySongsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -256,13 +256,13 @@ class _SongTile extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             Colors.white,
-            AppColors.secondary.withOpacity(0.1),
+            AppColors.secondary.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -279,7 +279,7 @@ class _SongTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),

@@ -17,7 +17,8 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderStateMixin {
+class _LibraryScreenState extends State<LibraryScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -30,22 +31,15 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOut,
-      ),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -74,7 +68,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
+                    AppColors.secondary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -130,7 +124,7 @@ class _Header extends StatelessWidget {
 
   void _showCreatePlaylistDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -183,7 +177,9 @@ class _Header extends StatelessWidget {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Playlist "${nameController.text}" created!'),
+                      content: Text(
+                        'Playlist "${nameController.text}" created!',
+                      ),
                       backgroundColor: AppColors.primary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -196,7 +192,10 @@ class _Header extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -251,10 +250,7 @@ class _TabBar extends StatelessWidget {
         indicatorWeight: 3,
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textMuted,
-        labelStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+        labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
@@ -275,11 +271,31 @@ class _PlaylistsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final playlists = [
       {'name': 'My Favorites', 'count': '42 songs', 'color': AppColors.primary},
-      {'name': 'Workout Mix', 'count': '28 songs', 'color': const Color(0xFFE85D75)},
-      {'name': 'Chill Vibes', 'count': '35 songs', 'color': const Color(0xFF6B8CFF)},
-      {'name': 'Study Focus', 'count': '51 songs', 'color': const Color(0xFF4CAF50)},
-      {'name': 'Party Time', 'count': '39 songs', 'color': const Color(0xFFFF9800)},
-      {'name': 'Road Trip', 'count': '46 songs', 'color': const Color(0xFF9C27B0)},
+      {
+        'name': 'Workout Mix',
+        'count': '28 songs',
+        'color': const Color(0xFFE85D75),
+      },
+      {
+        'name': 'Chill Vibes',
+        'count': '35 songs',
+        'color': const Color(0xFF6B8CFF),
+      },
+      {
+        'name': 'Study Focus',
+        'count': '51 songs',
+        'color': const Color(0xFF4CAF50),
+      },
+      {
+        'name': 'Party Time',
+        'count': '39 songs',
+        'color': const Color(0xFFFF9800),
+      },
+      {
+        'name': 'Road Trip',
+        'count': '46 songs',
+        'color': const Color(0xFF9C27B0),
+      },
     ];
 
     return ListView.separated(
@@ -333,7 +349,9 @@ class _PlaylistItemState extends State<_PlaylistItem> {
             builder: (context) => PlaylistDetailScreen(
               playlistName: widget.playlist['name'] as String,
               playlistCover: 'https://picsum.photos/400/400',
-              songCount: int.parse((widget.playlist['count'] as String).split(' ')[0]),
+              songCount: int.parse(
+                (widget.playlist['count'] as String).split(' ')[0],
+              ),
             ),
           ),
         );
@@ -349,7 +367,7 @@ class _PlaylistItemState extends State<_PlaylistItem> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(_isPressed ? 0.02 : 0.05),
+                color: Colors.black.withValues(alpha: _isPressed ? 0.02 : 0.05),
                 blurRadius: _isPressed ? 5 : 10,
                 offset: Offset(0, _isPressed ? 2 : 4),
               ),
@@ -361,7 +379,9 @@ class _PlaylistItemState extends State<_PlaylistItem> {
                 height: 60,
                 width: 60,
                 decoration: BoxDecoration(
-                  color: (widget.playlist['color'] as Color).withOpacity(0.2),
+                  color: (widget.playlist['color'] as Color).withValues(
+                    alpha: 0.2,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -394,10 +414,7 @@ class _PlaylistItemState extends State<_PlaylistItem> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.more_vert_rounded,
-                color: AppColors.textMuted,
-              ),
+              Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
             ],
           ),
         ),
@@ -419,9 +436,7 @@ class _SongsTabState extends State<_SongsTab> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text(
           'Xóa bài hát?',
           style: TextStyle(
@@ -470,12 +485,15 @@ class _SongsTabState extends State<_SongsTab> {
       );
 
       // Delete from Firestore
-      await FirebaseFirestore.instance.collection('tracks').doc(track.id).delete();
+      await FirebaseFirestore.instance
+          .collection('tracks')
+          .doc(track.id)
+          .delete();
 
       // Optionally delete from Cloudinary
       // Note: This requires Cloudinary admin API credentials
       // For now, we'll just delete from Firestore
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -510,7 +528,10 @@ class _SongsTabState extends State<_SongsTab> {
     final isAdmin = profile != null && profile['isAdmin'] == true;
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('tracks').orderBy('createdAt', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('tracks')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -534,7 +555,9 @@ class _SongsTabState extends State<_SongsTab> {
         final docs = snapshot.data!.docs;
         final tracks = docs
             .map((d) => Track.fromFirestore(d.data(), id: d.id))
-            .where((t) => t.previewUrl != null && t.previewUrl!.trim().isNotEmpty)
+            .where(
+              (t) => t.previewUrl != null && t.previewUrl!.trim().isNotEmpty,
+            )
             .toList();
 
         if (tracks.isEmpty) {
@@ -545,15 +568,12 @@ class _SongsTabState extends State<_SongsTab> {
                 Icon(
                   Icons.music_off_rounded,
                   size: 80,
-                  color: AppColors.textMuted.withOpacity(0.5),
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'No songs found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: AppColors.textMuted,
-                  ),
+                  style: TextStyle(fontSize: 18, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 8),
                 const Padding(
@@ -603,7 +623,7 @@ class _SongsTabState extends State<_SongsTab> {
                               height: 48,
                               width: 48,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -617,7 +637,7 @@ class _SongsTabState extends State<_SongsTab> {
                           height: 48,
                           width: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -757,7 +777,7 @@ class _AlbumsTabState extends State<_AlbumsTab> {
       // Get chart tracks and extract unique albums
       final tracks = await _deezerService.getChartTracks(limit: 50);
       final Map<String, Album> albumMap = {};
-      
+
       for (var track in tracks) {
         if (!albumMap.containsKey(track.albumId)) {
           albumMap[track.albumId] = Album(
@@ -780,9 +800,9 @@ class _AlbumsTabState extends State<_AlbumsTab> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading albums: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading albums: $e')));
       }
     }
   }
@@ -791,9 +811,7 @@ class _AlbumsTabState extends State<_AlbumsTab> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
@@ -805,15 +823,12 @@ class _AlbumsTabState extends State<_AlbumsTab> {
             Icon(
               Icons.album_rounded,
               size: 80,
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
               'No albums found',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.textMuted,
-              ),
+              style: TextStyle(fontSize: 18, color: AppColors.textMuted),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -856,83 +871,87 @@ class _AlbumsTabState extends State<_AlbumsTab> {
             onTap: () {
               // Navigate to album detail or artist detail
               // For now just show a message
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Opening ${album.name}')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Opening ${album.name}')));
             },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: album.imageUrl.isNotEmpty
-                      ? Image.network(
-                          album.imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                    borderRadius: BorderRadius.circular(16),
+                    child: album.imageUrl.isNotEmpty
+                        ? Image.network(
+                            album.imageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.2,
                                   ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.album_rounded,
-                                size: 48,
-                                color: AppColors.primary,
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.album_rounded,
+                                  size: 48,
+                                  color: AppColors.primary,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.album_rounded,
+                              size: 48,
+                              color: AppColors.primary,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.album_rounded,
-                            size: 48,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                album.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
+                const SizedBox(height: 12),
+                Text(
+                  album.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMain,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                album.artistName,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
+                Text(
+                  album.artistName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         );
       },
@@ -964,7 +983,7 @@ class _ArtistsTabState extends State<_ArtistsTab> {
       // Get chart tracks and extract unique artists
       final tracks = await _deezerService.getChartTracks(limit: 50);
       final Map<String, Artist> artistMap = {};
-      
+
       for (var track in tracks) {
         if (!artistMap.containsKey(track.artistId)) {
           artistMap[track.artistId] = Artist(
@@ -987,9 +1006,9 @@ class _ArtistsTabState extends State<_ArtistsTab> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading artists: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading artists: $e')));
       }
     }
   }
@@ -998,9 +1017,7 @@ class _ArtistsTabState extends State<_ArtistsTab> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
@@ -1012,15 +1029,12 @@ class _ArtistsTabState extends State<_ArtistsTab> {
             Icon(
               Icons.person_off_rounded,
               size: 80,
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
               'No artists found',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.textMuted,
-              ),
+              style: TextStyle(fontSize: 18, color: AppColors.textMuted),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -1073,92 +1087,96 @@ class _ArtistsTabState extends State<_ArtistsTab> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-            child: Row(
-              children: [
-                ClipOval(
-                  child: artist.imageUrl.isNotEmpty
-                      ? Image.network(
-                          artist.imageUrl,
-                          height: 60,
-                          width: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 60,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.person_rounded,
-                                color: AppColors.primary,
-                                size: 32,
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          height: 60,
-                          width: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
-                            shape: BoxShape.circle,
+              child: Row(
+                children: [
+                  ClipOval(
+                    child: artist.imageUrl.isNotEmpty
+                        ? Image.network(
+                            artist.imageUrl,
+                            height: 60,
+                            width: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 60,
+                                width: 60,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.person_rounded,
+                                  color: AppColors.primary,
+                                  size: 32,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              color: AppColors.primary,
+                              size: 32,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            color: AppColors.primary,
-                            size: 32,
-                          ),
-                        ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        artist.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textMain,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Artist',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.play_circle_filled),
-                  color: AppColors.primary,
-                  iconSize: 32,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Playing ${artist.name}\'s top tracks...'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          artist.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textMain,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Artist',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.play_circle_filled),
+                    color: AppColors.primary,
+                    iconSize: 32,
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Playing ${artist.name}\'s top tracks...',
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -1193,9 +1211,7 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: const Text(
         'Thông tin bài hát',
         style: TextStyle(
@@ -1219,7 +1235,10 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -1234,7 +1253,10 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -1249,7 +1271,10 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -1263,17 +1288,11 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
               },
               title: const Text(
                 'Thêm ảnh bìa',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textMain,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textMain),
               ),
               subtitle: const Text(
                 'Chọn ảnh từ máy và upload lên Cloudinary',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
               activeColor: AppColors.primary,
               controlAffinity: ListTileControlAffinity.leading,

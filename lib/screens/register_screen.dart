@@ -67,28 +67,28 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         return;
       }
 
-      print('🔵 Bắt đầu đăng ký...');
+      debugPrint('🔵 Bắt đầu đăng ký...');
       setState(() => _isLoading = true);
 
       final firebaseService = Provider.of<FirebaseService>(context, listen: false);
 
       try {
-        print('🔵 Gọi registerWithEmail...');
+        debugPrint('🔵 Gọi registerWithEmail...');
         final error = await firebaseService.registerWithEmail(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
-        print('🔵 Kết quả: ${error ?? "Thành công"}');
+        debugPrint('🔵 Kết quả: ${error ?? "Thành công"}');
 
         if (!mounted) {
-          print('⚠️ Widget đã unmounted');
+          debugPrint('⚠️ Widget đã unmounted');
           return;
         }
 
         if (error == null) {
-          print('🟢 Đăng ký thành công!');
+          debugPrint('🟢 Đăng ký thành công!');
 
           // Không await sign out để tránh treo UI trên Windows
           firebaseService.logout();
@@ -111,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ),
           );
         } else {
-          print('🔴 Lỗi: $error');
+          debugPrint('🔴 Lỗi: $error');
           // Show error
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -501,7 +501,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
                       ),
                       child: _isLoading
                           ? const SizedBox(

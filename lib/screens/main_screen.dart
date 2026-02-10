@@ -68,11 +68,11 @@ class _MainScreenState extends State<MainScreen> {
               margin: const EdgeInsets.all(24),
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     offset: const Offset(0, 20),
                     blurRadius: 40,
                     spreadRadius: -12,
@@ -110,7 +110,7 @@ class _MainScreenState extends State<MainScreen> {
         width: 48,
         decoration: isActive
             ? BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               )
             : null,

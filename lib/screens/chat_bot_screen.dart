@@ -132,7 +132,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.primary.withOpacity(0.05), Colors.white],
+            colors: [AppColors.primary.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -178,7 +178,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -191,7 +191,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -210,7 +210,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFF39C4D).withOpacity(0.3),
+                  color: const Color(0xFFF39C4D).withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -273,7 +273,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF39C4D).withOpacity(0.3),
+                    color: const Color(0xFFF39C4D).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -303,7 +303,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
@@ -326,7 +326,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                     style: TextStyle(
                       fontSize: 11,
                       color: message.isUser
-                          ? Colors.white.withOpacity(0.7)
+                          ? Colors.white.withValues(alpha: 0.7)
                           : Colors.black45,
                     ),
                   ),
@@ -456,11 +456,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),
@@ -490,7 +490,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -530,7 +530,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

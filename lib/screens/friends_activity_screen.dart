@@ -119,7 +119,7 @@ class _FriendActivityCardState extends State<_FriendActivityCard> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -142,7 +142,7 @@ class _FriendActivityCardState extends State<_FriendActivityCard> {
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.2),
+                              color: AppColors.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -211,7 +211,7 @@ class _FriendActivityCardState extends State<_FriendActivityCard> {
                           Icon(
                             Icons.music_note_rounded,
                             size: 14,
-                            color: AppColors.textMuted.withOpacity(0.7),
+                            color: AppColors.textMuted.withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -233,7 +233,7 @@ class _FriendActivityCardState extends State<_FriendActivityCard> {
                         '${widget.friend['artist']} • ${widget.friend['time']}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textMuted.withOpacity(0.7),
+                          color: AppColors.textMuted.withValues(alpha: 0.7),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -246,7 +246,7 @@ class _FriendActivityCardState extends State<_FriendActivityCard> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

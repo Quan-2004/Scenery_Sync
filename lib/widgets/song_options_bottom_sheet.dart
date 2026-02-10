@@ -27,7 +27,7 @@ class SongOptionsBottomSheet {
               height: 4,
               width: 40,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withOpacity(0.3),
+                color: AppColors.textMuted.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

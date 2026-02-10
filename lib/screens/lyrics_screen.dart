@@ -93,8 +93,8 @@ class _LyricsScreenState extends State<LyricsScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.primary.withOpacity(0.8),
-              AppColors.secondary.withOpacity(0.9),
+              AppColors.primary.withValues(alpha: 0.8),
+              AppColors.secondary.withValues(alpha: 0.9),
               Colors.black87,
             ],
           ),
@@ -112,7 +112,7 @@ class _LyricsScreenState extends State<LyricsScreen>
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -149,7 +149,7 @@ class _LyricsScreenState extends State<LyricsScreen>
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -174,8 +174,8 @@ class _LyricsScreenState extends State<LyricsScreen>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(0.3),
-                          Colors.white.withOpacity(0.1),
+                          Colors.white.withValues(alpha: 0.3),
+                          Colors.white.withValues(alpha: 0.1),
                         ],
                       ),
                     ),
@@ -230,8 +230,8 @@ class _LyricsScreenState extends State<LyricsScreen>
                               color: isActive
                                   ? Colors.white
                                   : isPast
-                                      ? Colors.white.withOpacity(0.5)
-                                      : Colors.white.withOpacity(0.3),
+                                      ? Colors.white.withValues(alpha: 0.5)
+                                      : Colors.white.withValues(alpha: 0.3),
                               height: 1.5,
                             ),
                             textAlign: TextAlign.center,
@@ -287,7 +287,7 @@ class _LyricsScreenState extends State<LyricsScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(

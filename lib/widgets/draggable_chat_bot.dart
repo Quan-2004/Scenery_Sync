@@ -135,13 +135,13 @@ class _DraggableChatBotState extends State<DraggableChatBot> with SingleTickerPr
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF47B3C).withOpacity(0.5),
+                    color: const Color(0xFFF47B3C).withValues(alpha: 0.5),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                     spreadRadius: 0,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -161,7 +161,7 @@ class _DraggableChatBotState extends State<DraggableChatBot> with SingleTickerPr
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withOpacity(0.4),
+                            Colors.white.withValues(alpha: 0.4),
                             Colors.transparent,
                           ],
                         ),
@@ -193,7 +193,7 @@ class _DraggableChatBotState extends State<DraggableChatBot> with SingleTickerPr
                         border: Border.all(color: Colors.white, width: 2.5),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4CAF50).withOpacity(0.5),
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.5),
                             blurRadius: 6,
                             spreadRadius: 1,
                           ),

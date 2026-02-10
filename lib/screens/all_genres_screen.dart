@@ -12,24 +12,72 @@ class AllGenresScreen extends StatefulWidget {
 class _AllGenresScreenState extends State<AllGenresScreen> {
   final List<Map<String, dynamic>> _allGenres = [
     {'name': 'Pop', 'color': const Color(0xFFFF6B9D), 'icon': Icons.music_note},
-    {'name': 'Rock', 'color': const Color(0xFF8B5CF6), 'icon': Icons.auto_awesome},
-    {'name': 'Hip Hop', 'color': const Color(0xFF3B82F6), 'icon': Icons.headphones},
+    {
+      'name': 'Rock',
+      'color': const Color(0xFF8B5CF6),
+      'icon': Icons.auto_awesome,
+    },
+    {
+      'name': 'Hip Hop',
+      'color': const Color(0xFF3B82F6),
+      'icon': Icons.headphones,
+    },
     {'name': 'Jazz', 'color': const Color(0xFFFFA500), 'icon': Icons.piano},
-    {'name': 'Classical', 'color': const Color(0xFF10B981), 'icon': Icons.album},
-    {'name': 'Electronic', 'color': const Color(0xFFEC4899), 'icon': Icons.graphic_eq},
+    {
+      'name': 'Classical',
+      'color': const Color(0xFF10B981),
+      'icon': Icons.album,
+    },
+    {
+      'name': 'Electronic',
+      'color': const Color(0xFFEC4899),
+      'icon': Icons.graphic_eq,
+    },
     {'name': 'R&B', 'color': const Color(0xFFF59E0B), 'icon': Icons.favorite},
-    {'name': 'Country', 'color': const Color(0xFF6366F1), 'icon': Icons.explore},
-    {'name': 'Latin', 'color': const Color(0xFFEF4444), 'icon': Icons.local_fire_department},
+    {
+      'name': 'Country',
+      'color': const Color(0xFF6366F1),
+      'icon': Icons.explore,
+    },
+    {
+      'name': 'Latin',
+      'color': const Color(0xFFEF4444),
+      'icon': Icons.local_fire_department,
+    },
     {'name': 'Indie', 'color': const Color(0xFF06B6D4), 'icon': Icons.palette},
     {'name': 'Metal', 'color': const Color(0xFF64748B), 'icon': Icons.bolt},
-    {'name': 'Blues', 'color': const Color(0xFF1E40AF), 'icon': Icons.nights_stay},
-    {'name': 'Reggae', 'color': const Color(0xFF22C55E), 'icon': Icons.wb_sunny},
-    {'name': 'Soul', 'color': const Color(0xFFA855F7), 'icon': Icons.sentiment_satisfied},
-    {'name': 'Funk', 'color': const Color(0xFFF97316), 'icon': Icons.celebration},
-    {'name': 'Disco', 'color': const Color(0xFFDB2777), 'icon': Icons.nightlife},
+    {
+      'name': 'Blues',
+      'color': const Color(0xFF1E40AF),
+      'icon': Icons.nights_stay,
+    },
+    {
+      'name': 'Reggae',
+      'color': const Color(0xFF22C55E),
+      'icon': Icons.wb_sunny,
+    },
+    {
+      'name': 'Soul',
+      'color': const Color(0xFFA855F7),
+      'icon': Icons.sentiment_satisfied,
+    },
+    {
+      'name': 'Funk',
+      'color': const Color(0xFFF97316),
+      'icon': Icons.celebration,
+    },
+    {
+      'name': 'Disco',
+      'color': const Color(0xFFDB2777),
+      'icon': Icons.nightlife,
+    },
     {'name': 'K-Pop', 'color': const Color(0xFFFF6B9D), 'icon': Icons.stars},
     {'name': 'Ambient', 'color': const Color(0xFF14B8A6), 'icon': Icons.cloud},
-    {'name': 'Techno', 'color': const Color(0xFF6366F1), 'icon': Icons.flash_on},
+    {
+      'name': 'Techno',
+      'color': const Color(0xFF6366F1),
+      'icon': Icons.flash_on,
+    },
     {'name': 'House', 'color': const Color(0xFF8B5CF6), 'icon': Icons.home},
   ];
 
@@ -51,7 +99,7 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
+                    AppColors.secondary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -64,7 +112,10 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -77,7 +128,7 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                               ),
                             ],
@@ -105,12 +156,13 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.5,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
                     itemCount: _allGenres.length,
                     itemBuilder: (context, index) {
                       final genre = _allGenres[index];
@@ -161,10 +213,7 @@ class _GenreCardState extends State<_GenreCard> {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.scale(
-            scale: value,
-            child: child,
-          ),
+          child: Transform.scale(scale: value, child: child),
         );
       },
       child: GestureDetector(
@@ -192,15 +241,12 @@ class _GenreCardState extends State<_GenreCard> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  widget.color,
-                  widget.color.withOpacity(0.7),
-                ],
+                colors: [widget.color, widget.color.withValues(alpha: 0.7)],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withOpacity(0.3),
+                  color: widget.color.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -214,7 +260,7 @@ class _GenreCardState extends State<_GenreCard> {
                   child: Icon(
                     widget.icon,
                     size: 80,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                 ),
                 Padding(
@@ -223,11 +269,7 @@ class _GenreCardState extends State<_GenreCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Icon(
-                        widget.icon,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+                      Icon(widget.icon, color: Colors.white, size: 28),
                       const SizedBox(height: 8),
                       Text(
                         widget.name,

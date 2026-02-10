@@ -26,7 +26,10 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
             backgroundColor: AppColors.backgroundLight,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textMain),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textMain,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -51,15 +54,9 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 20,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return _ArtistGridCard(
-                    artist: allArtists[index],
-                    index: index,
-                  );
-                },
-                childCount: allArtists.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return _ArtistGridCard(artist: allArtists[index], index: index);
+              }, childCount: allArtists.length),
             ),
           ),
         ],
@@ -72,10 +69,7 @@ class _ArtistGridCard extends StatefulWidget {
   final Map<String, String> artist;
   final int index;
 
-  const _ArtistGridCard({
-    required this.artist,
-    required this.index,
-  });
+  const _ArtistGridCard({required this.artist, required this.index});
 
   @override
   State<_ArtistGridCard> createState() => _ArtistGridCardState();
@@ -127,7 +121,7 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.25),
+                      color: AppColors.primary.withValues(alpha: 0.25),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -140,7 +134,7 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         child: const Icon(
                           Icons.person,
                           size: 80,
@@ -171,7 +165,7 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted.withOpacity(0.7),
+                  color: AppColors.textMuted.withValues(alpha: 0.7),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -180,9 +174,12 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
               const SizedBox(height: 4),
               // Followers
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
