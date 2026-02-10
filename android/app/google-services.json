@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "521689710584",
+    "project_id": "scenery-sync-81273",
+    "storage_bucket": "scenery-sync-81273.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521689710584:android:5ff81be155d4ad66ffe00d",
+        "android_client_info": {
+          "package_name": "com.example.scenery_sync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "521689710584-h5gorehodbpjgtfsb49e931g1mn5ep4i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.scenery_sync",
+            "certificate_hash": "540701d49f277da4f6d39ca956e7d1808e75be62"
+          }
+        },
+        {
+          "client_id": "521689710584-5t6dld14lcg0rr50e96p8tpktr5vq19k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAnXwhsELd3ThNyVVbKkpeSuE7TcDKoRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "521689710584-5t6dld14lcg0rr50e96p8tpktr5vq19k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "521689710584-9qqlo545bgumu4sql2quv2hvcba5sb95.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scenerySync"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
