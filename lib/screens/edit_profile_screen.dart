@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -17,12 +18,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _bioController = TextEditingController();
+  final _phoneController = TextEditingController();
 
-  final ImagePicker _imagePicker = ImagePicker();
+  String? _gender;
+  DateTime? _birthday;
 
   bool _initialized = false;
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void didChangeDependencies() {
@@ -31,10 +35,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final firebaseService = context.read<FirebaseService>();
     if (firebaseService.isLoggedIn) {
-      _nameController.text = (firebaseService.userName ?? '').trim();
-      _emailController.text = (firebaseService.userEmail ?? '').trim();
-      _bioController.text = (firebaseService.userProfile?['bio'] ?? '')
-          .toString();
+      final user = firebaseService.currentUser;
+      final profile = firebaseService.userProfile;
+
+      _nameController.text = (user?.displayName ?? '').trim();
+      _emailController.text = (user?.email ?? '').trim();
+
+      if (profile != null) {
+        if (profile.containsKey('bio'))
+          _bioController.text = profile['bio'] ?? '';
+        if (profile.containsKey('phone'))
+          _phoneController.text = profile['phone'] ?? '';
+        if (profile.containsKey('gender')) _gender = profile['gender'];
+        if (profile.containsKey('birthday')) {
+          final timestamp = profile['birthday'];
+          if (timestamp is Timestamp) {
+            _birthday = timestamp.toDate();
+          } else if (timestamp is String) {
+            _birthday = DateTime.tryParse(timestamp);
+          }
+        }
+      }
     }
 
     _initialized = true;
@@ -45,7 +66,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _bioController.dispose();
+    _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _birthday ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
+            // ignore: deprecated_member_use
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _birthday) {
+      setState(() {
+        _birthday = picked;
+      });
+    }
   }
 
   @override
@@ -65,61 +111,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text(
-                'Edit Profile',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textMain,
-                ),
-              ),
             ),
             body: const Center(
               child: Text(
                 'Bạn cần đăng nhập để chỉnh sửa hồ sơ.',
-                style: TextStyle(
-                  color: AppColors.textMain,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: AppColors.textMain),
               ),
             ),
           );
         }
 
+        final user = firebaseService.currentUser;
+        final photoUrl = user?.photoURL;
+
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
           appBar: AppBar(
-            backgroundColor: AppColors.backgroundLight,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_rounded,
-                color: AppColors.textMain,
-              ),
-              onPressed: _isSaving ? null : () => Navigator.pop(context),
-            ),
             title: const Text(
               'Edit Profile',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textMain,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => Navigator.pop(context),
             ),
             actions: [
               TextButton(
                 onPressed: _isSaving ? null : _saveProfile,
                 child: _isSaving
                     ? const SizedBox(
-                        height: 18,
-                        width: 18,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text(
                         'Save',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.primary,
                         ),
                       ),
@@ -127,142 +159,196 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                // Profile Picture
-                Stack(
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 3),
-                        boxShadow: [
-                          BoxShadow(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  // Avatar
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
                             color: AppColors.primary.withAlpha(
-                              (0.3 * 255).round(),
+                              (0.2 * 255).round(),
                             ),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            width: 4,
                           ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: firebaseService.userPhotoUrl != null
-                            ? Image.network(
-                                firebaseService.userPhotoUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildDefaultAvatar(
-                                    firebaseService.userName,
-                                  );
-                                },
-                              )
-                            : _buildDefaultAvatar(firebaseService.userName),
-                      ),
-                    ),
-                    if (_isUploadingAvatar)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha((0.45 * 255).round()),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
+                        ),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          child: ClipOval(
                             child: SizedBox(
-                              height: 28,
-                              width: 28,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
+                              width: 120,
+                              height: 120,
+                              child: _isUploadingAvatar
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : (photoUrl != null && photoUrl.isNotEmpty)
+                                  ? Image.network(
+                                      photoUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) => Image.asset(
+                                            'assets/images/default_avatar.png',
+                                            fit: BoxFit.cover,
+                                          ),
+                                    )
+                                  : Image.asset(
+                                      'assets/images/default_avatar.png',
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
                         ),
                       ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
+                      GestureDetector(
                         onTap: (_isUploadingAvatar || _isSaving)
                             ? null
                             : () => _showChangeAvatarSheet(context),
                         child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
                             color: Colors.white,
-                            size: 20,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Name Field
-                _buildTextField(
-                  controller: _nameController,
-                  label: 'Display Name',
-                  icon: Icons.person_outline_rounded,
-                ),
-                const SizedBox(height: 16),
-                // Email Field (readonly)
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  enabled: false,
-                ),
-                const SizedBox(height: 16),
-                // Bio Field
-                _buildTextField(
-                  controller: _bioController,
-                  label: 'Bio',
-                  icon: Icons.description_outlined,
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 32),
-                // Additional Options (giữ nguyên)
-                _buildOptionTile(
-                  'Change Password',
-                  Icons.lock_outline_rounded,
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Change password coming soon!'),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Fields
+                  _buildTextField(
+                    controller: _nameController,
+                    label: 'Display Name',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    icon: Icons.email_outlined,
+                    enabled: false,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _phoneController,
+                    label: 'Phone Number',
+                    icon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Gender
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Gender',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMain,
+                        ),
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildOptionTile('Privacy Settings', Icons.shield_outlined, () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Privacy settings coming soon!'),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _gender,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(
+                            Icons.people_outline,
+                            color: AppColors.primary,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        items: ['Male', 'Female', 'Other']
+                            .map(
+                              (label) => DropdownMenuItem(
+                                value: label,
+                                child: Text(label),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (val) => setState(() => _gender = val),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Birthday
+                  GestureDetector(
+                    onTap: () => _selectDate(context),
+                    child: AbsorbPointer(
+                      child: _buildTextField(
+                        controller: TextEditingController(
+                          text: _birthday != null
+                              ? "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}"
+                              : "",
+                        ),
+                        label: 'Birthday',
+                        icon: Icons.cake_outlined,
+                      ),
                     ),
-                  );
-                }),
-                const SizedBox(height: 12),
-                _buildOptionTile('Connected Accounts', Icons.link_rounded, () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Connected accounts coming soon!'),
-                    ),
-                  );
-                }),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildTextField(
+                    controller: _bioController,
+                    label: 'Bio',
+                    icon: Icons.description_outlined,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Options
+                  _buildOptionTile(
+                    'Change Password',
+                    Icons.lock_outline_rounded,
+                    () => _showChangePasswordDialog(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOptionTile(
+                    'Privacy Settings',
+                    Icons.shield_outlined,
+                    () => _showPrivacySettingsBottomSheet(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOptionTile(
+                    'Connected Accounts',
+                    Icons.link_rounded,
+                    () => _showConnectedAccountsBottomSheet(context),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -302,14 +388,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
         ),
@@ -365,31 +443,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildDefaultAvatar(String? name) {
-    final initials = (name ?? 'U').trim().isNotEmpty
-        ? (name ?? 'U')
-              .trim()
-              .split(RegExp(r'\s+'))
-              .take(2)
-              .map((e) => e.isNotEmpty ? e[0] : '')
-              .join()
-              .toUpperCase()
-        : 'U';
-
-    return Container(
-      color: AppColors.primary.withAlpha((0.15 * 255).round()),
-      alignment: Alignment.center,
-      child: Text(
-        initials.isEmpty ? 'U' : initials,
-        style: const TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w800,
-          color: AppColors.primary,
-        ),
-      ),
-    );
-  }
-
   Future<void> _saveProfile() async {
     if (_isSaving) return;
 
@@ -401,10 +454,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final name = _nameController.text.trim();
       final bio = _bioController.text.trim();
+      final phone = _phoneController.text.trim();
 
       final error = await firebaseService.updateUserProfile({
         'name': name,
         'bio': bio,
+        'phone': phone,
+        'gender': _gender,
+        'birthday': _birthday,
       });
 
       if (!mounted) return;
@@ -413,28 +470,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         messenger.showSnackBar(
           SnackBar(content: Text(error), backgroundColor: Colors.red),
         );
-        return;
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) navigator.pop();
       }
-
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
-      navigator.pop();
     } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Lỗi cập nhật: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted)
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -567,42 +619,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final XFile pickedFile;
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 900,
+        maxHeight: 900,
+        imageQuality: 85,
+      );
 
-      // Use image_picker for all platforms
-      {
-        try {
-          pickedFile =
-              await _imagePicker.pickImage(
-                source: source,
-                maxWidth: 900,
-                maxHeight: 900,
-                imageQuality: 85,
-              ) ??
-              (throw StateError('No file selected'));
-        } on UnimplementedError {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                source == ImageSource.camera
-                    ? 'Thiết bị này không hỗ trợ chụp ảnh'
-                    : 'Tính năng chọn ảnh không được hỗ trợ',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        } on StateError {
-          return;
-        }
-      }
+      if (pickedFile == null) return;
 
       if (!mounted) return;
-
       setState(() => _isUploadingAvatar = true);
 
       final bytes = await prepareAvatarBytes(pickedFile);
-
       final error = await firebaseService.uploadAvatar(bytes);
 
       if (!mounted) return;
@@ -619,17 +648,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Không thể cập nhật ảnh: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted)
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Không thể cập nhật ảnh: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
     } finally {
-      if (mounted) {
-        setState(() => _isUploadingAvatar = false);
-      }
+      if (mounted) setState(() => _isUploadingAvatar = false);
     }
   }
 
@@ -655,18 +682,215 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Không thể xoá ảnh: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      }
     } finally {
-      if (mounted) {
-        setState(() => _isUploadingAvatar = false);
-      }
+      if (mounted) setState(() => _isUploadingAvatar = false);
     }
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final firebaseService = context.read<FirebaseService>();
+    if (!firebaseService.linkedProviders.contains('password')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'You are logged in via a social account. Please manage your password there.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final currentPassController = TextEditingController();
+    final newPassController = TextEditingController();
+    final confirmPassController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isUpdating = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Change Password'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: currentPassController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Current Password',
+                    ),
+                    validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                  ),
+                  TextFormField(
+                    controller: newPassController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'New Password',
+                    ),
+                    validator: (v) =>
+                        (v?.length ?? 0) < 6 ? 'Min 6 chars' : null,
+                  ),
+                  TextFormField(
+                    controller: confirmPassController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm New Password',
+                    ),
+                    validator: (v) => v != newPassController.text
+                        ? 'Passwords do not match'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isUpdating
+                    ? null
+                    : () async {
+                        if (formKey.currentState!.validate()) {
+                          setDialogState(() => isUpdating = true);
+                          final error = await firebaseService.changePassword(
+                            currentPassword: currentPassController.text,
+                            newPassword: newPassController.text,
+                          );
+                          if (!mounted) return;
+
+                          if (error == null) {
+                            Navigator.pop(dialogContext);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password changed successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            setDialogState(() => isUpdating = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(error),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isUpdating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Change'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showPrivacySettingsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Privacy Settings',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Public Profile'),
+              subtitle: const Text('Allow others to see your profile'),
+              value: true,
+              onChanged: (val) {},
+            ),
+            SwitchListTile(
+              title: const Text('Show Email'),
+              subtitle: const Text('Display your email on your profile'),
+              value: false,
+              onChanged: (val) {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConnectedAccountsBottomSheet(BuildContext context) {
+    final firebaseService = context.read<FirebaseService>();
+    final providers = firebaseService.linkedProviders;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Connected Accounts',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildProviderTile(
+              Icons.email,
+              'Email/Password',
+              providers.contains('password'),
+            ),
+            _buildProviderTile(
+              Icons.g_mobiledata,
+              'Google',
+              providers.contains('google.com'),
+            ),
+            _buildProviderTile(
+              Icons.facebook,
+              'Facebook',
+              providers.contains('facebook.com'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProviderTile(IconData icon, String name, bool isConnected) {
+    return ListTile(
+      leading: Icon(icon, color: isConnected ? AppColors.primary : Colors.grey),
+      title: Text(name),
+      trailing: isConnected
+          ? const Icon(Icons.check_circle, color: Colors.green)
+          : const Text('Not Linked', style: TextStyle(color: Colors.grey)),
+    );
   }
 }

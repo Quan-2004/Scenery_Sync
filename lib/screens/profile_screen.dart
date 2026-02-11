@@ -222,19 +222,21 @@ class _ProfileCardState extends State<_ProfileCard> {
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child: firebaseService.userPhotoUrl != null
-                              ? Image.network(
-                                  firebaseService.userPhotoUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return _buildDefaultAvatar(
-                                      firebaseService.userName,
-                                    );
-                                  },
-                                )
-                              : _buildDefaultAvatar(firebaseService.userName),
-                        ),
+                        child: firebaseService.userPhotoUrl != null
+                            ? Image.network(
+                                firebaseService.userPhotoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/default_avatar.png',
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'assets/images/default_avatar.png',
+                                fit: BoxFit.cover,
+                              ),
                       ),
                       if (_isUploadingAvatar)
                         Positioned.fill(
@@ -366,23 +368,6 @@ class _ProfileCardState extends State<_ProfileCard> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDefaultAvatar(String? name) {
-    final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : '?';
-    return Container(
-      color: AppColors.primary.withAlpha((0.2 * 255).round()),
-      child: Center(
-        child: Text(
-          initial,
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-      ),
     );
   }
 

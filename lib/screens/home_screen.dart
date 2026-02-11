@@ -212,7 +212,6 @@ class _HeaderSection extends StatelessWidget {
     // Get user from provider
     final firebaseService = Provider.of<FirebaseService>(context);
     final user = firebaseService.currentUser;
-    final photoUrl = user?.photoURL ?? 'https://i.pravatar.cc/150?img=32';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -301,12 +300,16 @@ class _HeaderSection extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                     image: DecorationImage(
-                      image: NetworkImage(photoUrl),
+                      image:
+                          (user?.photoURL != null && user!.photoURL!.isNotEmpty)
+                          ? NetworkImage(user.photoURL!)
+                          : const AssetImage('assets/images/default_avatar.png')
+                                as ImageProvider,
                       fit: BoxFit.cover,
                     ),
                   ),

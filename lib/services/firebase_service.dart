@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class FirebaseService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // User Properties
@@ -16,15 +18,34 @@ class FirebaseService extends ChangeNotifier {
   String? get userName => _auth.currentUser?.displayName;
   String? get userPhotoUrl => _auth.currentUser?.photoURL;
 
-  // Compatibility stub
-  final Map<String, dynamic>? _userProfile = null;
+  Map<String, dynamic>? _userProfile;
   Map<String, dynamic>? get userProfile => _userProfile;
 
   FirebaseService() {
     // Listen to auth state changes to notify listeners
     _auth.authStateChanges().listen((user) {
-      notifyListeners();
+      if (user != null) {
+        _fetchUserProfile();
+      } else {
+        _userProfile = null;
+        notifyListeners();
+      }
     });
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          _userProfile = doc.data();
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('Error fetching user profile: $e');
+      }
+    }
   }
 
   // Google Sign-In
@@ -46,6 +67,7 @@ class FirebaseService extends ChangeNotifier {
 
       // 4. Sign in to Firebase with the Google credential
       await _auth.signInWithCredential(credential);
+      await _fetchUserProfile(); // Fetch profile after login
 
       return null; // Success (no error message)
     } on FirebaseAuthException catch (e) {
@@ -105,9 +127,20 @@ class FirebaseService extends ChangeNotifier {
           await userCredential.user!.updatePhotoURL(photoUrl);
           await userCredential.user!
               .reload(); // Reload to apply changes locally
+
+          // Ensure Firestore document exists
+          await _firestore.collection('users').doc(userCredential.user!.uid).set({
+            'name': name ?? '',
+            'email': userCredential.user!.email ?? '',
+            'photoUrl': photoUrl ?? '',
+            // Facebook might return birthday/gender if asked/permitted, but we simplify here
+          }, SetOptions(merge: true));
+
           notifyListeners(); // Notify UI to update
         }
       }
+
+      await _fetchUserProfile();
 
       return null; // Success (no error message)
     } on FirebaseAuthException catch (e) {
@@ -126,6 +159,7 @@ class FirebaseService extends ChangeNotifier {
   }) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _fetchUserProfile();
       return null; // Success
     } on FirebaseAuthException catch (e) {
       return e.message ?? 'Login failed';
@@ -149,7 +183,15 @@ class FirebaseService extends ChangeNotifier {
       // Update display name
       if (result.user != null) {
         await result.user!.updateDisplayName(name);
+        // Create initial Firestore doc
+        await _firestore.collection('users').doc(result.user!.uid).set({
+          'name': name,
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
+
+      await _fetchUserProfile();
 
       return null; // Success
     } on FirebaseAuthException catch (e) {
@@ -163,6 +205,8 @@ class FirebaseService extends ChangeNotifier {
   Future<void> logout() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+    _userProfile = null;
+    notifyListeners();
   }
 
   Future<String?> resetPassword(String email) async {
@@ -174,14 +218,65 @@ class FirebaseService extends ChangeNotifier {
     }
   }
 
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(cred);
+      await user.updatePassword(newPassword);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return e.message ?? 'Failed to change password';
+    } catch (e) {
+      return 'An error occurred';
+    }
+  }
+
+  List<String> get linkedProviders {
+    return _auth.currentUser?.providerData.map((e) => e.providerId).toList() ??
+        [];
+  }
+
   // ==========================================================
   // STUBS for Firestore Data (To be implemented later)
   // ==========================================================
 
   // User Profile Stubs
   Future<String?> updateUserProfile(Map<String, dynamic> data) async {
-    debugPrint('Stub: updateUserProfile called');
-    return null; // Simulate success
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      // Update Auth Profile if name/photo changed
+      if (data.containsKey('name')) {
+        await user.updateDisplayName(data['name']);
+      }
+      if (data.containsKey('photoUrl')) {
+        await user.updatePhotoURL(data['photoUrl']);
+      }
+
+      // Update Firestore
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(data, SetOptions(merge: true));
+
+      // Refresh local profile
+      await _fetchUserProfile();
+
+      return null;
+    } catch (e) {
+      return 'Failed to update profile: $e';
+    }
   }
 
   Future<String?> uploadAvatar(Uint8List bytes) async {
