@@ -7,7 +7,7 @@ import 'home_screen.dart';
 import 'search_screen.dart';
 import 'library_screen.dart';
 import 'profile_screen.dart';
-import 'camera_screen.dart';
+import 'scenery_camera_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
     SearchScreen(),
     LibraryScreen(),
     ProfileScreen(),
-    CameraScreen(),
+    SceneryCameraScreen(),
   ];
 
   @override
@@ -49,48 +49,47 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
-          
-          // Dynamic Island Player
-          const DynamicIslandPlayer(),
-          
-          // Draggable Chat Bot
-          const DraggableChatBot(),
-          
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              margin: const EdgeInsets.all(24),
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    offset: const Offset(0, 20),
-                    blurRadius: 40,
-                    spreadRadius: -12,
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavItem(Icons.home_rounded, 0),
-                  _buildNavItem(Icons.search_rounded, 1),
-                  _buildNavItem(Icons.camera, 4),
-                  _buildNavItem(Icons.library_music_rounded, 2),
-                  _buildNavItem(Icons.person_rounded, 3),
-                ],
+          IndexedStack(index: _currentIndex, children: _screens),
+
+          // Dynamic Island Player (hide when in camera)
+          if (_currentIndex != 4) const DynamicIslandPlayer(),
+
+          // Draggable Chat Bot (hide when in camera)
+          if (_currentIndex != 4) const DraggableChatBot(),
+
+          // Navigation Bar (hide when in camera)
+          if (_currentIndex != 4)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      offset: const Offset(0, 20),
+                      blurRadius: 40,
+                      spreadRadius: -12,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(Icons.home_rounded, 0),
+                    _buildNavItem(Icons.search_rounded, 1),
+                    _buildNavItem(Icons.camera, 4),
+                    _buildNavItem(Icons.library_music_rounded, 2),
+                    _buildNavItem(Icons.person_rounded, 3),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../services/firebase_service.dart';
-import '../screens/camera_capture_screen.dart';
 import '../utils/avatar_image.dart';
 import '../theme/colors.dart';
 
@@ -35,7 +33,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (firebaseService.isLoggedIn) {
       _nameController.text = (firebaseService.userName ?? '').trim();
       _emailController.text = (firebaseService.userEmail ?? '').trim();
-      _bioController.text = (firebaseService.userProfile?['bio'] ?? '').toString();
+      _bioController.text = (firebaseService.userProfile?['bio'] ?? '')
+          .toString();
     }
 
     _initialized = true;
@@ -60,7 +59,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               backgroundColor: AppColors.backgroundLight,
               elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textMain),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textMain,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
               title: const Text(
@@ -75,7 +77,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             body: const Center(
               child: Text(
                 'Bạn cần đăng nhập để chỉnh sửa hồ sơ.',
-                style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: AppColors.textMain,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           );
@@ -87,7 +92,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: AppColors.backgroundLight,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textMain),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textMain,
+              ),
               onPressed: _isSaving ? null : () => Navigator.pop(context),
             ),
             title: const Text(
@@ -133,7 +141,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: Border.all(color: AppColors.primary, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withAlpha((0.3 * 255).round()),
+                            color: AppColors.primary.withAlpha(
+                              (0.3 * 255).round(),
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -145,7 +155,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 firebaseService.userPhotoUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return _buildDefaultAvatar(firebaseService.userName);
+                                  return _buildDefaultAvatar(
+                                    firebaseService.userName,
+                                  );
                                 },
                               )
                             : _buildDefaultAvatar(firebaseService.userName),
@@ -164,7 +176,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               width: 28,
                               child: CircularProgressIndicator(
                                 strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -226,30 +240,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Icons.lock_outline_rounded,
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Change password coming soon!')),
+                      const SnackBar(
+                        content: Text('Change password coming soon!'),
+                      ),
                     );
                   },
                 ),
                 const SizedBox(height: 12),
-                _buildOptionTile(
-                  'Privacy Settings',
-                  Icons.shield_outlined,
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Privacy settings coming soon!')),
-                    );
-                  },
-                ),
+                _buildOptionTile('Privacy Settings', Icons.shield_outlined, () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Privacy settings coming soon!'),
+                    ),
+                  );
+                }),
                 const SizedBox(height: 12),
-                _buildOptionTile(
-                  'Connected Accounts',
-                  Icons.link_rounded,
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Connected accounts coming soon!')),
-                    );
-                  },
-                ),
+                _buildOptionTile('Connected Accounts', Icons.link_rounded, () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Connected accounts coming soon!'),
+                    ),
+                  );
+                }),
               ],
             ),
           ),
@@ -355,7 +367,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildDefaultAvatar(String? name) {
     final initials = (name ?? 'U').trim().isNotEmpty
-        ? (name ?? 'U').trim().split(RegExp(r'\s+')).take(2).map((e) => e.isNotEmpty ? e[0] : '').join().toUpperCase()
+        ? (name ?? 'U')
+              .trim()
+              .split(RegExp(r'\s+'))
+              .take(2)
+              .map((e) => e.isNotEmpty ? e[0] : '')
+              .join()
+              .toUpperCase()
         : 'U';
 
     return Container(
@@ -408,7 +426,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('Lỗi cập nhật: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Lỗi cập nhật: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -487,7 +508,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildChangeAvatarOption(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildChangeAvatarOption(
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: (_isUploadingAvatar || _isSaving) ? null : onTap,
       child: Container(
@@ -525,7 +550,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -541,16 +569,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final XFile pickedFile;
 
-      // On Windows, `image_picker` camera is often unsupported.
-      if (source == ImageSource.camera && defaultTargetPlatform == TargetPlatform.windows) {
-        final captured = await Navigator.of(context).push<XFile>(
-          MaterialPageRoute(builder: (_) => const CameraCaptureScreen()),
-        );
-        if (captured == null) return;
-        pickedFile = captured;
-      } else {
+      // Use image_picker for all platforms
+      {
         try {
-          pickedFile = await _imagePicker.pickImage(
+          pickedFile =
+              await _imagePicker.pickImage(
                 source: source,
                 maxWidth: 900,
                 maxHeight: 900,
@@ -598,7 +621,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('Không thể cập nhật ảnh: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Không thể cập nhật ảnh: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -631,7 +657,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể xoá ảnh: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Không thể xoá ảnh: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

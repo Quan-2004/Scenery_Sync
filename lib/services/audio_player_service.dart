@@ -7,9 +7,9 @@ import '../models/music_models.dart';
 
 // Repeat modes for playback
 enum RepeatMode {
-  off,   // No repeat
-  one,   // Repeat current track
-  all,   // Repeat entire queue
+  off, // No repeat
+  one, // Repeat current track
+  all, // Repeat entire queue
 }
 
 class AudioPlayerService {
@@ -19,12 +19,18 @@ class AudioPlayerService {
   final AudioPlayer _player = AudioPlayer();
 
   // Simple reactive state
-  final StreamController<Track?> _trackController = StreamController.broadcast();
-  final StreamController<bool> _playingController = StreamController.broadcast();
-  final StreamController<double> _progressController = StreamController.broadcast();
-  final StreamController<List<Track>> _queueController = StreamController.broadcast();
-  final StreamController<bool> _shuffleController = StreamController.broadcast();
-  final StreamController<RepeatMode> _repeatController = StreamController.broadcast();
+  final StreamController<Track?> _trackController =
+      StreamController.broadcast();
+  final StreamController<bool> _playingController =
+      StreamController.broadcast();
+  final StreamController<double> _progressController =
+      StreamController.broadcast();
+  final StreamController<List<Track>> _queueController =
+      StreamController.broadcast();
+  final StreamController<bool> _shuffleController =
+      StreamController.broadcast();
+  final StreamController<RepeatMode> _repeatController =
+      StreamController.broadcast();
 
   Track? _currentTrack;
   List<Track> _queue = [];
@@ -104,7 +110,7 @@ class AudioPlayerService {
     _originalQueue = List.from(tracks);
     _currentIndex = startIndex.clamp(0, tracks.length - 1);
     _queueController.add(_queue);
-    
+
     if (_currentIndex < _queue.length) {
       await setTrack(_queue[_currentIndex]);
     }
@@ -118,11 +124,11 @@ class AudioPlayerService {
 
   Future<void> removeFromQueue(int index) async {
     if (index < 0 || index >= _queue.length) return;
-    
+
     final removedTrack = _queue[index];
     _queue.removeAt(index);
     _originalQueue.remove(removedTrack);
-    
+
     // Adjust current index if needed
     if (index < _currentIndex) {
       _currentIndex--;
@@ -131,17 +137,17 @@ class AudioPlayerService {
       _currentIndex = _currentIndex.clamp(0, _queue.length - 1);
       await setTrack(_queue[_currentIndex]);
     }
-    
+
     _queueController.add(_queue);
   }
 
   Future<void> reorderQueue(int oldIndex, int newIndex) async {
     if (oldIndex < 0 || oldIndex >= _queue.length) return;
     if (newIndex < 0 || newIndex >= _queue.length) return;
-    
+
     final track = _queue.removeAt(oldIndex);
     _queue.insert(newIndex, track);
-    
+
     // Update current index
     if (oldIndex == _currentIndex) {
       _currentIndex = newIndex;
@@ -150,7 +156,7 @@ class AudioPlayerService {
     } else if (oldIndex > _currentIndex && newIndex <= _currentIndex) {
       _currentIndex++;
     }
-    
+
     _queueController.add(_queue);
   }
 
@@ -165,7 +171,7 @@ class AudioPlayerService {
   // Playback controls
   Future<void> skipToNext() async {
     if (_queue.isEmpty) return;
-    
+
     _currentIndex = (_currentIndex + 1) % _queue.length;
     await setTrack(_queue[_currentIndex]);
     await play();
@@ -173,14 +179,14 @@ class AudioPlayerService {
 
   Future<void> skipToPrevious() async {
     if (_queue.isEmpty) return;
-    
+
     // If we're more than 3 seconds into the song, restart it
     final position = _player.position;
     if (position.inSeconds > 3) {
       await _player.seek(Duration.zero);
       return;
     }
-    
+
     _currentIndex = (_currentIndex - 1 + _queue.length) % _queue.length;
     await setTrack(_queue[_currentIndex]);
     await play();
@@ -188,7 +194,7 @@ class AudioPlayerService {
 
   Future<void> skipToIndex(int index) async {
     if (index < 0 || index >= _queue.length) return;
-    
+
     _currentIndex = index;
     await setTrack(_queue[_currentIndex]);
     await play();
@@ -198,18 +204,20 @@ class AudioPlayerService {
   Future<void> toggleShuffle() async {
     _isShuffleOn = !_isShuffleOn;
     _shuffleController.add(_isShuffleOn);
-    
+
     if (_isShuffleOn) {
       // Save current track to restore after shuffle
       final currentTrack = _currentTrack;
-      
+
       // Shuffle the queue
       final random = Random();
       _queue.shuffle(random);
-      
+
       // Move current track to the beginning if it exists
       if (currentTrack != null) {
-        final currentTrackIndex = _queue.indexWhere((t) => t.id == currentTrack.id);
+        final currentTrackIndex = _queue.indexWhere(
+          (t) => t.id == currentTrack.id,
+        );
         if (currentTrackIndex != -1) {
           final track = _queue.removeAt(currentTrackIndex);
           _queue.insert(0, track);
@@ -220,14 +228,14 @@ class AudioPlayerService {
       // Restore original order
       final currentTrack = _currentTrack;
       _queue = List.from(_originalQueue);
-      
+
       // Find current track in original queue
       if (currentTrack != null) {
         _currentIndex = _queue.indexWhere((t) => t.id == currentTrack.id);
         if (_currentIndex == -1) _currentIndex = 0;
       }
     }
-    
+
     _queueController.add(_queue);
   }
 
@@ -256,7 +264,7 @@ class AudioPlayerService {
     debugPrint('🎵 Setting track: ${track.name} by ${track.artistName}');
     debugPrint('   Preview URL: ${track.previewUrl}');
     debugPrint('   Duration: ${track.durationMs}ms');
-    
+
     _currentTrack = track;
     _trackController.add(track);
 
@@ -285,6 +293,18 @@ class AudioPlayerService {
 
   Future<void> pause() async {
     await _player.pause();
+  }
+
+  /// Play a preview URL (for music suggestions, 30s previews, etc.)
+  Future<void> playPreview(String previewUrl) async {
+    try {
+      debugPrint('🎵 Playing preview: $previewUrl');
+      await _player.setUrl(previewUrl);
+      await _player.play();
+    } catch (e) {
+      debugPrint('❌ Error playing preview: $e');
+      rethrow;
+    }
   }
 
   Future<void> seek(Duration position) async {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scenery_sync/utils/avatar_image.dart';
-import 'package:scenery_sync/screens/camera_capture_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -476,15 +475,8 @@ class _ProfileCardState extends State<_ProfileCard> {
     try {
       final XFile pickedFile;
 
-      // On Windows, `image_picker` camera is often unsupported.
-      if (source == ImageSource.camera &&
-          defaultTargetPlatform == TargetPlatform.windows) {
-        final captured = await Navigator.of(context).push<XFile>(
-          MaterialPageRoute(builder: (_) => const CameraCaptureScreen()),
-        );
-        if (captured == null) return;
-        pickedFile = captured;
-      } else {
+      // Use image_picker for all platforms
+      {
         try {
           pickedFile =
               await _imagePicker.pickImage(
@@ -2089,7 +2081,9 @@ class _ManageTracksScreenState extends State<_ManageTracksScreen> {
                                   height: 56,
                                   width: 56,
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
