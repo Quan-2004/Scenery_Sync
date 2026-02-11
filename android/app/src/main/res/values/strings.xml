@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScenerySync</string>
+    <string name="facebook_app_id">4350536438551611</string>
+    <string name="fb_login_protocol_scheme">fb4350536438551611</string>
+    <string name="facebook_client_token">5f1778e276860027499daf866b81b924</string>
+</resources>

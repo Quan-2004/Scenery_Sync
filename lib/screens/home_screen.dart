@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../services/app_language.dart';
+import '../services/firebase_service.dart';
 import 'now_playing_screen.dart';
 import 'genre_detail_screen.dart';
 import 'downloads_screen.dart';
@@ -205,48 +207,36 @@ class _HomeScreenState extends State<HomeScreen>
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection();
 
-  String _getGreetingEmoji() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return '☀️';
-    if (hour < 18) return '🌤️';
-    return '🌙';
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Get user from provider
+    final firebaseService = Provider.of<FirebaseService>(context);
+    final user = firebaseService.currentUser;
+    final photoUrl = user?.photoURL ?? 'https://i.pravatar.cc/150?img=32';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Greeting with emoji
-          Row(
-            children: [
-              Text(_getGreetingEmoji(), style: const TextStyle(fontSize: 32)),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Scenery Sync',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textMain,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Text(
-                    DateTime.now().toString().split(' ')[0],
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
+          // Logo
+          Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(
+              2,
+            ), // Spacing between border and image
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.5),
+                width: 2,
               ),
-            ],
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+            child: ClipOval(
+              child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+            ),
           ),
           // Icons row
           Row(
@@ -315,8 +305,8 @@ class _HeaderSection extends StatelessWidget {
                         offset: const Offset(0, 2),
                       ),
                     ],
-                    image: const DecorationImage(
-                      image: NetworkImage('https://i.pravatar.cc/150?img=32'),
+                    image: DecorationImage(
+                      image: NetworkImage(photoUrl),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1587,8 +1577,8 @@ class _DailyMixCardState extends State<_DailyMixCard> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 
-                              _isPressed ? 0.05 : 0.1,
+                            color: Colors.black.withValues(
+                              alpha: _isPressed ? 0.05 : 0.1,
                             ),
                             blurRadius: _isPressed ? 5 : 10,
                             offset: Offset(0, _isPressed ? 2 : 5),
@@ -1756,7 +1746,10 @@ class _QuickActionsSection extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
+            colors: [
+              color.withValues(alpha: 0.2),
+              color.withValues(alpha: 0.1),
+            ],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [

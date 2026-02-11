@@ -20,12 +20,15 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final AppLanguage _appLanguage = AppLanguage();
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    SearchScreen(),
-    LibraryScreen(),
-    ProfileScreen(),
-    SceneryCameraScreen(),
+  List<Widget> get _screens => [
+    const HomeScreen(),
+    const SearchScreen(),
+    const LibraryScreen(),
+    const ProfileScreen(),
+    SceneryCameraScreen(
+      isActive: _currentIndex == 4,
+      onClose: () => setState(() => _currentIndex = 0),
+    ),
   ];
 
   @override

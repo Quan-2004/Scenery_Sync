@@ -167,7 +167,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
         await player.play();
       }
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Không điều khiển được phát nhạc: $e')),
       );
@@ -193,7 +193,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
 
   Future<void> _toggleShuffle() async {
     await AudioPlayerService.instance.toggleShuffle();
-    if (!context.mounted) return;
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isShuffled ? '🔀 Shuffle ON' : '➡️ Shuffle OFF'),
@@ -205,7 +205,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
 
   Future<void> _toggleRepeat() async {
     await AudioPlayerService.instance.toggleRepeat();
-    if (!context.mounted) return;
+    if (!mounted) return;
     final mode = _repeatMode == 0
         ? 'OFF'
         : _repeatMode == 1
@@ -224,7 +224,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     try {
       await AudioPlayerService.instance.skipToPrevious();
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi: $e'),
@@ -238,7 +238,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     try {
       await AudioPlayerService.instance.skipToNext();
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi: $e'),
@@ -290,13 +290,47 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
+  // Stash state: 0 = Center, -1 = Left (Stashed), 1 = Right (Stashed)
+  int _stashState = 0;
+  double _dragOffset = 0.0;
+
   @override
   Widget build(BuildContext context) {
+    // 1. Auto-hide if no track is loaded
+    if (_track == null) return const SizedBox.shrink();
+
     final screenWidth = MediaQuery.of(context).size.width;
     final safeAreaTop = MediaQuery.of(context).padding.top;
 
+    // Calculate position based on stash state
+    double leftPosition;
+    if (_stashState == 0) {
+      // Center
+      leftPosition =
+          (screenWidth / 2) - (_isExpanded ? (screenWidth - 32) / 2 : 100);
+      // Adjust for drag
+      if (!_isExpanded) leftPosition += _dragOffset;
+    } else if (_stashState == -1) {
+      // Stashed Left (show small part)
+      leftPosition = -180; // Tuck most of it away
+    } else {
+      // Stashed Right
+      leftPosition = screenWidth - 20; // Show small part
+    }
+
+    // Width logic
+    double width;
+    if (_isExpanded) {
+      width = screenWidth - 32;
+    } else if (_stashState != 0) {
+      width = 200; // Keep original width but hide it
+    } else {
+      width = 200;
+    }
+
     return Stack(
       children: [
+        // Overlay when expanded (to tap outside and close)
         if (_isExpanded)
           Positioned.fill(
             child: GestureDetector(
@@ -305,48 +339,97 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
             ),
           ),
 
-        Positioned(
+        AnimatedPositioned(
+          duration: _dragOffset == 0
+              ? const Duration(milliseconds: 400)
+              : Duration.zero,
+          curve: Curves.easeOutBack,
           top: safeAreaTop + 8,
-          left: _isExpanded ? 16 : screenWidth / 2 - 100,
+          left: _isExpanded
+              ? 16
+              : (_stashState == 0
+                    ? (screenWidth / 2) - 100 + _dragOffset
+                    : (_stashState == 1 ? screenWidth - 40 : -160)),
           right: _isExpanded ? 16 : null,
           child: GestureDetector(
-            // Keep original behavior: tap to expand/collapse, NOT open NowPlaying.
+            onHorizontalDragUpdate: _isExpanded
+                ? null
+                : (details) {
+                    setState(() {
+                      _dragOffset += details.delta.dx;
+                    });
+                  },
+            onHorizontalDragEnd: _isExpanded
+                ? null
+                : (details) {
+                    // Snap logic
+                    final velocity = details.primaryVelocity ?? 0;
+                    final threshold = screenWidth * 0.25;
+
+                    setState(() {
+                      if (_stashState == 0) {
+                        // From Center -> Stash
+                        if (_dragOffset > threshold || velocity > 500) {
+                          _stashState = 1; // Stash Right
+                        } else if (_dragOffset < -threshold ||
+                            velocity < -500) {
+                          _stashState = -1; // Stash Left
+                        }
+                        _dragOffset = 0;
+                      } else {
+                        // From Stashed -> Center
+                        // Any significant swipe towards center should restore it
+                        if ((_stashState == 1 && velocity < -200) ||
+                            (_stashState == -1 && velocity > 200)) {
+                          _stashState = 0;
+                        }
+                        // Tap to restore is handled in onTap
+                      }
+                    });
+                  },
             onTap: () {
-              if (!_isExpanded) {
+              if (_stashState != 0) {
+                setState(() => _stashState = 0); // Unstash
+              } else if (!_isExpanded) {
                 _toggleExpanded();
               }
             },
-            onLongPress: _toggleExpanded,
+            onLongPress: _stashState == 0 ? _toggleExpanded : null,
             child: AnimatedBuilder(
               animation: _expandAnimation,
               builder: (context, child) {
-                final width = _isExpanded ? null : 200.0;
-                final height = 46.0 + (_expandAnimation.value * 166.0);
+                // Opacity/Look when stashed
+                final isStashed = _stashState != 0;
+
+                final currentHeight = 46.0 + (_expandAnimation.value * 166.0);
                 final borderRadius = 20.0;
 
-                return Container(
-                  width: width,
-                  height: height,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(borderRadius),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
+                return Opacity(
+                  opacity: isStashed ? 0.6 : 1.0,
+                  child: Container(
+                    width: _isExpanded ? null : 200.0,
+                    height: currentHeight,
+                    clipBehavior: Clip.hardEdge,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(borderRadius),
-                      child: _isExpanded
-                          ? _buildExpandedView()
-                          : _buildCompactView(),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(borderRadius),
+                        child: _isExpanded
+                            ? _buildExpandedView()
+                            : _buildCompactView(),
+                      ),
                     ),
                   ),
                 );

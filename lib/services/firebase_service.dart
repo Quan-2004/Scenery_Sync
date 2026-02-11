@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class FirebaseService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -53,6 +54,68 @@ class FirebaseService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Google Sign-In Error: $e');
       return 'Failed to sign in with Google';
+    }
+  }
+
+  // Facebook Sign-In
+  Future<String?> loginWithFacebook() async {
+    try {
+      // 1. Trigger Facebook Sign-In flow
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: [
+          'public_profile',
+          'email',
+          'user_birthday',
+          'user_gender',
+        ],
+      );
+
+      if (result.status != LoginStatus.success) {
+        return 'Facebook login was cancelled or failed';
+      }
+
+      // 2. Get the access token
+      final AccessToken? accessToken = result.accessToken;
+      if (accessToken == null) {
+        return 'Failed to get Facebook access token';
+      }
+
+      // 3. Create a Facebook credential
+      final OAuthCredential credential = FacebookAuthProvider.credential(
+        accessToken.token,
+      );
+
+      // 4. Sign in to Firebase with the Facebook credential
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      // 5. Fetch Facebook user data (for high-res image)
+      final userData = await FacebookAuth.instance.getUserData(
+        fields: "name,email,picture.width(400)",
+      );
+
+      if (userCredential.user != null) {
+        String? name = userData['name'];
+        String? photoUrl = userData['picture']?['data']?['url'];
+
+        // Update Firebase User Profile if data exists
+        if (name != null || photoUrl != null) {
+          await userCredential.user!.updateDisplayName(name);
+          await userCredential.user!.updatePhotoURL(photoUrl);
+          await userCredential.user!
+              .reload(); // Reload to apply changes locally
+          notifyListeners(); // Notify UI to update
+        }
+      }
+
+      return null; // Success (no error message)
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException: ${e.message}');
+      return e.message ?? 'An unknown error occurred';
+    } catch (e) {
+      debugPrint('Facebook Sign-In Error: $e');
+      return 'Failed to sign in with Facebook';
     }
   }
 

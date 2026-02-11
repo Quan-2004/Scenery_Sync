@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../services/firebase_service.dart';
 import 'forgot_password_screen.dart';
+import '../widgets/social_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -125,6 +126,38 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  void _handleFacebookLogin() async {
+    setState(() => _isLoading = true);
+
+    final firebaseService = Provider.of<FirebaseService>(
+      context,
+      listen: false,
+    );
+
+    final error = await firebaseService.loginWithFacebook();
+
+    setState(() => _isLoading = false);
+
+    if (error == null) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main');
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,10 +204,14 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                               ],
                             ),
-                            child: const Icon(
-                              Icons.music_note_rounded,
-                              size: 50,
-                              color: Colors.white,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(25),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -451,18 +488,18 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Row(
                     children: [
                       Expanded(
-                        child: _SocialButton(
-                          icon: Icons.g_mobiledata_rounded,
+                        child: SocialButton(
+                          imagePath: 'assets/images/google_logo.webp',
                           label: 'Google',
                           onPressed: _isLoading ? () {} : _handleGoogleLogin,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _SocialButton(
-                          icon: Icons.facebook_rounded,
+                        child: SocialButton(
+                          imagePath: 'assets/images/facebook_logo.png',
                           label: 'Facebook',
-                          onPressed: () {},
+                          onPressed: _isLoading ? () {} : _handleFacebookLogin,
                         ),
                       ),
                     ],
@@ -508,45 +545,6 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  const _SocialButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        side: BorderSide(color: AppColors.textMuted.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 24, color: AppColors.textMain),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMain,
-            ),
-          ),
-        ],
       ),
     );
   }

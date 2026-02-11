@@ -10,7 +10,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -32,10 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
     _animationController.forward();
@@ -70,7 +68,10 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       debugPrint('🔵 Bắt đầu đăng ký...');
       setState(() => _isLoading = true);
 
-      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+      final firebaseService = Provider.of<FirebaseService>(
+        context,
+        listen: false,
+      );
 
       try {
         debugPrint('🔵 Gọi registerWithEmail...');
@@ -91,12 +92,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           debugPrint('🟢 Đăng ký thành công!');
 
           // Không await sign out để tránh treo UI trên Windows
-          firebaseService.logout();
-
-          if (!mounted) return;
-
-          // Navigate to login
-          Navigator.pushReplacementNamed(context, '/login');
+          // Navigate to main screen
+          Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
 
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
@@ -401,7 +398,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             ),
                             onPressed: () {
                               setState(() {
-                                _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                                _isConfirmPasswordVisible =
+                                    !_isConfirmPasswordVisible;
                               });
                             },
                           ),
@@ -501,7 +499,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
