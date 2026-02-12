@@ -97,7 +97,9 @@ class FirebaseService extends ChangeNotifier {
       }
 
       // 2. Get the access token
+      // 2. Get the access token
       final AccessToken? accessToken = result.accessToken;
+
       if (accessToken == null) {
         return 'Failed to get Facebook access token';
       }
@@ -321,20 +323,71 @@ class FirebaseService extends ChangeNotifier {
     String? description,
     String? coverImage,
   }) async {
-    debugPrint('Stub: createPlaylist called');
-    return null;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('playlists')
+          .add({
+            'name': name,
+            'description': description ?? '',
+            'coverImage': coverImage ?? '',
+            'createdAt': FieldValue.serverTimestamp(),
+            'tracks': [],
+            'trackCount': 0,
+          });
+
+      return null;
+    } catch (e) {
+      return 'Failed to create playlist: $e';
+    }
   }
 
-  Stream<dynamic> getUserPlaylists() {
-    return const Stream.empty();
+  Stream<List<Map<String, dynamic>>> getUserPlaylists() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+
+    return _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('playlists')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+        });
   }
 
   Future<String?> addTrackToPlaylist(
     String playlistId,
     Map<String, dynamic> track,
   ) async {
-    debugPrint('Stub: addTrackToPlaylist called');
-    return null;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      final playlistRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('playlists')
+          .doc(playlistId);
+
+      await playlistRef.update({
+        'tracks': FieldValue.arrayUnion([track]),
+        'trackCount': FieldValue.increment(1),
+      });
+
+      return null;
+    } catch (e) {
+      return 'Failed to add track: $e';
+    }
   }
 
   Future<String?> removeTrackFromPlaylist(
@@ -381,5 +434,14 @@ class FirebaseService extends ChangeNotifier {
 
   Stream<List<Map<String, dynamic>>> tracksStream({int limit = 50}) {
     return Stream.value([]);
+  }
+
+  // Sign Out
+  Future<void> signOut() async {
+    await _googleSignIn.signOut();
+    await FacebookAuth.instance.logOut();
+    await _auth.signOut();
+    _userProfile = null;
+    notifyListeners();
   }
 }

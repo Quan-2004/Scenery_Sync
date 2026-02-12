@@ -42,10 +42,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _emailController.text = (user?.email ?? '').trim();
 
       if (profile != null) {
-        if (profile.containsKey('bio'))
+        if (profile.containsKey('bio')) {
           _bioController.text = profile['bio'] ?? '';
-        if (profile.containsKey('phone'))
+        }
+        if (profile.containsKey('phone')) {
           _phoneController.text = profile['phone'] ?? '';
+        }
         if (profile.containsKey('gender')) _gender = profile['gender'];
         if (profile.containsKey('birthday')) {
           final timestamp = profile['birthday'];
@@ -481,10 +483,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (mounted) navigator.pop();
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         messenger.showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -648,13 +651,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         messenger.showSnackBar(
           SnackBar(
             content: Text('Không thể cập nhật ảnh: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploadingAvatar = false);
     }
@@ -682,13 +686,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Không thể xoá ảnh: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _isUploadingAvatar = false);
     }

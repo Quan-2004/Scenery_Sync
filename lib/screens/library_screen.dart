@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../services/app_language.dart';
 import '../services/deezer_service.dart';
@@ -124,85 +125,115 @@ class _Header extends StatelessWidget {
 
   void _showCreatePlaylistDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
+    bool isLoading = false;
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text(
-            'Create Playlist',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textMain,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Playlist name',
-                  filled: true,
-                  fillColor: AppColors.backgroundLight,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                'Create Playlist',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMain,
                 ),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textMuted),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Playlist "${nameController.text}" created!',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    enabled: !isLoading,
+                    decoration: InputDecoration(
+                      hintText: 'Playlist name',
+                      filled: true,
+                      fillColor: AppColors.backgroundLight,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
                       ),
-                      backgroundColor: AppColors.primary,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
                       ),
                     ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                  ),
+                ],
               ),
-              child: const Text('Create'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (nameController.text.isNotEmpty) {
+                            setState(() => isLoading = true);
+                            final result = await Provider.of<FirebaseService>(
+                              context,
+                              listen: false,
+                            ).createPlaylist(name: nameController.text);
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              if (result == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Playlist "${nameController.text}" created!',
+                                    ),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Create'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -269,55 +300,79 @@ class _TabBar extends StatelessWidget {
 class _PlaylistsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final playlists = [
-      {'name': 'My Favorites', 'count': '42 songs', 'color': AppColors.primary},
-      {
-        'name': 'Workout Mix',
-        'count': '28 songs',
-        'color': const Color(0xFFE85D75),
-      },
-      {
-        'name': 'Chill Vibes',
-        'count': '35 songs',
-        'color': const Color(0xFF6B8CFF),
-      },
-      {
-        'name': 'Study Focus',
-        'count': '51 songs',
-        'color': const Color(0xFF4CAF50),
-      },
-      {
-        'name': 'Party Time',
-        'count': '39 songs',
-        'color': const Color(0xFFFF9800),
-      },
-      {
-        'name': 'Road Trip',
-        'count': '46 songs',
-        'color': const Color(0xFF9C27B0),
-      },
-    ];
+    final firebaseService = Provider.of<FirebaseService>(context);
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
-      itemCount: playlists.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final playlist = playlists[index];
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 400 + (index * 80)),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 30 * (1 - value)),
-                child: child,
-              ),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: firebaseService.getUserPlaylists(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: AppColors.textMuted),
+            ),
+          );
+        }
+
+        final playlists = snapshot.data ?? [];
+
+        if (playlists.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.queue_music_rounded,
+                  size: 80,
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No playlists yet',
+                  style: TextStyle(fontSize: 18, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tap + to create one',
+                  style: TextStyle(fontSize: 14, color: AppColors.textMain),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
+          itemCount: playlists.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final playlist = playlists[index];
+            // Assign random color if not present or parse existing one
+            // For simplicity, we'll just check if it has a color or default to primary
+            final color = AppColors.primary;
+
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 400 + (index * 80)),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: _PlaylistItem(playlist: playlist, color: color),
             );
           },
-          child: _PlaylistItem(playlist: playlist),
         );
       },
     );
@@ -325,9 +380,10 @@ class _PlaylistsTab extends StatelessWidget {
 }
 
 class _PlaylistItem extends StatefulWidget {
-  final Map<String, Object> playlist;
+  final Map<String, dynamic> playlist;
+  final Color color;
 
-  const _PlaylistItem({required this.playlist});
+  const _PlaylistItem({required this.playlist, required this.color});
 
   @override
   State<_PlaylistItem> createState() => _PlaylistItemState();
@@ -338,6 +394,10 @@ class _PlaylistItemState extends State<_PlaylistItem> {
 
   @override
   Widget build(BuildContext context) {
+    // Correctly handle track count whether it's int or String
+    final count = widget.playlist['trackCount'] ?? 0;
+    final trackCountText = '$count songs';
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
@@ -348,10 +408,11 @@ class _PlaylistItemState extends State<_PlaylistItem> {
           MaterialPageRoute(
             builder: (context) => PlaylistDetailScreen(
               playlistName: widget.playlist['name'] as String,
-              playlistCover: 'https://picsum.photos/400/400',
-              songCount: int.parse(
-                (widget.playlist['count'] as String).split(' ')[0],
-              ),
+              playlistCover:
+                  'https://picsum.photos/400/400', // Placeholder for now
+              songCount: count is int
+                  ? count
+                  : int.tryParse(count.toString()) ?? 0,
             ),
           ),
         );
@@ -379,14 +440,12 @@ class _PlaylistItemState extends State<_PlaylistItem> {
                 height: 60,
                 width: 60,
                 decoration: BoxDecoration(
-                  color: (widget.playlist['color'] as Color).withValues(
-                    alpha: 0.2,
-                  ),
+                  color: widget.color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.music_note_rounded,
-                  color: widget.playlist['color'] as Color,
+                  color: widget.color,
                   size: 32,
                 ),
               ),
@@ -405,7 +464,7 @@ class _PlaylistItemState extends State<_PlaylistItem> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      widget.playlist['count'] as String,
+                      trackCountText,
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textMuted,

@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: _fadeAnimations[1],
                     child: SlideTransition(
                       position: _slideAnimations[1],
-                      child: const _FeaturedPlaylistsSection(),
+                      child: _FeaturedPlaylistsSection(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -571,6 +571,9 @@ class _ProfileSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context);
+    final user = firebaseService.currentUser;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.65,
       decoration: const BoxDecoration(
@@ -604,16 +607,20 @@ class _ProfileSheet extends StatelessWidget {
                   offset: const Offset(0, 8),
                 ),
               ],
-              image: const DecorationImage(
-                image: NetworkImage('https://i.pravatar.cc/300?img=32'),
-                fit: BoxFit.cover,
-              ),
+            ),
+            child: ClipOval(
+              child: (user?.photoURL != null && user!.photoURL!.isNotEmpty)
+                  ? Image.network(user.photoURL!, fit: BoxFit.cover)
+                  : Image.asset(
+                      'assets/images/default_avatar.png',
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Alex Morgan',
-            style: TextStyle(
+          Text(
+            firebaseService.userName ?? 'User',
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
               color: AppColors.textMain,
@@ -621,7 +628,7 @@ class _ProfileSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'alex.morgan@email.com',
+            user?.email ?? '',
             style: TextStyle(
               fontSize: 14,
               color: AppColors.textMuted.withValues(alpha: 0.8),
@@ -632,11 +639,14 @@ class _ProfileSheet extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStat('128', 'Playlists'),
+              _buildStat(
+                firebaseService.getFavorites().length.toString(),
+                'Playlists',
+              ),
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildStat('2.5K', 'Followers'),
+              _buildStat('0', 'Followers'), // TODO: Implement followers
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildStat('890', 'Following'),
+              _buildStat('0', 'Following'), // TODO: Implement following
             ],
           ),
           const SizedBox(height: 24),
@@ -682,12 +692,20 @@ class _ProfileSheet extends StatelessWidget {
                 ),
                 _buildMenuItem(Icons.history_rounded, 'Listening History', () {
                   Navigator.pop(context);
-                  // Navigate to history
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RecentlyPlayedScreen(),
+                    ),
+                  );
                 }),
                 const Divider(height: 32),
-                _buildMenuItem(Icons.logout_rounded, 'Logout', () {
+                _buildMenuItem(Icons.logout_rounded, 'Logout', () async {
                   Navigator.pop(context);
-                  // Handle logout
+                  await firebaseService.signOut();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
                 }, isDestructive: true),
               ],
             ),
@@ -811,7 +829,9 @@ class _TimeBasedGreeting extends StatelessWidget {
 
 // Featured Playlists Section - Beautiful cards for new users
 class _FeaturedPlaylistsSection extends StatelessWidget {
-  const _FeaturedPlaylistsSection();
+  _FeaturedPlaylistsSection();
+
+  final List<Map<String, dynamic>> _playlists = [];
 
   @override
   Widget build(BuildContext context) {
@@ -833,15 +853,21 @@ class _FeaturedPlaylistsSection extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 200,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            scrollDirection: Axis.horizontal,
-            itemCount: 5,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              return _FeaturedPlaylistCard(index: index);
-            },
-          ),
+          child: _playlists.isEmpty
+              ? const Center(child: Text('No playlists available'))
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _playlists.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 16),
+                  itemBuilder: (context, index) {
+                    return _FeaturedPlaylistCard(
+                      playlist: _playlists[index],
+                      index: index,
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -849,9 +875,10 @@ class _FeaturedPlaylistsSection extends StatelessWidget {
 }
 
 class _FeaturedPlaylistCard extends StatefulWidget {
+  final Map<String, dynamic> playlist;
   final int index;
 
-  const _FeaturedPlaylistCard({required this.index});
+  const _FeaturedPlaylistCard({required this.playlist, required this.index});
 
   @override
   State<_FeaturedPlaylistCard> createState() => _FeaturedPlaylistCardState();
@@ -860,47 +887,9 @@ class _FeaturedPlaylistCard extends StatefulWidget {
 class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
   bool _isPressed = false;
 
-  final List<Map<String, dynamic>> _playlists = [
-    {
-      'title': 'Discover Weekly',
-      'subtitle': 'Your weekly mixtape',
-      'icon': Icons.explore_rounded,
-      'gradient': [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-      'image': 'https://picsum.photos/seed/discover/400/400',
-    },
-    {
-      'title': 'Release Radar',
-      'subtitle': 'New releases for you',
-      'icon': Icons.fiber_new_rounded,
-      'gradient': [const Color(0xFFFA709A), const Color(0xFFFF9A6C)],
-      'image': 'https://picsum.photos/seed/radar/400/400',
-    },
-    {
-      'title': 'Daily Mix',
-      'subtitle': 'Your favorite songs',
-      'icon': Icons.playlist_play_rounded,
-      'gradient': [const Color(0xFF4FACFE), const Color(0xFF00F2FE)],
-      'image': 'https://picsum.photos/seed/daily/400/400',
-    },
-    {
-      'title': 'Liked Songs',
-      'subtitle': '50 songs',
-      'icon': Icons.favorite_rounded,
-      'gradient': [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-      'image': 'https://picsum.photos/seed/liked/400/400',
-    },
-    {
-      'title': 'On Repeat',
-      'subtitle': 'Songs you love',
-      'icon': Icons.repeat_rounded,
-      'gradient': [const Color(0xFFFEAC5E), const Color(0xFFC779D0)],
-      'image': 'https://picsum.photos/seed/repeat/400/400',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final playlist = _playlists[widget.index];
+    final playlist = widget.playlist;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -1250,25 +1239,7 @@ class _GenresSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final genres = [
-      {
-        'name': 'Pop',
-        'color': const Color(0xFFFF6B9D),
-        'icon': Icons.music_note,
-      },
-      {
-        'name': 'Chill',
-        'color': const Color(0xFF92A3FD),
-        'icon': Icons.self_improvement,
-      },
-      {
-        'name': 'EDM',
-        'color': const Color(0xFFC58BF2),
-        'icon': Icons.equalizer,
-      },
-      {'name': 'Jazz', 'color': const Color(0xFFFFA84A), 'icon': Icons.piano},
-      {'name': 'Indie', 'color': const Color(0xFF7FD8BE), 'icon': Icons.park},
-    ];
+    final List<Map<String, dynamic>> genres = [];
 
     return Column(
       children: [
@@ -1452,23 +1423,7 @@ class _DailyMixSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mixes = [
-      {
-        'title': 'Morning Coffee',
-        'subtitle': 'Soft acoustics & jazz',
-        'image': 'https://picsum.photos/id/10/300/300',
-      },
-      {
-        'title': 'Neon Drive',
-        'subtitle': 'Synthwave mix',
-        'image': 'https://picsum.photos/id/15/300/300',
-      },
-      {
-        'title': 'Study Session',
-        'subtitle': 'Deep focus beats',
-        'image': 'https://picsum.photos/id/20/300/300',
-      },
-    ];
+    final List<Map<String, dynamic>> mixes = [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import '../theme/colors.dart';
+import '../models/music_models.dart';
+import '../services/audio_player_service.dart';
 
 class ChatBotScreen extends StatefulWidget {
-  const ChatBotScreen({super.key});
+  final String? imagePath;
+
+  const ChatBotScreen({super.key, this.imagePath});
 
   @override
   State<ChatBotScreen> createState() => _ChatBotScreenState();
@@ -17,6 +23,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
   late AnimationController _animationController;
+  ImageLabeler? _imageLabeler;
 
   final List<String> _quickSuggestions = [
     'Recommend me some chill music',
@@ -33,12 +40,21 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       duration: const Duration(milliseconds: 300),
     );
 
-    // Welcome message
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _addBotMessage(
-        'Hi there! 👋 I\'m your music assistant. How can I help you discover amazing music today?',
+    // Initialize image labeler if needed
+    if (widget.imagePath != null) {
+      final ImageLabelerOptions options = ImageLabelerOptions(
+        confidenceThreshold: 0.5,
       );
-    });
+      _imageLabeler = ImageLabeler(options: options);
+      _handleImageAnalysis();
+    } else {
+      // Welcome message
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _addBotMessage(
+          'Hi there! 👋 I\'m your music assistant. How can I help you discover amazing music today?',
+        );
+      });
+    }
   }
 
   @override
@@ -46,7 +62,139 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     _textController.dispose();
     _scrollController.dispose();
     _animationController.dispose();
+    _imageLabeler?.close();
     super.dispose();
+  }
+
+  Future<void> _handleImageAnalysis() async {
+    if (widget.imagePath == null) return;
+
+    // Add user message with image
+    _messages.add(
+      ChatMessage(
+        text: '',
+        isUser: true,
+        timestamp: DateTime.now(),
+        imagePath: widget.imagePath,
+      ),
+    );
+
+    // Add bot analyzing message
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _addBotMessage('Analyzing your scenery... 🔍');
+    });
+
+    try {
+      final inputImage = InputImage.fromFilePath(widget.imagePath!);
+      final labels = await _imageLabeler!.processImage(inputImage);
+
+      // Get music recommendations based on labels
+      final tracks = _getRecommendationsFromLabels(labels);
+
+      if (mounted) {
+        // Build response message
+        String response = '';
+        if (labels.isNotEmpty) {
+          final detectedLabels = labels.map((l) => l.label).take(3).join(', ');
+          response += '✨ I detected: $detectedLabels\n\n';
+        }
+
+        response +=
+            '🎵 Based on your scenery, here are some music recommendations. I\'m playing the best match for you now!';
+
+        // Add message with tracks (custom message type needed or handled in builder)
+        // For now, we'll just add the text and handle the list in the UI builder
+        // by checking if the message is from bot and has tracks associated (need to update model)
+
+        setState(() {
+          _messages.add(
+            ChatMessage(
+              text: response,
+              isUser: false,
+              timestamp: DateTime.now(),
+              tracks: tracks, // Pass tracks to message
+            ),
+          );
+        });
+        _scrollToBottom();
+
+        // Auto-play the first recommended track
+        if (tracks.isNotEmpty) {
+          try {
+            await AudioPlayerService.instance.setQueue(tracks, startIndex: 0);
+            await AudioPlayerService.instance.play();
+            debugPrint('✅ Auto-playing: ${tracks[0].name}');
+          } catch (e) {
+            debugPrint('❌ Error auto-playing track: $e');
+            _addBotMessage(
+              'I had trouble playing the track, but you can try playing it manually from the player.',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error analyzing image: $e');
+      if (mounted) {
+        _addBotMessage(
+          'Sorry, I had trouble analyzing the image. But I\'m still here to help with music recommendations! 🎧',
+        );
+      }
+    }
+  }
+
+  List<Track> _getRecommendationsFromLabels(List<ImageLabel> labels) {
+    final keywords = labels.map((l) => l.label.toLowerCase()).toList();
+
+    // Default recommendations
+    List<Track> recommendations = [
+      Track(
+        id: '1',
+        name: 'Morning Breeze',
+        artistName: 'Nature Sounds',
+        artistId: 'art1',
+        albumName: 'Morning',
+        albumId: 'alb1',
+        imageUrl: 'https://picsum.photos/seed/nature/300/300',
+        durationMs: 180000,
+        popularity: 80,
+      ),
+      Track(
+        id: '2',
+        name: 'City Lights',
+        artistName: 'Urban Beats',
+        artistId: 'art2',
+        albumName: 'Night Life',
+        albumId: 'alb2',
+        imageUrl: 'https://picsum.photos/seed/city/300/300',
+        durationMs: 200000,
+        popularity: 75,
+      ),
+      Track(
+        id: '3',
+        name: 'Ocean Waves',
+        artistName: 'Relaxing Vibes',
+        artistId: 'art3',
+        albumName: 'Ocean',
+        albumId: 'alb3',
+        imageUrl: 'https://picsum.photos/seed/ocean/300/300',
+        durationMs: 240000,
+        popularity: 90,
+      ),
+    ];
+
+    // Simple filtering based on keywords
+    if (keywords.any(
+      (k) => k.contains('sky') || k.contains('cloud') || k.contains('blue'),
+    )) {
+      return [recommendations[0], recommendations[2]];
+    }
+    if (keywords.any(
+      (k) => k.contains('building') || k.contains('city') || k.contains('road'),
+    )) {
+      return [recommendations[1]];
+    }
+
+    return recommendations;
   }
 
   void _addBotMessage(String text) {
@@ -312,14 +460,106 @@ class _ChatBotScreenState extends State<ChatBotScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: message.isUser ? Colors.white : Colors.black87,
-                      height: 1.4,
+                  if (message.imagePath != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(message.imagePath!),
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
+                    if (message.text.isNotEmpty) const SizedBox(height: 8),
+                  ],
+                  if (message.text.isNotEmpty)
+                    Text(
+                      message.text,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: message.isUser ? Colors.white : Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+                  // Display Tracks if available
+                  if (message.tracks != null && message.tracks!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ...message.tracks!.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final track = entry.value;
+                      return GestureDetector(
+                        onTap: () async {
+                          await AudioPlayerService.instance.setQueue([track]);
+                          await AudioPlayerService.instance.play();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  track.imageUrl,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 40,
+                                    height: 40,
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      track.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      track.artistName,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.play_circle_fill,
+                                color: AppColors.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
@@ -559,10 +799,14 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+  final String? imagePath;
+  final List<Track>? tracks;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.imagePath,
+    this.tracks,
   });
 }

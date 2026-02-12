@@ -222,21 +222,23 @@ class _ProfileCardState extends State<_ProfileCard> {
                             ),
                           ],
                         ),
-                        child: firebaseService.userPhotoUrl != null
-                            ? Image.network(
-                                firebaseService.userPhotoUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Image.asset(
-                                    'assets/images/default_avatar.png',
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              )
-                            : Image.asset(
-                                'assets/images/default_avatar.png',
-                                fit: BoxFit.cover,
-                              ),
+                        child: ClipOval(
+                          child: firebaseService.userPhotoUrl != null
+                              ? Image.network(
+                                  firebaseService.userPhotoUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/default_avatar.png',
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  'assets/images/default_avatar.png',
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
                       ),
                       if (_isUploadingAvatar)
                         Positioned.fill(
@@ -716,6 +718,8 @@ class _StatsSectionState extends State<_StatsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -732,7 +736,7 @@ class _StatsSectionState extends State<_StatsSection> {
               },
               child: _StatCard(
                 icon: Icons.music_note_rounded,
-                value: '142',
+                value: '0', // TODO: Implement real count in FirebaseService
                 label: _appLanguage.translate('songs'),
               ),
             ),
@@ -750,7 +754,10 @@ class _StatsSectionState extends State<_StatsSection> {
               },
               child: _StatCard(
                 icon: Icons.playlist_play_rounded,
-                value: '23',
+                value: firebaseService
+                    .getFavorites()
+                    .length
+                    .toString(), // Example usage
                 label: _appLanguage.translate('playlists'),
               ),
             ),
@@ -768,7 +775,7 @@ class _StatsSectionState extends State<_StatsSection> {
               },
               child: _StatCard(
                 icon: Icons.favorite_rounded,
-                value: '89',
+                value: '0', // TODO: Implement real count in FirebaseService
                 label: _appLanguage.translate('favorites'),
               ),
             ),

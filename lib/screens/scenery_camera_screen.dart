@@ -1,10 +1,12 @@
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
+import 'package:photo_manager/photo_manager.dart';
 import '../theme/colors.dart';
+import 'chat_bot_screen.dart';
 
 class SceneryCameraScreen extends StatefulWidget {
   final bool isActive;
@@ -16,15 +18,14 @@ class SceneryCameraScreen extends StatefulWidget {
   State<SceneryCameraScreen> createState() => _SceneryCameraScreenState();
 }
 
-class _SceneryCameraScreenState extends State<SceneryCameraScreen>
-    with SingleTickerProviderStateMixin {
+class _SceneryCameraScreenState extends State<SceneryCameraScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   int _selectedCameraIndex = 0;
   int _selectedModeIndex = 1; // AI Photo
-  FlashMode _flashMode = FlashMode.auto;
-  late AnimationController _pulseController;
+  FlashMode _flashMode = FlashMode.off;
   bool _isCapturing = false;
+  String? _lastImagePath;
 
   // Settings
   bool _showGrid = false;
@@ -39,11 +40,8 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
     super.initState();
     if (widget.isActive) {
       _initializeCamera();
+      _loadLastImage();
     }
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
   }
 
   @override
@@ -52,6 +50,7 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
     if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
         _initializeCamera();
+        _loadLastImage();
       } else {
         _disposeCamera();
       }
@@ -78,41 +77,74 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
     }
   }
 
-  void _disposeCamera() {
+  Future<void> _loadLastImage() async {
+    try {
+      final PermissionState ps = await PhotoManager.requestPermissionExtend();
+      if (ps.isAuth) {
+        final List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
+          type: RequestType.image,
+          onlyAll: true,
+        );
+        if (albums.isNotEmpty) {
+          final List<AssetEntity> recentAssets = await albums[0].getAssetListRange(
+            start: 0,
+            end: 1,
+          );
+          if (recentAssets.isNotEmpty) {
+            final file = await recentAssets[0].file;
+            if (mounted && file != null) {
+              setState(() {
+                _lastImagePath = file.path;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading last image: $e');
+    }
+  }
+
+  void _disposeCamera({bool fromDispose = false}) {
     _cameraController?.dispose();
     _cameraController = null;
-    if (mounted) {
+    if (mounted && !fromDispose) {
       setState(() {});
     }
   }
 
   @override
   void dispose() {
-    _disposeCamera();
-    _pulseController.dispose();
+    _disposeCamera(fromDispose: true);
     super.dispose();
   }
 
   Future<void> _toggleFlash() async {
     if (_cameraController == null) return;
 
-    setState(() {
-      switch (_flashMode) {
-        case FlashMode.auto:
-          _flashMode = FlashMode.off;
-          break;
-        case FlashMode.off:
-          _flashMode = FlashMode.always;
-          break;
-        case FlashMode.always:
-          _flashMode = FlashMode.auto;
-          break;
-        default:
-          _flashMode = FlashMode.auto;
-      }
-    });
+    FlashMode newMode;
+    switch (_flashMode) {
+      case FlashMode.off:
+        newMode = FlashMode.auto;
+        break;
+      case FlashMode.auto:
+        newMode = FlashMode.torch; // Always On
+        break;
+      case FlashMode.torch:
+        newMode = FlashMode.off;
+        break;
+      default:
+        newMode = FlashMode.off;
+    }
 
-    await _cameraController!.setFlashMode(_flashMode);
+    try {
+      await _cameraController!.setFlashMode(newMode);
+      if (mounted) {
+        setState(() => _flashMode = newMode);
+      }
+    } catch (e) {
+      debugPrint('Error setting flash mode: $e');
+    }
   }
 
   Future<void> _switchCamera() async {
@@ -138,28 +170,15 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
 
       final XFile image = await _cameraController!.takePicture();
 
-      // Get app directory
-      final directory = await getApplicationDocumentsDirectory();
-      final String imagePath = path.join(
-        directory.path,
-        'scenery_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      if (!mounted) return;
+
+      // Navigate to chat bot screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatBotScreen(imagePath: image.path),
+        ),
       );
-
-      // Save image
-      await image.saveTo(imagePath);
-
-      debugPrint('Image saved to: $imagePath');
-
-      // Show success feedback
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Photo captured!'),
-            duration: Duration(seconds: 1),
-            backgroundColor: AppColors.primary,
-          ),
-        );
-      }
     } catch (e) {
       debugPrint('Error capturing image: $e');
       if (mounted) {
@@ -174,20 +193,26 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
     }
   }
 
-  void _openGallery() {
-    // Navigate to library screen (index 2)
-    if (mounted) {
-      // This will trigger MainScreen to switch to library tab
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      // Note: In a production app, you'd want to signal MainScreen to change tab
-      // For now, we'll just show a message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Opening Library...'),
-          duration: Duration(seconds: 1),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+  Future<void> _openGallery() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatBotScreen(imagePath: image.path),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error open gallery: $e')));
+      }
     }
   }
 
@@ -442,7 +467,7 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // Top Row: Flash, Dynamic Island, Settings
+              // Top Row: Close and Settings
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -458,12 +483,6 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
                       }
                     },
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildDynamicIsland(),
-                    ),
-                  ),
                   _buildTopButton(
                     Icons.settings,
                     onTap: _showSettingsBottomSheet,
@@ -478,7 +497,7 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
                   _buildTopButton(
                     _flashMode == FlashMode.auto
                         ? Icons.flash_auto
-                        : _flashMode == FlashMode.always
+                        : _flashMode == FlashMode.torch
                         ? Icons.flash_on
                         : Icons.flash_off,
                     onTap: _toggleFlash,
@@ -491,64 +510,6 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDynamicIsland() {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(
-                        alpha: _pulseController.value,
-                      ),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'ANALYZING SCENERY...',
-                style: TextStyle(
-                  color: AppColors.textMainDark,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -616,12 +577,25 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen>
                 color: Colors.white.withValues(alpha: 0.2),
                 width: 2,
               ),
-              image: const DecorationImage(
-                image: NetworkImage(
-                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-                ),
-                fit: BoxFit.cover,
-              ),
+              color: Colors.black.withValues(alpha: 0.3),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: _lastImagePath != null
+                  ? Image.file(
+                      File(_lastImagePath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.photo_library,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.photo_library,
+                      color: Colors.white,
+                      size: 24,
+                    ),
             ),
           ),
         ),

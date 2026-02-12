@@ -15,30 +15,7 @@ class _LyricsScreenState extends State<LyricsScreen>
 
   int _currentLineIndex = 0;
 
-  final List<Map<String, dynamic>> _lyrics = [
-    {'time': 0, 'text': 'I\'ve been trying to do it right'},
-    {'time': 3, 'text': 'I\'ve been living a lonely life'},
-    {'time': 6, 'text': 'I\'ve been sleeping here instead'},
-    {'time': 9, 'text': 'I\'ve been sleeping in my bed'},
-    {'time': 13, 'text': 'I\'ve been sleeping in my bed'},
-    {'time': 17, 'text': ''},
-    {'time': 18, 'text': 'So show me family'},
-    {'time': 22, 'text': 'All the blood that I will bleed'},
-    {'time': 25, 'text': 'I don\'t know where I belong'},
-    {'time': 28, 'text': 'I don\'t know where I went wrong'},
-    {'time': 32, 'text': 'But I can write a song'},
-    {'time': 36, 'text': ''},
-    {'time': 37, 'text': 'I belong with you, you belong with me'},
-    {'time': 40, 'text': 'You\'re my sweetheart'},
-    {'time': 43, 'text': 'I belong with you, you belong with me'},
-    {'time': 46, 'text': 'You\'re my sweet'},
-    {'time': 49, 'text': ''},
-    {'time': 50, 'text': 'I don\'t think you\'re right for him'},
-    {'time': 53, 'text': 'Look at what it might have been if you'},
-    {'time': 57, 'text': 'Took a bus to Chinatown'},
-    {'time': 60, 'text': 'I\'d be standing on Canal and Bowery'},
-    {'time': 65, 'text': 'And she\'d be standing next to me'},
-  ];
+  final List<Map<String, dynamic>> _lyrics = [];
 
   @override
   void initState() {
@@ -59,7 +36,7 @@ class _LyricsScreenState extends State<LyricsScreen>
 
   void _updateCurrentLine() {
     if (!mounted) return;
-    
+
     setState(() {
       _currentLineIndex = (_currentLineIndex + 1) % _lyrics.length;
     });
@@ -207,12 +184,28 @@ class _LyricsScreenState extends State<LyricsScreen>
                   blendMode: BlendMode.dstIn,
                   child: ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                    itemCount: _lyrics.length,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 40,
+                    ),
+                    itemCount: _lyrics.isEmpty ? 1 : _lyrics.length,
                     itemBuilder: (context, index) {
+                      if (_lyrics.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No lyrics available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }
+
                       final isActive = index == _currentLineIndex;
                       final isPast = index < _currentLineIndex;
-                      
+
                       return GestureDetector(
                         onTap: () {
                           setState(() {
@@ -226,18 +219,18 @@ class _LyricsScreenState extends State<LyricsScreen>
                             duration: const Duration(milliseconds: 300),
                             style: TextStyle(
                               fontSize: isActive ? 28 : 20,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isActive
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: isActive
                                   ? Colors.white
                                   : isPast
-                                      ? Colors.white.withValues(alpha: 0.5)
-                                      : Colors.white.withValues(alpha: 0.3),
+                                  ? Colors.white.withValues(alpha: 0.5)
+                                  : Colors.white.withValues(alpha: 0.3),
                               height: 1.5,
                             ),
                             textAlign: TextAlign.center,
-                            child: Text(
-                              _lyrics[index]['text'] ?? '',
-                            ),
+                            child: Text(_lyrics[index]['text'] ?? ''),
                           ),
                         ),
                       );
@@ -290,11 +283,7 @@ class _LyricsScreenState extends State<LyricsScreen>
           color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }

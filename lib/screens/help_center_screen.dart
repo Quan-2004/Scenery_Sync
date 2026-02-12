@@ -22,62 +22,15 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     'Troubleshooting',
   ];
 
-  final List<Map<String, dynamic>> _articles = [
-    {
-      'title': 'How to create an account',
-      'category': 'Getting Started',
-      'views': '12.5K',
-      'icon': Icons.person_add,
-    },
-    {
-      'title': 'Download music for offline listening',
-      'category': 'Downloads',
-      'views': '8.3K',
-      'icon': Icons.download,
-    },
-    {
-      'title': 'How to manage your subscription',
-      'category': 'Subscription',
-      'views': '6.7K',
-      'icon': Icons.credit_card,
-    },
-    {
-      'title': 'Reset your password',
-      'category': 'Account',
-      'views': '5.9K',
-      'icon': Icons.lock_reset,
-    },
-    {
-      'title': 'Fix playback issues',
-      'category': 'Troubleshooting',
-      'views': '4.2K',
-      'icon': Icons.build,
-    },
-    {
-      'title': 'Create and share playlists',
-      'category': 'Getting Started',
-      'views': '7.1K',
-      'icon': Icons.playlist_add,
-    },
-    {
-      'title': 'Connect to Bluetooth devices',
-      'category': 'Playback',
-      'views': '3.8K',
-      'icon': Icons.bluetooth,
-    },
-    {
-      'title': 'Cancel or change subscription',
-      'category': 'Subscription',
-      'views': '5.4K',
-      'icon': Icons.cancel,
-    },
-  ];
+  final List<Map<String, dynamic>> _articles = [];
 
   List<Map<String, dynamic>> get _filteredArticles {
     if (_selectedCategory == 'All') {
       return _articles;
     }
-    return _articles.where((article) => article['category'] == _selectedCategory).toList();
+    return _articles
+        .where((article) => article['category'] == _selectedCategory)
+        .toList();
   }
 
   @override
@@ -117,10 +70,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary,
-                          AppColors.secondary,
-                        ],
+                        colors: [AppColors.primary, AppColors.secondary],
                       ),
                     ),
                   ),
@@ -147,8 +97,13 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     style: const TextStyle(color: AppColors.textMain),
                     decoration: InputDecoration(
                       hintText: 'Search articles...',
-                      hintStyle: const TextStyle(color: AppColors.textSecondary),
-                      prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                      hintStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.primary,
+                      ),
                       filled: true,
                       fillColor: AppColors.surface,
                       border: OutlineInputBorder(
@@ -190,8 +145,12 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             backgroundColor: AppColors.surface,
                             selectedColor: AppColors.primary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.textMain,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.textMain,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         );
@@ -219,10 +178,26 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
+                  if (_filteredArticles.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Text(
+                          'No articles found',
+                          style: TextStyle(
+                            color: AppColors.textMain,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   final article = _filteredArticles[index];
                   return _ArticleCard(article: article);
                 },
-                childCount: _filteredArticles.length,
+                childCount: _filteredArticles.isEmpty
+                    ? 1
+                    : _filteredArticles.length,
               ),
             ),
           ),
@@ -247,7 +222,10 @@ class _ArticleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         leading: Container(
           width: 48,
           height: 48,
@@ -289,7 +267,11 @@ class _ArticleCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.visibility, size: 14, color: AppColors.textSecondary),
+              const Icon(
+                Icons.visibility,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 4),
               Text(
                 article['views'],
@@ -301,7 +283,11 @@ class _ArticleCard extends StatelessWidget {
             ],
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppColors.textSecondary,
+        ),
         onTap: () {
           _showArticleDetail(context, article);
         },
@@ -373,7 +359,9 @@ class _ArticleCard extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Thanks for your feedback!')),
+                          const SnackBar(
+                            content: Text('Thanks for your feedback!'),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.thumb_up),
@@ -386,7 +374,9 @@ class _ArticleCard extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('We\'ll improve this article')),
+                          const SnackBar(
+                            content: Text('We\'ll improve this article'),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.thumb_down),

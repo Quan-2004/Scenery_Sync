@@ -10,68 +10,7 @@ class AllMoodsScreen extends StatefulWidget {
 }
 
 class _AllMoodsScreenState extends State<AllMoodsScreen> {
-  final List<Map<String, dynamic>> allMoods = [
-    {
-      'title': '💪 Workout',
-      'subtitle': 'Get pumped and energized',
-      'gradient': [const Color(0xFFE74C3C), const Color(0xFFC0392B)],
-    },
-    {
-      'title': '😌 Chill',
-      'subtitle': 'Relax and unwind',
-      'gradient': [const Color(0xFF3498DB), const Color(0xFF2980B9)],
-    },
-    {
-      'title': '🎉 Party',
-      'subtitle': 'Dance and celebrate',
-      'gradient': [const Color(0xFF9B59B6), const Color(0xFF8E44AD)],
-    },
-    {
-      'title': '🧘 Focus',
-      'subtitle': 'Deep concentration',
-      'gradient': [const Color(0xFF1ABC9C), const Color(0xFF16A085)],
-    },
-    {
-      'title': '😴 Sleep',
-      'subtitle': 'Peaceful dreams',
-      'gradient': [const Color(0xFF34495E), const Color(0xFF2C3E50)],
-    },
-    {
-      'title': '☕ Morning',
-      'subtitle': 'Start your day right',
-      'gradient': [const Color(0xFFF39C12), const Color(0xFFE67E22)],
-    },
-    {
-      'title': '💔 Sad',
-      'subtitle': 'Let it all out',
-      'gradient': [const Color(0xFF5D6D7E), const Color(0xFF34495E)],
-    },
-    {
-      'title': '😊 Happy',
-      'subtitle': 'Feel good vibes',
-      'gradient': [const Color(0xFFF1C40F), const Color(0xFFF39C12)],
-    },
-    {
-      'title': '🚗 Road Trip',
-      'subtitle': 'Highway anthems',
-      'gradient': [const Color(0xFF16A085), const Color(0xFF1ABC9C)],
-    },
-    {
-      'title': '💖 Romance',
-      'subtitle': 'Love songs',
-      'gradient': [const Color(0xFFE91E63), const Color(0xFFC2185B)],
-    },
-    {
-      'title': '🎸 Rock',
-      'subtitle': 'Hard hitting beats',
-      'gradient': [const Color(0xFF212121), const Color(0xFF424242)],
-    },
-    {
-      'title': '🌊 Beach',
-      'subtitle': 'Summer vibes',
-      'gradient': [const Color(0xFF00BCD4), const Color(0xFF0097A7)],
-    },
-  ];
+  final List<Map<String, dynamic>> allMoods = [];
 
   @override
   Widget build(BuildContext context) {
@@ -116,8 +55,16 @@ class _AllMoodsScreenState extends State<AllMoodsScreen> {
                 mainAxisSpacing: 16,
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
+                if (allMoods.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No moods available',
+                      style: TextStyle(color: AppColors.textMain, fontSize: 16),
+                    ),
+                  );
+                }
                 return _MoodGridCard(mood: allMoods[index], index: index);
-              }, childCount: allMoods.length),
+              }, childCount: allMoods.isEmpty ? 1 : allMoods.length),
             ),
           ),
         ],

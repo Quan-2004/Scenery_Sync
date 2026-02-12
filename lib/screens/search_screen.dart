@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
+import '../services/firebase_service.dart';
 import '../theme/colors.dart';
 import '../services/deezer_service.dart';
 import '../services/audio_player_service.dart';
@@ -60,26 +62,24 @@ class _SearchScreenState extends State<SearchScreen>
 
     _slideAnimations = List.generate(
       4,
-      (index) => Tween<Offset>(
-        begin: const Offset(0, 0.3),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            index * 0.15,
-            0.4 + (index * 0.15),
-            curve: Curves.easeOutCubic,
+      (index) =>
+          Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+            CurvedAnimation(
+              parent: _controller,
+              curve: Interval(
+                index * 0.15,
+                0.4 + (index * 0.15),
+                curve: Curves.easeOutCubic,
+              ),
+            ),
           ),
-        ),
-      ),
     );
 
     _controller.forward();
 
     // Listen to search input changes
     _searchController.addListener(_onSearchChanged);
-    
+
     // Listen to focus changes
     _searchFocusNode.addListener(() {
       setState(() {
@@ -151,9 +151,9 @@ class _SearchScreenState extends State<SearchScreen>
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error searching: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error searching: $e')));
       }
     }
   }
@@ -170,8 +170,6 @@ class _SearchScreenState extends State<SearchScreen>
         return _SearchResults(results: _searchResults);
     }
   }
-
-
 
   void _clearSearch() {
     _searchController.clear();
@@ -221,7 +219,11 @@ class _SearchScreenState extends State<SearchScreen>
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(left: 24, right: 24, bottom: 70),
+                    padding: const EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                      bottom: 70,
+                    ),
                     child: Column(
                       children: [
                         const SizedBox(height: 8),
@@ -239,7 +241,9 @@ class _SearchScreenState extends State<SearchScreen>
                         const SizedBox(height: 24),
 
                         // Show filter chips only when there are results
-                        if (_hasSearched && _searchResults.isNotEmpty)
+                        if (_hasSearched &&
+                            _searchResults.isNotEmpty &&
+                            _selectedFilter != 'All')
                           FadeTransition(
                             opacity: _fadeAnimations[2],
                             child: SlideTransition(
@@ -264,7 +268,8 @@ class _SearchScreenState extends State<SearchScreen>
                           const _EmptyState()
                         else if (_hasSearched && _searchResults.isNotEmpty)
                           _buildFilteredContent()
-                        else if (_isSearchFocused && _searchController.text.isEmpty)
+                        else if (_isSearchFocused &&
+                            _searchController.text.isEmpty)
                           // Show suggestions when search bar is focused
                           FadeTransition(
                             opacity: _fadeAnimations[3],
@@ -307,6 +312,9 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context);
+    final userPhotoUrl = firebaseService.userPhotoUrl;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -334,10 +342,12 @@ class _Header extends StatelessWidget {
               ],
             ),
             child: ClipOval(
-              child: Image.network(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuD4zTvs1ZSng5Zs-6SN5e6BY4THURyLABqJuRzTseMfznR7cdc845lQnuxW_Byz_ueROCw2Hi8LXbQB_UR16NDwRAkvGIQGq4UYgSDdkZwtqAhbJSSR0LO4GYw1U9XAcqiEZUIrpVEOh07cioPqi1a42PawaVEWvSbkbqTmdUHo7oM-W1uR3o5oWQZPdph52lmM_rZAKUB2TtCdBP82GoLoClCKT7MmwfYAq0qdj7O6Unr5NCwYW8o4kMrGa1m_DtQjKdF2xDxXSw',
-                fit: BoxFit.cover,
-              ),
+              child: userPhotoUrl != null
+                  ? Image.network(userPhotoUrl, fit: BoxFit.cover)
+                  : Image.asset(
+                      'assets/images/default_avatar.png',
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
         ],
@@ -376,11 +386,7 @@ class _SearchBar extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Icon(
-              Icons.search,
-              color: AppColors.textMuted,
-              size: 24,
-            ),
+            child: Icon(Icons.search, color: AppColors.textMuted, size: 24),
           ),
           Expanded(
             child: TextField(
@@ -414,11 +420,7 @@ class _SearchBar extends StatelessWidget {
           else
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Icon(
-                Icons.mic,
-                color: AppColors.textMuted,
-                size: 24,
-              ),
+              child: Icon(Icons.mic, color: AppColors.textMuted, size: 24),
             ),
         ],
       ),
@@ -466,8 +468,10 @@ class _FilterChips extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 80, vertical: 10),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 80,
+                    vertical: 10,
+                  ),
                   backgroundColor: AppColors.primary,
                 ),
               );
@@ -481,8 +485,9 @@ class _FilterChips extends StatelessWidget {
                 curve: Curves.easeInOut,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.primary : AppColors.surfaceLight,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -575,10 +580,7 @@ class _EmptyState extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Try searching with different keywords',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textMuted,
-          ),
+          style: TextStyle(fontSize: 14, color: AppColors.textMuted),
         ),
       ],
     );
@@ -622,10 +624,7 @@ class _SearchResults extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Try selecting a different filter',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textMuted,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
           ),
         ],
       );
@@ -655,11 +654,7 @@ class _SearchResults extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.music_note,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
+                    Icon(Icons.music_note, size: 14, color: AppColors.primary),
                     SizedBox(width: 4),
                     Text(
                       'Songs',
@@ -712,14 +707,12 @@ class _SearchResultItem extends StatelessWidget {
           }
           return;
         }
-        
+
         // Navigate đến Now Playing
         if (context.mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const NowPlayingScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const NowPlayingScreen()),
           );
         }
       },
@@ -829,8 +822,9 @@ class _SearchResultItem extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                               color: AppColors.textMuted,
                               decoration: TextDecoration.underline,
-                              decorationColor:
-                                  AppColors.textMuted.withValues(alpha: 0.3),
+                              decorationColor: AppColors.textMuted.withValues(
+                                alpha: 0.3,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -857,11 +851,7 @@ class _SearchResultItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Icon(
-                  Icons.more_vert,
-                  size: 20,
-                  color: AppColors.textMuted,
-                ),
+                Icon(Icons.more_vert, size: 20, color: AppColors.textMuted),
               ],
             ),
           ],
@@ -878,13 +868,7 @@ class _SearchSuggestionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trendingSearches = [
-      {'icon': Icons.trending_up, 'text': 'Trending now'},
-      {'icon': Icons.star, 'text': 'Top hits 2024'},
-      {'icon': Icons.music_note, 'text': 'New releases'},
-      {'icon': Icons.favorite, 'text': 'Popular artists'},
-      {'icon': Icons.album, 'text': 'Viral playlists'},
-    ];
+    final trendingSearches = <Map<String, dynamic>>[];
 
     final popularSearches = <String>[];
 
@@ -903,54 +887,59 @@ class _SearchSuggestionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ...suggestedSongs.map((song) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(12),
+        ...suggestedSongs.map(
+          (song) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                leading: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage(song['image'] as String),
-                      fit: BoxFit.cover,
-                    ),
+              leading: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: NetworkImage(song['image'] as String),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                title: Text(
-                  song['title'] as String,
-                  style: const TextStyle(
-                    color: AppColors.textMain,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  song['artist'] as String,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: const Icon(
-                  Icons.play_circle_outline,
-                  color: AppColors.primary,
-                  size: 32,
-                ),
-                onTap: () => onSuggestionTap(song['title'] as String),
               ),
-            )),
+              title: Text(
+                song['title'] as String,
+                style: const TextStyle(
+                  color: AppColors.textMain,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                song['artist'] as String,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 13,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(
+                Icons.play_circle_outline,
+                color: AppColors.primary,
+                size: 32,
+              ),
+              onTap: () => onSuggestionTap(song['title'] as String),
+            ),
+          ),
+        ),
         const SizedBox(height: 24),
-        
+
         // Trending Searches
         const Text(
           'Trending Searches',
@@ -961,29 +950,28 @@ class _SearchSuggestionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ...trendingSearches.map((item) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                item['icon'] as IconData,
-                color: AppColors.primary,
-                size: 24,
-              ),
-              title: Text(
-                item['text'] as String,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textMain,
-                ),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              onTap: () => onSuggestionTap(item['text'] as String),
-            )),
+        ...trendingSearches.map(
+          (item) => ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              item['icon'] as IconData,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            title: Text(
+              item['text'] as String,
+              style: const TextStyle(fontSize: 15, color: AppColors.textMain),
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+            onTap: () => onSuggestionTap(item['text'] as String),
+          ),
+        ),
         const SizedBox(height: 24),
-        
+
         // Popular Searches
         const Text(
           'Popular Artists',
@@ -997,16 +985,22 @@ class _SearchSuggestionsSection extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: popularSearches.map((search) => ActionChip(
-            label: Text(search),
-            labelStyle: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textMain,
-            ),
-            backgroundColor: AppColors.cardBackground,
-            side: BorderSide(color: AppColors.divider.withValues(alpha: 0.3)),
-            onPressed: () => onSuggestionTap(search),
-          )).toList(),
+          children: popularSearches
+              .map(
+                (search) => ActionChip(
+                  label: Text(search),
+                  labelStyle: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textMain,
+                  ),
+                  backgroundColor: AppColors.cardBackground,
+                  side: BorderSide(
+                    color: AppColors.divider.withValues(alpha: 0.3),
+                  ),
+                  onPressed: () => onSuggestionTap(search),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -1018,56 +1012,7 @@ class _DiscoverSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = [
-      {
-        'title': 'Chill\nVibes',
-        'searchQuery': 'chill lofi',
-        'bgColor': const Color(0xFFFFD8D8).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF8B4848),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuD9fxCh6ix0aWLgour1YPDsqEAdkSI_q85A_PQ-r-IpV15bFAnCSroUA2hJvtpfEecrMtv6AED61ldXvgn4uH-IiRnElltY4h_YrxbBlPx3BnrGwXGEC9aE1okxT9imLOMmawLxC-IYRS_ABtMvc3IXv7FwqF2kmLHHLjcq9SxUET6r8oSBK48CJcInyPnZPeWVO9owgW3QrGXXfzWiJtRErdJyzR2cQ_vRGO1JqxYeoT2y70dxJyRIhCrL-u-OB3Ed4A9wPIaxQw',
-      },
-      {
-        'title': 'Pop\nHits',
-        'searchQuery': 'pop hits',
-        'bgColor': const Color(0xFFD8E6FF).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF485E8B),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuD4zTvs1ZSng5Zs-6SN5e6BY4THURyLABqJuRzTseMfznR7cdc845lQnuxW_Byz_ueROCw2Hi8LXbQB_UR16NDwRAkvGIQGq4UYgSDdkZwtqAhbJSSR0LO4GYw1U9XAcqiEZUIrpVEOh07cioPqi1a42PawaVEWvSbkbqTmdUHo7oM-W1uR3o5oWQZPdph52lmM_rZAKUB2TtCdBP82GoLoClCKT7MmwfYAq0qdj7O6Unr5NCwYW8o4kMrGa1m_DtQjKdF2xDxXSw',
-      },
-      {
-        'title': 'Focus\nFlow',
-        'searchQuery': 'study focus',
-        'bgColor': const Color(0xFFE6FFD8).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF538B48),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuAmtFifzozcQm7xAGiCL7_6Icz5OfmgQWrbVoM4jjIdaOwTrkGuVQBLHWYPVVl9KRG_eGN6qkbhIRxMzltH10xZUD1QvtBeAwFhEMq66Mk7TPZUgzzMy9oj9_OTYdmYXISguXLBSZp4MDLLhyrM7XuBFnhroFY7-npxaToy02371fr_CCidrCgPkI6CeLJPaz0JXvkLQR52PbbKa83XvoNM2l4F5Z0FYd3xtzsQF5Wj-ydFhTa2lHb92aaWFpkPlJAzR_1vTDVaVQ',
-      },
-      {
-        'title': 'Jazz\nClub',
-        'searchQuery': 'jazz',
-        'bgColor': const Color(0xFFFFF4D8).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF8B7848),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuC0twC4bcYkDO_Ks18aY0qp5CTNDlfne1DHEy86WFtTl5AGTHEcFCOIBANtP_w1AmYviNfj9jrQ4svLAER01_WSQ9mTnYs4199WII8b2ASOEJp2SPHkjL88UbfbXPsHM85vqFl3uDkzkGQ6BvMzTbp6RqE0jWYOE2z7Ppsq_MfOCjK84lhjE0oBxxPbnnGLNw9WjIDH6fCXfMqWe43k0EmAHbLqNZXgLGDXaPXnk6QSWMI2rcRmPPHoavM7RqKKPYmpV4-2KLxUGg',
-      },
-      {
-        'title': 'Rock\nLegends',
-        'searchQuery': 'rock',
-        'bgColor': const Color(0xFFFFE6D8).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF8B5E48),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuD9fxCh6ix0aWLgour1YPDsqEAdkSI_q85A_PQ-r-IpV15bFAnCSroUA2hJvtpfEecrMtv6AED61ldXvgn4uH-IiRnElltY4h_YrxbBlPx3BnrGwXGEC9aE1okxT9imLOMmawLxC-IYRS_ABtMvc3IXv7FwqF2kmLHHLjcq9SxUET6r8oSBK48CJcInyPnZPeWVO9owgW3QrGXXfzWiJtRErdJyzR2cQ_vRGO1JqxYeoT2y70dxJyRIhCrL-u-OB3Ed4A9wPIaxQw',
-      },
-      {
-        'title': 'Hip Hop\nBeats',
-        'searchQuery': 'hip hop',
-        'bgColor': const Color(0xFFE8D8FF).withValues(alpha: 0.6),
-        'textColor': const Color(0xFF5E488B),
-        'image':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuD4zTvs1ZSng5Zs-6SN5e6BY4THURyLABqJuRzTseMfznR7cdc845lQnuxW_Byz_ueROCw2Hi8LXbQB_UR16NDwRAkvGIQGq4UYgSDdkZwtqAhbJSSR0LO4GYw1U9XAcqiEZUIrpVEOh07cioPqi1a42PawaVEWvSbkbqTmdUHo7oM-W1uR3o5oWQZPdph52lmM_rZAKUB2TtCdBP82GoLoClCKT7MmwfYAq0qdj7O6Unr5NCwYW8o4kMrGa1m_DtQjKdF2xDxXSw',
-      },
-    ];
+    final List<Map<String, dynamic>> categories = [];
 
     return Column(
       children: [
@@ -1126,7 +1071,9 @@ class _DiscoverSection extends StatelessWidget {
   }
 
   void _showAllCategories(
-      BuildContext context, List<Map<String, dynamic>> categories) {
+    BuildContext context,
+    List<Map<String, dynamic>> categories,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1306,10 +1253,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        widget.imageUrl,
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.network(widget.imageUrl, fit: BoxFit.cover),
                     ),
                   ),
                 ),
@@ -1352,8 +1296,10 @@ class _GenreDetailScreenState extends State<_GenreDetailScreen> {
   Future<void> _loadTracks() async {
     setState(() => _isLoading = true);
     try {
-      final results =
-          await _deezerService.searchTracks(widget.searchQuery, limit: 30);
+      final results = await _deezerService.searchTracks(
+        widget.searchQuery,
+        limit: 30,
+      );
       setState(() {
         _tracks = results;
         _isLoading = false;
@@ -1361,9 +1307,9 @@ class _GenreDetailScreenState extends State<_GenreDetailScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading tracks: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading tracks: $e')));
       }
     }
   }
@@ -1385,10 +1331,7 @@ class _GenreDetailScreenState extends State<_GenreDetailScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    widget.bgColor,
-                    AppColors.backgroundLight,
-                  ],
+                  colors: [widget.bgColor, AppColors.backgroundLight],
                 ),
               ),
             ),
@@ -1444,28 +1387,28 @@ class _GenreDetailScreenState extends State<_GenreDetailScreen> {
                       ? const Center(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
+                              AppColors.primary,
+                            ),
                           ),
                         )
                       : _tracks.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No tracks found',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: _tracks.length,
-                              itemBuilder: (context, index) {
-                                return _SearchResultItem(track: _tracks[index]);
-                              },
+                      ? const Center(
+                          child: Text(
+                            'No tracks found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textMuted,
                             ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _tracks.length,
+                          itemBuilder: (context, index) {
+                            return _SearchResultItem(track: _tracks[index]);
+                          },
+                        ),
                 ),
               ],
             ),
@@ -1510,11 +1453,7 @@ class _ArtistResults extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.person,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
+                    Icon(Icons.person, size: 14, color: AppColors.primary),
                     SizedBox(width: 4),
                     Text(
                       'Artists',
@@ -1692,11 +1631,7 @@ class _AlbumResults extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.album,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
+                    Icon(Icons.album, size: 14, color: AppColors.primary),
                     SizedBox(width: 4),
                     Text(
                       'Albums',
@@ -1821,7 +1756,9 @@ class _AlbumResults extends StatelessWidget {
                     // Track count
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.secondary.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
@@ -1885,11 +1822,7 @@ class _PlaylistSuggestions extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.queue_music,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
+                    Icon(Icons.queue_music, size: 14, color: AppColors.primary),
                     SizedBox(width: 4),
                     Text(
                       'Playlists',
