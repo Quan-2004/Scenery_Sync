@@ -49,12 +49,9 @@ class CloudinaryService {
       ..fields['upload_preset'] = CloudinaryConfig.uploadPreset.trim()
       ..fields['folder'] = CloudinaryConfig.avatarFolder.trim()
       ..fields['resource_type'] = 'image'
+      ..fields['public_id'] = uid
       ..files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          bytes,
-          filename: 'avatar.jpg',
-        ),
+        http.MultipartFile.fromBytes('file', bytes, filename: 'avatar.jpg'),
       );
 
     final streamed = await request.send();
@@ -69,7 +66,9 @@ class CloudinaryService {
             : 'Upload failed';
         throw Exception('Cloudinary upload failed: $message');
       } catch (_) {
-        throw Exception('Cloudinary upload failed (HTTP ${streamed.statusCode}): $body');
+        throw Exception(
+          'Cloudinary upload failed (HTTP ${streamed.statusCode}): $body',
+        );
       }
     }
 
@@ -81,7 +80,10 @@ class CloudinaryService {
     final secureUrl = decoded['secure_url']?.toString();
     final publicId = decoded['public_id']?.toString();
 
-    if (secureUrl == null || secureUrl.isEmpty || publicId == null || publicId.isEmpty) {
+    if (secureUrl == null ||
+        secureUrl.isEmpty ||
+        publicId == null ||
+        publicId.isEmpty) {
       throw Exception('Cloudinary upload failed: missing secure_url/public_id');
     }
 
@@ -116,11 +118,7 @@ class CloudinaryService {
     }
 
     request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: filename,
-      ),
+      http.MultipartFile.fromBytes('file', bytes, filename: filename),
     );
 
     final streamed = await request.send();
@@ -134,7 +132,9 @@ class CloudinaryService {
             : 'Upload failed';
         throw Exception('Cloudinary upload failed: $message');
       } catch (_) {
-        throw Exception('Cloudinary upload failed (HTTP ${streamed.statusCode}): $body');
+        throw Exception(
+          'Cloudinary upload failed (HTTP ${streamed.statusCode}): $body',
+        );
       }
     }
 
@@ -146,11 +146,17 @@ class CloudinaryService {
     final secureUrl = decoded['secure_url']?.toString();
     final returnedPublicId = decoded['public_id']?.toString();
 
-    if (secureUrl == null || secureUrl.isEmpty || returnedPublicId == null || returnedPublicId.isEmpty) {
+    if (secureUrl == null ||
+        secureUrl.isEmpty ||
+        returnedPublicId == null ||
+        returnedPublicId.isEmpty) {
       throw Exception('Cloudinary upload failed: missing secure_url/public_id');
     }
 
-    return CloudinaryUploadResult(secureUrl: secureUrl, publicId: returnedPublicId);
+    return CloudinaryUploadResult(
+      secureUrl: secureUrl,
+      publicId: returnedPublicId,
+    );
   }
 
   /// Uploads a track cover image (album art) to Cloudinary.
@@ -169,7 +175,8 @@ class CloudinaryService {
     }
 
     final request = http.MultipartRequest('POST', _uploadUri())
-      ..fields['upload_preset'] = CloudinaryConfig.effectiveTrackCoverUploadPreset
+      ..fields['upload_preset'] =
+          CloudinaryConfig.effectiveTrackCoverUploadPreset
       ..fields['folder'] = CloudinaryConfig.trackCoverFolder.trim()
       ..fields['resource_type'] = 'image';
 
@@ -179,11 +186,7 @@ class CloudinaryService {
     }
 
     request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: 'track_cover.jpg',
-      ),
+      http.MultipartFile.fromBytes('file', bytes, filename: 'track_cover.jpg'),
     );
 
     final streamed = await request.send();
@@ -197,7 +200,9 @@ class CloudinaryService {
             : 'Upload failed';
         throw Exception('Cloudinary upload failed: $message');
       } catch (_) {
-        throw Exception('Cloudinary upload failed (HTTP ${streamed.statusCode}): $body');
+        throw Exception(
+          'Cloudinary upload failed (HTTP ${streamed.statusCode}): $body',
+        );
       }
     }
 
@@ -209,10 +214,16 @@ class CloudinaryService {
     final secureUrl = decoded['secure_url']?.toString();
     final returnedPublicId = decoded['public_id']?.toString();
 
-    if (secureUrl == null || secureUrl.isEmpty || returnedPublicId == null || returnedPublicId.isEmpty) {
+    if (secureUrl == null ||
+        secureUrl.isEmpty ||
+        returnedPublicId == null ||
+        returnedPublicId.isEmpty) {
       throw Exception('Cloudinary upload failed: missing secure_url/public_id');
     }
 
-    return CloudinaryUploadResult(secureUrl: secureUrl, publicId: returnedPublicId);
+    return CloudinaryUploadResult(
+      secureUrl: secureUrl,
+      publicId: returnedPublicId,
+    );
   }
 }

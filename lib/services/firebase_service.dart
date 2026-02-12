@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'cloudinary_service.dart';
 
 class FirebaseService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -282,13 +283,54 @@ class FirebaseService extends ChangeNotifier {
   }
 
   Future<String?> uploadAvatar(Uint8List bytes) async {
-    debugPrint('Stub: uploadAvatar called');
-    return null; // Simulate success
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      // 1. Upload to Cloudinary
+      const cloudinary = CloudinaryService();
+      final result = await cloudinary.uploadAvatar(uid: user.uid, bytes: bytes);
+
+      // 2. Update Firebase Auth Profile
+      await user.updatePhotoURL(result.secureUrl);
+
+      // 3. Update Firestore
+      await _firestore.collection('users').doc(user.uid).set({
+        'photoUrl': result.secureUrl,
+      }, SetOptions(merge: true));
+
+      // 4. Update local state
+      await _fetchUserProfile();
+      notifyListeners();
+
+      return null; // Success
+    } catch (e) {
+      debugPrint('Upload avatar failed: $e');
+      return 'Failed to upload avatar: $e';
+    }
   }
 
   Future<String?> removeAvatar() async {
-    debugPrint('Stub: removeAvatar called');
-    return null;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+
+      // 1. Remove from Firebase Auth
+      await user.updatePhotoURL(null);
+
+      // 2. Remove from Firestore
+      await _firestore.collection('users').doc(user.uid).update({
+        'photoUrl': FieldValue.delete(),
+      });
+
+      // 3. Update local state
+      await _fetchUserProfile();
+      notifyListeners();
+
+      return null;
+    } catch (e) {
+      return 'Failed to remove avatar: $e';
+    }
   }
 
   // Favorites Stubs

@@ -558,7 +558,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                   const SizedBox(height: 4),
                   Text(

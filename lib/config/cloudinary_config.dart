@@ -1,31 +1,29 @@
 /// Cloudinary configuration.
 ///
 /// This project uses *unsigned uploads* for avatars so we don't ship secrets in the app.
-///
-/// Provide values at build/run time using `--dart-define`:
-///
-/// - `CLOUDINARY_CLOUD_NAME`
-/// - `CLOUDINARY_UPLOAD_PRESET`
-/// - (optional) `CLOUDINARY_AUDIO_UPLOAD_PRESET` (default: CLOUDINARY_UPLOAD_PRESET)
-/// - (optional) `CLOUDINARY_AVATAR_FOLDER` (default: avatars)
-/// - (optional) `CLOUDINARY_AUDIO_FOLDER` (default: audio)
-///
-/// Example:
-/// `flutter run -d windows --dart-define=CLOUDINARY_CLOUD_NAME=xxx --dart-define=CLOUDINARY_UPLOAD_PRESET=yyy`
 class CloudinaryConfig {
-  static const String cloudName = String.fromEnvironment('CLOUDINARY_CLOUD_NAME');
-  static const String uploadPreset = String.fromEnvironment('CLOUDINARY_UPLOAD_PRESET');
+  static const String cloudName = 'dvcebine7';
+  static const String uploadPreset = 'scenery_upload';
 
   /// Optional separate preset for audio uploads (Cloudinary treats audio as `resource_type=video`).
   /// If not provided, falls back to `CLOUDINARY_UPLOAD_PRESET`.
   static const String audioUploadPreset = String.fromEnvironment(
     'CLOUDINARY_AUDIO_UPLOAD_PRESET',
+    defaultValue: 'scenery_upload',
   );
 
   /// Optional separate preset for track cover images.
   /// If not provided, falls back to `CLOUDINARY_UPLOAD_PRESET`.
   static const String trackCoverUploadPreset = String.fromEnvironment(
     'CLOUDINARY_TRACK_COVER_UPLOAD_PRESET',
+    defaultValue: 'scenery_upload',
+  );
+
+  /// Optional separate preset for lyrics (raw/auto resource type).
+  /// If not provided, falls back to `CLOUDINARY_UPLOAD_PRESET`.
+  static const String lyricUploadPreset = String.fromEnvironment(
+    'CLOUDINARY_LYRIC_UPLOAD_PRESET',
+    defaultValue: 'scenery_upload',
   );
 
   static const String avatarFolder = String.fromEnvironment(
@@ -43,7 +41,13 @@ class CloudinaryConfig {
     defaultValue: 'track_covers',
   );
 
-  static bool get isConfigured => cloudName.trim().isNotEmpty && uploadPreset.trim().isNotEmpty;
+  static const String lyricFolder = String.fromEnvironment(
+    'CLOUDINARY_LYRIC_FOLDER',
+    defaultValue: 'lyrics',
+  );
+
+  static bool get isConfigured =>
+      cloudName.trim().isNotEmpty && uploadPreset.trim().isNotEmpty;
 
   static String get effectiveAudioUploadPreset {
     final preset = audioUploadPreset.trim();
@@ -55,5 +59,11 @@ class CloudinaryConfig {
     return preset.isNotEmpty ? preset : uploadPreset.trim();
   }
 
-  static bool get isAudioConfigured => cloudName.trim().isNotEmpty && effectiveAudioUploadPreset.isNotEmpty;
+  static String get effectiveLyricUploadPreset {
+    final preset = lyricUploadPreset.trim();
+    return preset.isNotEmpty ? preset : uploadPreset.trim();
+  }
+
+  static bool get isAudioConfigured =>
+      cloudName.trim().isNotEmpty && effectiveAudioUploadPreset.isNotEmpty;
 }

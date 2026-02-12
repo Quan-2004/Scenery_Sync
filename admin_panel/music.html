@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
     <link href="style.css" rel="stylesheet"/>
     
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -60,24 +63,10 @@
                 <span class="material-icons">people</span>
                 <span class="font-medium">User Management</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-neutral-warm hover:text-primary hover:bg-primary/5 rounded-xl transition-all" href="#">
-                <span class="material-icons">analytics</span>
-                <span class="font-medium">Analytics</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-neutral-warm hover:text-primary hover:bg-primary/5 rounded-xl transition-all" href="#">
-                <span class="material-icons">settings</span>
-                <span class="font-medium">Settings</span>
-            </a>
+
         </nav>
         
         <div class="p-4 border-t border-primary/5">
-            <div class="bg-primary/5 rounded-2xl p-4">
-                <p class="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Storage Plan</p>
-                <div class="w-full bg-primary/20 h-1.5 rounded-full mb-2">
-                    <div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
-                </div>
-                <p class="text-xs text-neutral-warm">65% of 1TB used</p>
-            </div>
         </div>
     </aside>
 
@@ -107,10 +96,10 @@
                 
                 <div class="flex items-center gap-3 pl-4 lg:pl-6 border-l border-primary/10">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-semibold">Alex Rivera</p>
-                        <p class="text-xs text-neutral-warm font-medium">Platform Admin</p>
+                        <p class="text-sm font-semibold">Admin</p>
+                        <p class="text-xs text-neutral-warm font-medium">Administrator</p>
                     </div>
-                    <img class="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/10" alt="Admin user profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCia4w5JiYrgY4BNngESUgTzVPrW0jC7TLbj5mHsuJB9mm1HEh0-7yCkMfxwvPL7_qK1cml639DNOhDg6mkHlWqHMjY4LpN5XywoyPSxJ8NyLDScH3FWyTKYIUeHP28d1A6i6DbKzFbGnhLPaUgaEw_AIcz_lnJeeskcjOgYhQ8MzNBoJNX-1ukzSPJRGs_T9WYny4n1NoFRh0Z6KgzoV2VqhBHLMVdmWMFaLaX3KcOXUGE5rJxKL757leCqEWZBINt_pv05DmpQPo"/>
+                    <img class="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/10" alt="Admin user profile picture" src="https://ui-avatars.com/api/?name=Admin&background=e48744&color=fff"/>
                 </div>
             </div>
         </header>
@@ -133,18 +122,18 @@
             <div class="bg-white dark:bg-[#1a130d] p-4 rounded-2xl shadow-sm border border-primary/5 flex flex-col md:flex-row gap-4">
                 <div class="relative flex-1">
                     <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-neutral-warm text-lg">search</span>
-                    <input class="w-full pl-10 pr-4 py-2 bg-primary/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/30 transition-all dark:bg-white/5 dark:text-white" placeholder="Search by track title, artist, or tag..." type="text"/>
+                    <input id="track-search-input" class="w-full pl-10 pr-4 py-2 bg-primary/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/30 transition-all dark:bg-white/5 dark:text-white" placeholder="Search by track title, artist, or tag..." type="text"/>
                 </div>
                 <div class="flex gap-4">
-                    <select class="bg-primary/5 border-none rounded-xl text-sm px-4 py-2 pr-8 focus:ring-2 focus:ring-primary/30 dark:bg-white/5 dark:text-white cursor-pointer">
+                    <select id="genre-filter" class="bg-primary/5 border-none rounded-xl text-sm px-4 py-2 pr-8 focus:ring-2 focus:ring-primary/30 dark:bg-white/5 dark:text-white cursor-pointer">
                         <option value="">All Genres</option>
                         <option value="lofi">Lofi Focus</option>
                         <option value="acoustic">Acoustic</option>
                         <option value="ambient">Ambient</option>
                         <option value="cinematic">Cinematic</option>
                     </select>
-                    <select class="bg-primary/5 border-none rounded-xl text-sm px-4 py-2 pr-8 focus:ring-2 focus:ring-primary/30 dark:bg-white/5 dark:text-white cursor-pointer">
-                        <option value="">Status</option>
+                    <select id="status-filter" class="bg-primary/5 border-none rounded-xl text-sm px-4 py-2 pr-8 focus:ring-2 focus:ring-primary/30 dark:bg-white/5 dark:text-white cursor-pointer">
+                        <option value="">All Status</option>
                         <option value="published">Published</option>
                         <option value="draft">Draft</option>
                         <option value="flagged">Flagged</option>
@@ -168,134 +157,26 @@
                                 <th scope="col" class="px-6 py-4 font-bold tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-primary/5">
-                            <!-- Row 1 -->
-                            <tr class="hover:bg-primary/5 transition-colors group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 shadow-sm group-hover:shadow-md transition-all">
-                                            <span class="material-icons">music_note</span>
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-slate-800 dark:text-white">Midnight Velvet</div>
-                                            <div class="text-xs text-neutral-warm">Julian Casablancas • 3:45</div>
-                                        </div>
+                        <tbody id="tracks-table-body" class="divide-y divide-primary/5">
+                            <!-- Loading State -->
+                            <tr id="tracks-loading-state">
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                        <p class="text-neutral-warm font-medium">Loading tracks...</p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-primary/10 text-primary px-2.5 py-1 rounded-lg text-xs font-semibold">Lofi Focus</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-slate-800 dark:text-slate-200 font-medium">12.5k <span class="text-xs text-neutral-warm font-normal">streams</span></div>
-                                    <div class="text-xs text-neutral-warm">Added Oct 24, 2023</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-emerald-500/10 text-emerald-500 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Published
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-neutral-warm hover:text-primary p-1 transition-colors"><span class="material-icons text-xl">edit</span></button>
-                                    <button class="text-neutral-warm hover:text-red-500 p-1 transition-colors ml-2"><span class="material-icons text-xl">delete_outline</span></button>
-                                </td>
                             </tr>
-                            
-                            <!-- Row 2 -->
-                            <tr class="hover:bg-primary/5 transition-colors group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-500 shadow-sm group-hover:shadow-md transition-all">
-                                            <span class="material-icons">piano</span>
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-slate-800 dark:text-white">Autumn Breeze</div>
-                                            <div class="text-xs text-neutral-warm">Sarah Jenkins • 4:12</div>
-                                        </div>
+                            <!-- Empty State -->
+                            <tr id="tracks-empty-state" class="hidden">
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <span class="material-icons text-6xl text-neutral-warm/30">library_music</span>
+                                        <p class="text-neutral-warm font-medium">No tracks found</p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-blue-500/10 text-blue-500 px-2.5 py-1 rounded-lg text-xs font-semibold">Acoustic</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-slate-800 dark:text-slate-200 font-medium">8.2k <span class="text-xs text-neutral-warm font-normal">streams</span></div>
-                                    <div class="text-xs text-neutral-warm">Added Oct 21, 2023</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-slate-500/10 text-slate-500 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-                                        Draft
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-neutral-warm hover:text-primary p-1 transition-colors"><span class="material-icons text-xl">edit</span></button>
-                                    <button class="text-neutral-warm hover:text-red-500 p-1 transition-colors ml-2"><span class="material-icons text-xl">delete_outline</span></button>
-                                </td>
                             </tr>
-
-                            <!-- Row 3 -->
-                            <tr class="hover:bg-primary/5 transition-colors group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-500 shadow-sm group-hover:shadow-md transition-all">
-                                            <span class="material-icons">movie</span>
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-slate-800 dark:text-white">Urban Sunset</div>
-                                            <div class="text-xs text-neutral-warm">David Chen • 5:05</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-purple-500/10 text-purple-500 px-2.5 py-1 rounded-lg text-xs font-semibold">Cinematic</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-slate-800 dark:text-slate-200 font-medium">24.1k <span class="text-xs text-neutral-warm font-normal">streams</span></div>
-                                    <div class="text-xs text-neutral-warm">Added Oct 18, 2023</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                   <span class="bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
-                                        <span class="material-icons text-[14px]">flag</span>
-                                        Flagged
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-neutral-warm hover:text-primary p-1 transition-colors"><span class="material-icons text-xl">edit</span></button>
-                                    <button class="text-neutral-warm hover:text-red-500 p-1 transition-colors ml-2"><span class="material-icons text-xl">delete_outline</span></button>
-                                </td>
-                            </tr>
-
-                            <!-- Row 4 -->
-                            <tr class="hover:bg-primary/5 transition-colors group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-500 shadow-sm group-hover:shadow-md transition-all">
-                                            <span class="material-icons">landscape</span>
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-slate-800 dark:text-white">Golden Hour Resonance</div>
-                                            <div class="text-xs text-neutral-warm">Luna Blue • 6:30</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-teal-500/10 text-teal-500 px-2.5 py-1 rounded-lg text-xs font-semibold">Ambient</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-slate-800 dark:text-slate-200 font-medium">5.4k <span class="text-xs text-neutral-warm font-normal">streams</span></div>
-                                    <div class="text-xs text-neutral-warm">Added Oct 15, 2023</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-emerald-500/10 text-emerald-500 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Published
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-neutral-warm hover:text-primary p-1 transition-colors"><span class="material-icons text-xl">edit</span></button>
-                                    <button class="text-neutral-warm hover:text-red-500 p-1 transition-colors ml-2"><span class="material-icons text-xl">delete_outline</span></button>
-                                </td>
-                            </tr>
+                            <!-- Track rows will be dynamically inserted here -->
                         </tbody>
                     </table>
                 </div>
@@ -321,6 +202,6 @@
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

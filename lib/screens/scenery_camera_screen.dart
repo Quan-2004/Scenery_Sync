@@ -756,7 +756,7 @@ class _SceneryCameraScreenState extends State<SceneryCameraScreen> {
       bottom: 180,
       left: 0,
       right: 0,
-      child: Container(
+      child: SizedBox(
         height: 100,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
