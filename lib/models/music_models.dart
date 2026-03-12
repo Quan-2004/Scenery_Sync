@@ -63,15 +63,30 @@ class Track {
 
     String readString(dynamic value) => value?.toString() ?? '';
 
+    // Support both existing and Admin Panel schemas
+    String name = readString(json['name']);
+    if (name.isEmpty) name = readString(json['title']);
+
+    String artistName = readString(json['artistName']);
+    if (artistName.isEmpty) artistName = readString(json['artist']);
+
+    String imageUrl = readString(json['imageUrl']);
+    if (imageUrl.isEmpty) imageUrl = readString(json['artworkUrl']);
+
+    String previewUrl = readString(json['previewUrl']);
+    if (previewUrl.isEmpty) previewUrl = readString(json['audioUrl']);
+
     return Track(
       id: id,
-      name: readString(json['name']).isEmpty ? 'Unknown' : readString(json['name']),
-      artistName: readString(json['artistName']).isEmpty ? 'Unknown Artist' : readString(json['artistName']),
+      name: name.isEmpty ? 'Unknown' : name,
+      artistName: artistName.isEmpty ? 'Unknown Artist' : artistName,
       artistId: readString(json['artistId']),
-      albumName: readString(json['albumName']),
+      albumName: readString(json['albumName']).isEmpty
+          ? 'Single'
+          : readString(json['albumName']),
       albumId: readString(json['albumId']),
-      imageUrl: readString(json['imageUrl']),
-      previewUrl: readString(json['previewUrl']).isEmpty ? null : readString(json['previewUrl']),
+      imageUrl: imageUrl,
+      previewUrl: previewUrl.isEmpty ? null : previewUrl,
       localPath: null,
       isDownloaded: false,
       durationMs: readInt(json['durationMs']),
@@ -85,10 +100,7 @@ class Track {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  Track copyWith({
-    String? localPath,
-    bool? isDownloaded,
-  }) {
+  Track copyWith({String? localPath, bool? isDownloaded}) {
     return Track(
       id: id,
       name: name,
@@ -123,6 +135,25 @@ class Artist {
     required this.popularity,
   });
 
+  factory Artist.fromDeezerJson(Map<String, dynamic> json) {
+    return Artist(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] ?? 'Unknown',
+      imageUrl: json['picture_medium'] ?? json['picture'] ?? '',
+      genres: [],
+      followers: json['nb_fan'] ?? 0,
+      popularity: json['nb_fan'] ?? 0,
+    );
+  }
+
+  String get followersFormatted {
+    if (followers >= 1000000) {
+      return '${(followers / 1000000).toStringAsFixed(1)}M fans';
+    } else if (followers >= 1000) {
+      return '${(followers / 1000).toStringAsFixed(0)}K fans';
+    }
+    return '$followers fans';
+  }
 }
 
 class Album {
@@ -141,7 +172,6 @@ class Album {
     required this.releaseDate,
     required this.totalTracks,
   });
-
 }
 
 class Playlist {
@@ -158,5 +188,4 @@ class Playlist {
     required this.imageUrl,
     required this.tracksCount,
   });
-
 }

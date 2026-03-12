@@ -90,7 +90,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                 ),
                 Expanded(
                   child: DefaultTabController(
-                    length: 4,
+                    length: 3,
                     child: Column(
                       children: [
                         FadeTransition(
@@ -102,8 +102,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                             children: [
                               _PlaylistsTab(),
                               _SongsTab(),
-                              _AlbumsTab(),
-                              _ArtistsTab(),
+                              _FavoritesTab(),
                             ],
                           ),
                         ),
@@ -289,8 +288,7 @@ class _TabBar extends StatelessWidget {
         tabs: [
           Tab(text: AppLanguage().translate('playlists')),
           Tab(text: AppLanguage().translate('songs')),
-          Tab(text: AppLanguage().translate('albums')),
-          Tab(text: AppLanguage().translate('artists')),
+          const Tab(text: 'Favorites'),
         ],
       ),
     );
@@ -582,15 +580,12 @@ class _SongsTabState extends State<_SongsTab> {
   @override
   Widget build(BuildContext context) {
     final player = AudioPlayerService.instance;
-    final firebaseService = FirebaseService();
+    final firebaseService = Provider.of<FirebaseService>(context);
     final profile = firebaseService.userProfile;
     final isAdmin = profile != null && profile['isAdmin'] == true;
 
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('tracks')
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: firebaseService.tracksStream(limit: 100),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -605,18 +600,15 @@ class _SongsTabState extends State<_SongsTab> {
           );
         }
 
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           );
         }
 
-        final docs = snapshot.data!.docs;
-        final tracks = docs
-            .map((d) => Track.fromFirestore(d.data(), id: d.id))
-            .where(
-              (t) => t.previewUrl != null && t.previewUrl!.trim().isNotEmpty,
-            )
+        final dataList = snapshot.data ?? [];
+        final tracks = dataList
+            .map((d) => Track.fromFirestore(d, id: d['id'] ?? ''))
             .toList();
 
         if (tracks.isEmpty) {
@@ -682,7 +674,9 @@ class _SongsTabState extends State<_SongsTab> {
                               height: 48,
                               width: 48,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.2),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -806,438 +800,6 @@ class _SongsTabState extends State<_SongsTab> {
               ),
             );
           },
-        );
-      },
-    );
-  }
-}
-
-class _AlbumsTab extends StatefulWidget {
-  const _AlbumsTab();
-
-  @override
-  State<_AlbumsTab> createState() => _AlbumsTabState();
-}
-
-class _AlbumsTabState extends State<_AlbumsTab> {
-  final DeezerService _deezerService = DeezerService();
-  List<Album> _albums = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAlbums();
-  }
-
-  Future<void> _loadAlbums() async {
-    setState(() => _isLoading = true);
-    try {
-      // Get chart tracks and extract unique albums
-      final tracks = await _deezerService.getChartTracks(limit: 50);
-      final Map<String, Album> albumMap = {};
-
-      for (var track in tracks) {
-        if (!albumMap.containsKey(track.albumId)) {
-          albumMap[track.albumId] = Album(
-            id: track.albumId,
-            name: track.albumName,
-            artistName: track.artistName,
-            imageUrl: track.imageUrl,
-            releaseDate: '',
-            totalTracks: 0,
-          );
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _albums = albumMap.values.take(20).toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading albums: $e')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-
-    if (_albums.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.album_rounded,
-              size: 80,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No albums found',
-              style: TextStyle(fontSize: 18, color: AppColors.textMuted),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadAlbums,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: _albums.length,
-      itemBuilder: (context, index) {
-        final album = _albums[index];
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 400 + (index * 50)),
-          curve: Curves.easeOut,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value.clamp(0.0, 1.0),
-              child: Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: GestureDetector(
-            onTap: () {
-              // Navigate to album detail or artist detail
-              // For now just show a message
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Opening ${album.name}')));
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: album.imageUrl.isNotEmpty
-                        ? Image.network(
-                            album.imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.album_rounded,
-                                  size: 48,
-                                  color: AppColors.primary,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.album_rounded,
-                              size: 48,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  album.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textMain,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  album.artistName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ArtistsTab extends StatefulWidget {
-  const _ArtistsTab();
-
-  @override
-  State<_ArtistsTab> createState() => _ArtistsTabState();
-}
-
-class _ArtistsTabState extends State<_ArtistsTab> {
-  final DeezerService _deezerService = DeezerService();
-  List<Artist> _artists = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadArtists();
-  }
-
-  Future<void> _loadArtists() async {
-    setState(() => _isLoading = true);
-    try {
-      // Get chart tracks and extract unique artists
-      final tracks = await _deezerService.getChartTracks(limit: 50);
-      final Map<String, Artist> artistMap = {};
-
-      for (var track in tracks) {
-        if (!artistMap.containsKey(track.artistId)) {
-          artistMap[track.artistId] = Artist(
-            id: track.artistId,
-            name: track.artistName,
-            imageUrl: track.imageUrl,
-            genres: [],
-            followers: 0,
-            popularity: 0,
-          );
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _artists = artistMap.values.take(20).toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading artists: $e')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-
-    if (_artists.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_off_rounded,
-              size: 80,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No artists found',
-              style: TextStyle(fontSize: 18, color: AppColors.textMuted),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadArtists,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
-      itemCount: _artists.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final artist = _artists[index];
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 400 + (index * 50)),
-          curve: Curves.easeOut,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value.clamp(0.0, 1.0),
-              child: Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ArtistDetailScreen(
-                    artistName: artist.name,
-                    artistImage: artist.imageUrl,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  ClipOval(
-                    child: artist.imageUrl.isNotEmpty
-                        ? Image.network(
-                            artist.imageUrl,
-                            height: 60,
-                            width: 60,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 60,
-                                width: 60,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: AppColors.primary,
-                                  size: 32,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              color: AppColors.primary,
-                              size: 32,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          artist.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textMain,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Artist',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.play_circle_filled),
-                    color: AppColors.primary,
-                    iconSize: 32,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Playing ${artist.name}\'s top tracks...',
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
         );
       },
     );
@@ -1398,6 +960,137 @@ class _UploadTrackDialogState extends State<_UploadTrackDialog> {
           child: const Text('Tiếp tục'),
         ),
       ],
+    );
+  }
+}
+
+// Favorites Tab
+class _FavoritesTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context);
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: firebaseService.favoritesStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+        final dataList = snapshot.data ?? [];
+        final tracks = dataList
+            .map((d) => Track.fromFirestore(d, id: d['id'] ?? ''))
+            .toList();
+        if (tracks.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.favorite_border_rounded,
+                  size: 80,
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No favorites yet',
+                  style: TextStyle(fontSize: 18, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 140),
+          itemCount: tracks.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: track.imageUrl.isNotEmpty
+                    ? Image.network(
+                        track.imageUrl,
+                        height: 48,
+                        width: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 48,
+                            width: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.music_note_rounded,
+                              color: AppColors.primary,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        height: 48,
+                        width: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.music_note_rounded,
+                          color: AppColors.primary,
+                        ),
+                      ),
+              ),
+              title: Text(
+                track.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMain,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                track.artistName,
+                style: const TextStyle(color: AppColors.textMuted),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.play_circle_filled),
+                color: AppColors.primary,
+                onPressed: () async {
+                  await AudioPlayerService.instance.setTrack(track);
+                  await AudioPlayerService.instance.play();
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NowPlayingScreen(),
+                      ),
+                    );
+                  }
+                },
+              ),
+              onTap: () async {
+                await AudioPlayerService.instance.setTrack(track);
+                await AudioPlayerService.instance.play();
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NowPlayingScreen(),
+                    ),
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

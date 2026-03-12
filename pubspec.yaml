@@ -59,6 +59,8 @@ dependencies:
   google_mlkit_image_labeling: ^0.13.0
   gal: ^2.3.0
   photo_manager: ^3.8.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:

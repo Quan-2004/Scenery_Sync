@@ -6,6 +6,9 @@ import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import '../theme/colors.dart';
 import '../models/music_models.dart';
 import '../services/audio_player_service.dart';
+import '../services/deezer_service.dart';
+import 'now_playing_screen.dart';
+import '../services/jamendo_service.dart';
 
 class ChatBotScreen extends StatefulWidget {
   final String? imagePath;
@@ -89,7 +92,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       final labels = await _imageLabeler!.processImage(inputImage);
 
       // Get music recommendations based on labels
-      final tracks = _getRecommendationsFromLabels(labels);
+      final tracks = await _getRecommendationsFromLabels(labels);
 
       if (mounted) {
         // Build response message
@@ -142,59 +145,104 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     }
   }
 
-  List<Track> _getRecommendationsFromLabels(List<ImageLabel> labels) {
-    final keywords = labels.map((l) => l.label.toLowerCase()).toList();
-
-    // Default recommendations
-    List<Track> recommendations = [
-      Track(
-        id: '1',
-        name: 'Morning Breeze',
-        artistName: 'Nature Sounds',
-        artistId: 'art1',
-        albumName: 'Morning',
-        albumId: 'alb1',
-        imageUrl: 'https://picsum.photos/seed/nature/300/300',
-        durationMs: 180000,
-        popularity: 80,
-      ),
-      Track(
-        id: '2',
-        name: 'City Lights',
-        artistName: 'Urban Beats',
-        artistId: 'art2',
-        albumName: 'Night Life',
-        albumId: 'alb2',
-        imageUrl: 'https://picsum.photos/seed/city/300/300',
-        durationMs: 200000,
-        popularity: 75,
-      ),
-      Track(
-        id: '3',
-        name: 'Ocean Waves',
-        artistName: 'Relaxing Vibes',
-        artistId: 'art3',
-        albumName: 'Ocean',
-        albumId: 'alb3',
-        imageUrl: 'https://picsum.photos/seed/ocean/300/300',
-        durationMs: 240000,
-        popularity: 90,
-      ),
+  /// Determines if the scene is nature/scenery (use Jamendo) or people/urban (use Deezer).
+  bool _isNatureScene(List<String> keywords) {
+    const natureTerms = [
+      'beach', 'sea', 'ocean', 'wave', 'coast', 'water', 'lake', 'river',
+      'forest', 'tree', 'nature', 'leaf', 'green', 'grass', 'plant',
+      'mountain', 'hill', 'rock', 'cliff', 'valley',
+      'sunset', 'sunrise', 'golden', 'dusk', 'dawn',
+      'sky', 'cloud', 'blue', 'horizon',
+      'rain', 'storm', 'thunder', 'fog', 'mist',
+      'snow', 'winter', 'ice', 'cold', 'frost',
+      'flower', 'garden', 'spring', 'blossom', 'field',
+      'night', 'star', 'moon', 'galaxy',
+      'bird', 'wildlife', 'landscape', 'scenery', 'countryside',
     ];
+    return keywords.any((k) => natureTerms.any((t) => k.contains(t)));
+  }
 
-    // Simple filtering based on keywords
-    if (keywords.any(
-      (k) => k.contains('sky') || k.contains('cloud') || k.contains('blue'),
-    )) {
-      return [recommendations[0], recommendations[2]];
+  /// Jamendo tags for nature scenes → trả về full song không lời
+  List<String> _labelsToJamendoTags(List<String> keywords) {
+    bool has(List<String> terms) =>
+        keywords.any((k) => terms.any((t) => k.contains(t)));
+
+    if (has(['beach', 'sea', 'ocean', 'wave', 'coast', 'lake', 'river', 'water'])) {
+      return ['ambient', 'instrumental', 'relaxing'];
     }
-    if (keywords.any(
-      (k) => k.contains('building') || k.contains('city') || k.contains('road'),
-    )) {
-      return [recommendations[1]];
+    if (has(['forest', 'tree', 'nature', 'leaf', 'green', 'grass', 'plant', 'field'])) {
+      return ['nature', 'acoustic', 'instrumental'];
+    }
+    if (has(['mountain', 'hill', 'rock', 'cliff', 'valley', 'landscape'])) {
+      return ['cinematic', 'instrumental', 'epic'];
+    }
+    if (has(['sunset', 'sunrise', 'golden', 'dusk', 'dawn'])) {
+      return ['ambient', 'instrumental', 'chillout'];
+    }
+    if (has(['rain', 'storm', 'thunder', 'fog', 'mist'])) {
+      return ['piano', 'ambient', 'instrumental'];
+    }
+    if (has(['snow', 'winter', 'ice', 'cold', 'frost'])) {
+      return ['piano', 'instrumental', 'classical'];
+    }
+    if (has(['flower', 'garden', 'spring', 'blossom'])) {
+      return ['acoustic', 'instrumental', 'happy'];
+    }
+    if (has(['night', 'star', 'moon', 'galaxy', 'dark'])) {
+      return ['ambient', 'lofi', 'instrumental'];
+    }
+    if (has(['sky', 'cloud', 'blue', 'horizon'])) {
+      return ['ambient', 'instrumental', 'chillout'];
+    }
+    if (has(['bird', 'wildlife'])) {
+      return ['nature', 'ambient', 'instrumental'];
     }
 
-    return recommendations;
+    return ['instrumental', 'ambient'];
+  }
+
+  /// Deezer query cho cảnh người / urban
+  String _labelsToDeezerQuery(List<String> keywords) {
+    bool has(List<String> terms) =>
+        keywords.any((k) => terms.any((t) => k.contains(t)));
+
+    if (has(['smile', 'happy', 'joy', 'laugh'])) return 'happy upbeat pop';
+    if (has(['sad', 'cry', 'tear'])) return 'sad emotional ballad';
+    if (has(['face', 'person', 'selfie', 'portrait'])) return 'pop hits';
+    if (has(['city', 'building', 'street', 'road', 'urban'])) return 'urban hip hop beats';
+    if (has(['coffee', 'cafe', 'cup', 'drink'])) return 'cafe jazz lofi';
+    if (has(['food', 'restaurant', 'meal', 'eat'])) return 'jazz bossa nova';
+    if (has(['gym', 'sport', 'exercise', 'fitness', 'run'])) return 'workout motivation';
+    if (has(['party', 'dance', 'club', 'celebration'])) return 'dance party edm';
+    if (has(['dog', 'cat', 'pet', 'animal'])) return 'cute happy pop';
+
+    return 'chill popular';
+  }
+
+  /// Maps ML Kit labels → Jamendo (nature/scenery) or Deezer (people/urban)
+  Future<List<Track>> _getRecommendationsFromLabels(List<ImageLabel> labels) async {
+    final keywords = labels.map((l) => l.label.toLowerCase()).toList();
+    debugPrint('🔍 ML Kit detected: $keywords');
+
+    // Cảnh thiên nhiên → Jamendo (nhạc không lời, full song)
+    if (_isNatureScene(keywords) && JamendoService().isConfigured) {
+      final tags = _labelsToJamendoTags(keywords);
+      debugPrint('🌿 Nature scene → Jamendo tags: $tags');
+      final tracks = await JamendoService().getInstrumentalTracks(tags: tags, limit: 10);
+      if (tracks.isNotEmpty) return tracks;
+    }
+
+    // Cảnh người / urban → Deezer
+    final query = _labelsToDeezerQuery(keywords);
+    debugPrint('🎵 Urban/people scene → Deezer: "$query"');
+    try {
+      final tracks = await DeezerService().searchTracks(query, limit: 10);
+      if (tracks.isNotEmpty) return tracks;
+      return await DeezerService().searchTracks('chill', limit: 10);
+    } catch (e) {
+      debugPrint('Error fetching tracks: $e');
+      return [];
+    }
   }
 
   void _addBotMessage(String text) {
@@ -489,8 +537,32 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                       final track = entry.value;
                       return GestureDetector(
                         onTap: () async {
-                          await AudioPlayerService.instance.setQueue([track]);
-                          await AudioPlayerService.instance.play();
+                          try {
+                            final allTracks = message.tracks!;
+                            await AudioPlayerService.instance.setQueue(
+                              allTracks,
+                              startIndex: index,
+                            );
+                            await AudioPlayerService.instance.play();
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const NowPlayingScreen(),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            debugPrint('❌ Play error: $e');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Could not play this track. Try another one.'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 8),

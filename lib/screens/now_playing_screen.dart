@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import 'lyrics_screen.dart';
 import 'queue_screen.dart';
@@ -6,6 +8,8 @@ import 'equalizer_screen.dart';
 import 'audio_visualizer_screen.dart';
 import '../widgets/share_widgets.dart';
 import '../services/audio_player_service.dart';
+import '../services/firebase_service.dart';
+import '../services/downloads_service.dart';
 import '../models/music_models.dart';
 
 class NowPlayingScreen extends StatelessWidget {
@@ -293,28 +297,77 @@ class _AlbumArt extends StatelessWidget {
   }
 }
 
-class _TrackInfo extends StatelessWidget {
+class _TrackInfo extends StatefulWidget {
   const _TrackInfo();
+
+  @override
+  State<_TrackInfo> createState() => _TrackInfoState();
+}
+
+class _TrackInfoState extends State<_TrackInfo> {
+  bool _isDownloading = false;
+
+  Map<String, dynamic> _trackToFavoriteMap(Track t) => {
+        'id': t.id,
+        'name': t.name,
+        'artistName': t.artistName,
+        'artistId': t.artistId,
+        'albumName': t.albumName,
+        'albumId': t.albumId,
+        'imageUrl': t.imageUrl,
+        'previewUrl': t.previewUrl ?? '',
+        'durationMs': t.durationMs,
+        'popularity': t.popularity,
+      };
+
+  Future<void> _toggleFavorite(Track track, FirebaseService firebase, bool isFav) async {
+    if (isFav) {
+      await firebase.removeFromFavorites(track.id);
+    } else {
+      await firebase.addToFavorites(_trackToFavoriteMap(track));
+    }
+  }
+
+  Future<void> _toggleDownload(Track track) async {
+    final dl = DownloadsService.instance;
+    if (dl.isDownloaded(track.id)) {
+      await dl.deleteTrack(track);
+      if (mounted) setState(() {});
+    } else {
+      if (track.previewUrl == null || track.previewUrl!.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bài này không có link tải')),
+          );
+        }
+        return;
+      }
+      setState(() => _isDownloading = true);
+      await dl.downloadTrack(track);
+      if (mounted) setState(() => _isDownloading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final player = AudioPlayerService.instance;
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StreamBuilder<Track?>(
-                stream: player.trackStream,
-                initialData: player.currentTrack,
-                builder: (context, snapshot) {
-                  final title = snapshot.data?.name ?? 'No track';
-                  return Text(
-                    title,
+    final firebase = Provider.of<FirebaseService>(context, listen: false);
+
+    return StreamBuilder<Track?>(
+      stream: player.trackStream,
+      initialData: player.currentTrack,
+      builder: (context, trackSnap) {
+        final track = trackSnap.data;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    track?.name ?? 'No track',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -323,29 +376,71 @@ class _TrackInfo extends StatelessWidget {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  );
-                },
-              ),
-              const SizedBox(height: 4),
-              StreamBuilder<Track?>(
-                stream: player.trackStream,
-                initialData: player.currentTrack,
-                builder: (context, snapshot) {
-                  final artist = snapshot.data?.artistName ?? '';
-                  return Text(
-                    artist,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    track?.artistName ?? '',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textMuted,
                     ),
+                  ),
+                ],
+              ),
+            ),
+            // Download button
+            if (track != null)
+              ValueListenableBuilder(
+                valueListenable: Hive.box<Map>('downloads').listenable(),
+                builder: (context, box, _) {
+                  final downloaded = DownloadsService.instance.isDownloaded(track.id);
+                  return _isDownloading
+                      ? const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            downloaded
+                                ? Icons.download_done_rounded
+                                : Icons.download_outlined,
+                            size: 28,
+                          ),
+                          color: downloaded ? AppColors.primary : AppColors.textMuted,
+                          onPressed: () => _toggleDownload(track),
+                        );
+                },
+              ),
+            // Favorite button
+            if (track != null)
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: firebase.favoritesStream(),
+                builder: (context, favSnap) {
+                  final isFav = (favSnap.data ?? []).any((f) => f['id'] == track.id);
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                      size: 28,
+                    ),
+                    color: isFav ? Colors.red : AppColors.textMuted,
+                    onPressed: () => _toggleFavorite(track, firebase, isFav),
                   );
                 },
               ),
-            ],
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

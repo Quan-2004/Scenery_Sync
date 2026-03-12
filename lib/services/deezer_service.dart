@@ -152,4 +152,59 @@ class DeezerService {
       return [];
     }
   }
+
+  // Lấy top artists từ chart Deezer
+  Future<List<Artist>> getChartArtists({int limit = 10}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/chart/0/artists?limit=$limit'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final artists = data['data'] as List;
+        return artists.map((json) => Artist.fromDeezerJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error getting chart artists: $e');
+      return [];
+    }
+  }
+
+  // Lấy tracks theo album
+  Future<List<Track>> getAlbumTracks(String albumId, {int limit = 20}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/album/$albumId/tracks?limit=$limit'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final tracks = data['data'] as List;
+        // Album track list doesn't include full track info, need to enrich
+        return tracks.map((t) {
+          // artist may be nested differently
+          final artistName = t['artist']?['name'] ?? '';
+          final artistId = t['artist']?['id']?.toString() ?? '';
+          return Track(
+            id: t['id']?.toString() ?? '',
+            name: t['title'] ?? 'Unknown',
+            artistName: artistName.isNotEmpty ? artistName : 'Unknown Artist',
+            artistId: artistId,
+            albumName: '',
+            albumId: albumId,
+            imageUrl: '',
+            previewUrl: t['preview'],
+            durationMs: (t['duration'] ?? 0) * 1000,
+            popularity: t['rank'] ?? 0,
+          );
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error getting album tracks: $e');
+      return [];
+    }
+  }
 }

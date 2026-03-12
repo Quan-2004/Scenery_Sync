@@ -1,18 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scenery_sync/utils/avatar_image.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 import '../theme/colors.dart';
 import '../services/app_language.dart';
 import '../services/firebase_service.dart';
-import '../services/cloudinary_service.dart';
-import 'settings_screen.dart';
+import '../services/downloads_service.dart';
 import 'downloads_screen.dart';
-import 'chat_bot_screen.dart';
-import 'help_support_screen.dart';
 import 'edit_profile_screen.dart';
 import 'my_songs_screen.dart';
 import 'my_playlists_screen.dart';
@@ -85,8 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 24),
                   const _ProfileCard(),
                   const SizedBox(height: 32),
-                  const _UploadMusicSection(),
-                  const SizedBox(height: 32),
                   _StatsSection(),
                   const SizedBox(height: 32),
                   const _SettingsSection(),
@@ -121,31 +113,13 @@ class _HeaderState extends State<_Header> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            _appLanguage.translate('profile'),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textMain,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-            icon: const Icon(
-              Icons.settings_outlined,
-              color: AppColors.textMain,
-              size: 28,
-            ),
-          ),
-        ],
+      child: Text(
+        _appLanguage.translate('profile'),
+        style: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textMain,
+        ),
       ),
     );
   }
@@ -308,62 +282,35 @@ class _ProfileCardState extends State<_ProfileCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // Edit Profile & Logout Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EditProfileScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        elevation: 0,
+                // Edit Profile Button
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen(),
                       ),
-                      child: const Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: () => _handleLogout(context, firebaseService),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red, width: 2),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: const Text(
-                        'Logout',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                  ],
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -719,6 +666,7 @@ class _StatsSectionState extends State<_StatsSection> {
   @override
   Widget build(BuildContext context) {
     final firebaseService = Provider.of<FirebaseService>(context);
+    final songsCount = DownloadsService.instance.getDownloadedTracks().length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -736,7 +684,7 @@ class _StatsSectionState extends State<_StatsSection> {
               },
               child: _StatCard(
                 icon: Icons.music_note_rounded,
-                value: '0', // TODO: Implement real count in FirebaseService
+                value: songsCount.toString(),
                 label: _appLanguage.translate('songs'),
               ),
             ),
@@ -752,13 +700,13 @@ class _StatsSectionState extends State<_StatsSection> {
                   ),
                 );
               },
-              child: _StatCard(
-                icon: Icons.playlist_play_rounded,
-                value: firebaseService
-                    .getFavorites()
-                    .length
-                    .toString(), // Example usage
-                label: _appLanguage.translate('playlists'),
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: firebaseService.getUserPlaylists(),
+                builder: (context, snap) => _StatCard(
+                  icon: Icons.playlist_play_rounded,
+                  value: (snap.data?.length ?? 0).toString(),
+                  label: _appLanguage.translate('playlists'),
+                ),
               ),
             ),
           ),
@@ -773,10 +721,13 @@ class _StatsSectionState extends State<_StatsSection> {
                   ),
                 );
               },
-              child: _StatCard(
-                icon: Icons.favorite_rounded,
-                value: '0', // TODO: Implement real count in FirebaseService
-                label: _appLanguage.translate('favorites'),
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: firebaseService.favoritesStream(),
+                builder: (context, snap) => _StatCard(
+                  icon: Icons.favorite_rounded,
+                  value: (snap.data?.length ?? 0).toString(),
+                  label: _appLanguage.translate('favorites'),
+                ),
               ),
             ),
           ),
@@ -888,64 +839,6 @@ class _SettingsSectionState extends State<_SettingsSection> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const DownloadsScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(height: 1),
-            _SettingItem(
-              icon: Icons.data_usage_rounded,
-              title: _appLanguage.translate('data_usage'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                _showDataUsageDialog(context);
-              },
-            ),
-            const Divider(height: 1),
-            _SettingItem(
-              icon: Icons.dark_mode_outlined,
-              title: _appLanguage.translate('dark_mode'),
-              trailing: Switch(
-                value: false,
-                onChanged: (value) {},
-                thumbColor: WidgetStateProperty.all(AppColors.primary),
-              ),
-            ),
-            const Divider(height: 1),
-            _SettingItem(
-              icon: Icons.language_rounded,
-              title: _appLanguage.translate('language'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                _showLanguageDialog(context, () {
-                  setState(() {}); // Refresh UI when language changes
-                });
-              },
-            ),
-            const Divider(height: 1),
-            _SettingItem(
-              icon: Icons.smart_toy_rounded,
-              title: _appLanguage.translate('ai_assistant'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ChatBotScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(height: 1),
-            _SettingItem(
-              icon: Icons.help_outline_rounded,
-              title: _appLanguage.translate('help_support'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HelpSupportScreen(),
                   ),
                 );
               },
@@ -1310,835 +1203,3 @@ class _DataUsageItem extends StatelessWidget {
   }
 }
 
-// Upload Music Section (Admin only)
-class _UploadMusicSection extends StatefulWidget {
-  const _UploadMusicSection();
-
-  @override
-  State<_UploadMusicSection> createState() => _UploadMusicSectionState();
-}
-
-class _UploadMusicSectionState extends State<_UploadMusicSection> {
-  bool _uploading = false;
-
-  bool _isAdmin(BuildContext context) {
-    final firebase = Provider.of<FirebaseService>(context, listen: false);
-    final profile = firebase.userProfile;
-    return profile is Map<String, dynamic> && profile['isAdmin'] == true;
-  }
-
-  Future<void> _uploadAudioToCloudinary() async {
-    if (_uploading) return;
-
-    if (!_isAdmin(context)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chỉ Admin mới được upload nhạc.')),
-      );
-      return;
-    }
-
-    // Show dialog to get track info and files
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => const _UploadTrackDialog(),
-    );
-
-    if (result == null) return;
-
-    setState(() => _uploading = true);
-    try {
-      final cloudinary = const CloudinaryService();
-
-      final name = result['name'] as String;
-      final artistName = result['artistName'] as String;
-      final albumName = result['albumName'] as String;
-      final hasImage = result['hasImage'] == 'true';
-      final imageBytes = result['imageBytes'] as Uint8List?;
-      final audioBytes = result['audioBytes'] as Uint8List?;
-      final audioName = result['audioName'] as String;
-
-      if (audioBytes == null) {
-        throw StateError('Không có dữ liệu file nhạc');
-      }
-
-      // Step 1: Upload cover image (if selected)
-      String imageUrl = '';
-      if (hasImage && imageBytes != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đang upload ảnh bìa...'),
-              duration: Duration(seconds: 30),
-            ),
-          );
-        }
-
-        final imageUploaded = await cloudinary.uploadTrackCover(
-          bytes: imageBytes,
-          publicId: 'track_${DateTime.now().millisecondsSinceEpoch}',
-        );
-        imageUrl = imageUploaded.secureUrl;
-      }
-
-      // Step 2: Upload audio file
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đang upload file nhạc...'),
-            duration: Duration(seconds: 30),
-          ),
-        );
-      }
-
-      // Upload audio to Cloudinary
-      final audioUploaded = await cloudinary.uploadAudio(
-        bytes: audioBytes,
-        filename: audioName,
-      );
-
-      // Save to Firestore
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đang lưu vào Firebase...'),
-            duration: Duration(seconds: 30),
-          ),
-        );
-      }
-
-      await FirebaseFirestore.instance.collection('tracks').add({
-        'name': name,
-        'artistName': artistName,
-        'albumName': albumName,
-        'imageUrl': imageUrl,
-        'previewUrl': audioUploaded.secureUrl,
-        'cloudinaryPublicId': audioUploaded.publicId,
-        'durationMs': 0,
-        'popularity': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Upload thành công! Bài hát hiện ở trang chủ.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload thất bại: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _uploading = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isAdmin = _isAdmin(context);
-    if (!isAdmin) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.primary.withValues(alpha: 0.1),
-              AppColors.secondary.withValues(alpha: 0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.cloud_upload_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Upload Nhạc',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textMain,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Chia sẻ nhạc lên trang chủ',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _uploading ? null : _uploadAudioToCloudinary,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: _uploading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.add_rounded),
-                    label: Text(_uploading ? 'Đang upload...' : 'Thêm bài hát'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const _ManageTracksScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: const Icon(Icons.delete_outline_rounded),
-                    label: const Text('Xóa nhạc'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Dialog for uploading track with info
-class _UploadTrackDialog extends StatefulWidget {
-  const _UploadTrackDialog();
-
-  @override
-  State<_UploadTrackDialog> createState() => _UploadTrackDialogState();
-}
-
-class _UploadTrackDialogState extends State<_UploadTrackDialog> {
-  final _nameController = TextEditingController();
-  final _artistController = TextEditingController();
-  final _albumController = TextEditingController();
-  String? _selectedImageName;
-  String? _selectedAudioName;
-  Uint8List? _imageBytes;
-  Uint8List? _audioBytes;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _artistController.dispose();
-    _albumController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-      withData: true,
-    );
-
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _selectedImageName = result.files.single.name;
-        _imageBytes = result.files.single.bytes;
-      });
-    }
-  }
-
-  Future<void> _pickAudio() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['mp3', 'm4a', 'wav'],
-      allowMultiple: false,
-      withData: true,
-    );
-
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _selectedAudioName = result.files.single.name;
-        _audioBytes = result.files.single.bytes;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text(
-        'Thông tin bài hát',
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textMain,
-        ),
-      ),
-      content: SingleChildScrollView(
-        child: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Tên bài hát
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Tên bài hát *',
-                  hintText: 'Nhập tên bài hát',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Nghệ sĩ
-              TextField(
-                controller: _artistController,
-                decoration: InputDecoration(
-                  labelText: 'Nghệ sĩ',
-                  hintText: 'Nhập tên nghệ sĩ',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Album
-              TextField(
-                controller: _albumController,
-                decoration: InputDecoration(
-                  labelText: 'Album (tùy chọn)',
-                  hintText: 'Nhập tên album',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Divider
-              const Divider(),
-              const SizedBox(height: 16),
-
-              // Chọn ảnh bìa
-              const Text(
-                '1. Chọn ảnh bìa (tùy chọn)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
-                ),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: _pickImage,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: _selectedImageName != null
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                    width: 2,
-                  ),
-                  backgroundColor: _selectedImageName != null
-                      ? AppColors.primary.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 16,
-                  ),
-                ),
-                icon: Icon(
-                  _selectedImageName != null
-                      ? Icons.check_circle
-                      : Icons.image_outlined,
-                  color: _selectedImageName != null
-                      ? AppColors.primary
-                      : AppColors.textMuted,
-                ),
-                label: SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    _selectedImageName ?? 'Chọn ảnh JPG/PNG',
-                    style: TextStyle(
-                      color: _selectedImageName != null
-                          ? AppColors.primary
-                          : AppColors.textMuted,
-                      fontWeight: _selectedImageName != null
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Chọn file nhạc
-              const Text(
-                '2. Chọn file nhạc *',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
-                ),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: _pickAudio,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: _selectedAudioName != null
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                    width: 2,
-                  ),
-                  backgroundColor: _selectedAudioName != null
-                      ? AppColors.primary.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 16,
-                  ),
-                ),
-                icon: Icon(
-                  _selectedAudioName != null
-                      ? Icons.check_circle
-                      : Icons.audio_file_outlined,
-                  color: _selectedAudioName != null
-                      ? AppColors.primary
-                      : AppColors.textMuted,
-                ),
-                label: SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    _selectedAudioName ?? 'Chọn file MP3/M4A/WAV',
-                    style: TextStyle(
-                      color: _selectedAudioName != null
-                          ? AppColors.primary
-                          : AppColors.textMuted,
-                      fontWeight: _selectedAudioName != null
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Hủy',
-            style: TextStyle(color: AppColors.textMuted),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final name = _nameController.text.trim();
-            final artist = _artistController.text.trim();
-            final album = _albumController.text.trim();
-
-            if (name.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Vui lòng nhập tên bài hát')),
-              );
-              return;
-            }
-
-            if (_selectedAudioName == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Vui lòng chọn file nhạc')),
-              );
-              return;
-            }
-
-            Navigator.pop(context, {
-              'name': name,
-              'artistName': artist.isEmpty ? 'Unknown Artist' : artist,
-              'albumName': album,
-              'hasImage': _selectedImageName != null ? 'true' : 'false',
-              'imageName': _selectedImageName ?? '',
-              'audioName': _selectedAudioName ?? '',
-              'imageBytes': _imageBytes,
-              'audioBytes': _audioBytes,
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: const Text('Tiếp tục'),
-        ),
-      ],
-    );
-  }
-}
-
-// Screen to manage (delete) uploaded tracks
-class _ManageTracksScreen extends StatefulWidget {
-  const _ManageTracksScreen();
-
-  @override
-  State<_ManageTracksScreen> createState() => _ManageTracksScreenState();
-}
-
-class _ManageTracksScreenState extends State<_ManageTracksScreen> {
-  Future<void> _deleteTrack(String trackId, String trackName) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          'Xóa bài hát?',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textMain,
-          ),
-        ),
-        content: Text(
-          'Bạn có chắc muốn xóa "$trackName"?\nHành động này không thể hoàn tác.',
-          style: const TextStyle(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Hủy',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đang xóa bài hát...'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      await FirebaseFirestore.instance
-          .collection('tracks')
-          .doc(trackId)
-          .delete();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đã xóa "$trackName"'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi xóa: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Quản lý nhạc',
-          style: TextStyle(
-            color: AppColors.textMain,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('tracks')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Lỗi: ${snapshot.error}',
-                  style: const TextStyle(color: AppColors.textMuted),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
-          final docs = snapshot.data!.docs;
-
-          if (docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.music_off_rounded,
-                    size: 80,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Chưa có bài hát nào',
-                    style: TextStyle(fontSize: 18, color: AppColors.textMuted),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(24),
-            itemCount: docs.length,
-            separatorBuilder: (context, index) => const Divider(height: 24),
-            itemBuilder: (context, index) {
-              final doc = docs[index];
-              final data = doc.data();
-              final trackId = doc.id;
-              final name = data['name'] ?? 'Unknown';
-              final artist = data['artistName'] ?? 'Unknown Artist';
-              final imageUrl = data['imageUrl'] ?? '';
-
-              return Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: imageUrl.isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              height: 56,
-                              width: 56,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 56,
-                                  width: 56,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.music_note_rounded,
-                                    color: AppColors.primary,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              height: 56,
-                              width: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.music_note_rounded,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.textMain,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            artist,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_rounded),
-                      color: Colors.red,
-                      onPressed: () => _deleteTrack(trackId, name),
-                      tooltip: 'Xóa bài hát',
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}

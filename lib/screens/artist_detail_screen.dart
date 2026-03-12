@@ -1,15 +1,85 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
+import '../services/deezer_service.dart';
+import '../services/audio_player_service.dart';
+import '../models/music_models.dart';
+import 'now_playing_screen.dart';
 
-class ArtistDetailScreen extends StatelessWidget {
+class ArtistDetailScreen extends StatefulWidget {
   final String artistName;
   final String artistImage;
+  final String? artistId;
 
   const ArtistDetailScreen({
     super.key,
     required this.artistName,
     required this.artistImage,
+    this.artistId,
   });
+
+  @override
+  State<ArtistDetailScreen> createState() => _ArtistDetailScreenState();
+}
+
+class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
+  final _deezerService = DeezerService();
+  List<Track> _tracks = [];
+  bool _isLoading = true;
+  bool _isPlayLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTracks();
+  }
+
+  Future<void> _loadTracks() async {
+    try {
+      List<Track> tracks;
+      if (widget.artistId != null && widget.artistId!.isNotEmpty) {
+        tracks = await _deezerService.getArtistTopTracks(
+          widget.artistId!,
+          limit: 20,
+        );
+      } else {
+        tracks = await _deezerService.searchTracks(
+          widget.artistName,
+          limit: 20,
+        );
+      }
+      if (mounted) {
+        setState(() {
+          _tracks = tracks;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _playAll() async {
+    if (_tracks.isEmpty) return;
+    setState(() => _isPlayLoading = true);
+    try {
+      await AudioPlayerService.instance.setQueue(_tracks, startIndex: 0);
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NowPlayingScreen()),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPlayLoading = false);
+    }
+  }
+
+  String _formatDuration(int ms) {
+    final totalSec = ms ~/ 1000;
+    final m = totalSec ~/ 60;
+    final s = totalSec % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,26 +111,18 @@ class ArtistDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-            onPressed: () {},
-          ),
-        ),
-      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
           children: [
             Image.network(
-              artistImage,
+              widget.artistImage,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: AppColors.primary.withValues(alpha: 0.2),
+                child: const Icon(Icons.person_rounded,
+                    size: 80, color: AppColors.primary),
+              ),
             ),
             Container(
               decoration: BoxDecoration(
@@ -82,7 +144,7 @@ class ArtistDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    artistName,
+                    widget.artistName,
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -90,13 +152,12 @@ class ArtistDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '1.2M monthly listeners',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
+                  if (!_isLoading && _tracks.isNotEmpty)
+                    Text(
+                      '${_tracks.length} tracks on Deezer',
+                      style: const TextStyle(
+                          fontSize: 14, color: Colors.white70),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -109,11 +170,10 @@ class ArtistDetailScreen extends StatelessWidget {
   SliverList _buildContent() {
     return SliverList(
       delegate: SliverChildListDelegate([
+        const SizedBox(height: 24),
         _buildActionButtons(),
         const SizedBox(height: 24),
         _buildPopularSection(),
-        const SizedBox(height: 24),
-        _buildAlbumsSection(),
         const SizedBox(height: 70),
       ]),
     );
@@ -122,65 +182,34 @@ class ArtistDetailScreen extends StatelessWidget {
   Widget _buildActionButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.play_arrow_rounded, size: 28),
-              label: const Text(
-                'Play',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      child: ElevatedButton.icon(
+        onPressed: (_tracks.isEmpty || _isPlayLoading) ? null : _playAll,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
-          const SizedBox(width: 16),
-          Container(
-            height: 56,
-            width: 56,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.favorite_border_rounded),
-              color: AppColors.primary,
-            ),
-          ),
-        ],
+          elevation: 0,
+        ),
+        icon: _isPlayLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2),
+              )
+            : const Icon(Icons.play_arrow_rounded, size: 28),
+        label: const Text(
+          'Play',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
 
   Widget _buildPopularSection() {
-    final popularSongs = List.generate(
-      5,
-      (index) => {
-        'title': 'Popular Song ${index + 1}',
-        'plays': '${(index + 1) * 12}M plays',
-        'duration': '3:${(index + 20).toString().padLeft(2, '0')}',
-      },
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,181 +225,107 @@ class ArtistDetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ...popularSongs.asMap().entries.map((entry) {
-          final index = entry.key;
-          final song = entry.value;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(16),
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textMuted,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.music_note_rounded,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
+          )
+        else if (_tracks.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text('No tracks found',
+                  style: TextStyle(color: AppColors.textMuted)),
+            ),
+          )
+        else
+          ..._tracks.asMap().entries.map((entry) {
+            final index = entry.key;
+            final track = entry.value;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(16),
               ),
-              title: Text(
-                song['title']!,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                onTap: () async {
+                  await AudioPlayerService.instance
+                      .setQueue(_tracks, startIndex: index);
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const NowPlayingScreen()),
+                    );
+                  }
+                },
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        '${index + 1}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: track.imageUrl.isNotEmpty
+                          ? Image.network(
+                              track.imageUrl,
+                              height: 48,
+                              width: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _placeholderArt(),
+                            )
+                          : _placeholderArt(),
+                    ),
+                  ],
+                ),
+                title: Text(
+                  track.name,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: AppColors.textMain),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  track.artistName,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Text(
+                  _formatDuration(track.durationMs),
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 12),
                 ),
               ),
-              subtitle: Text(
-                song['plays']!,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    song['duration']!,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_vert_rounded),
-                    color: AppColors.textMuted,
-                    iconSize: 20,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
+            );
+          }),
       ],
     );
   }
 
-  Widget _buildAlbumsSection() {
-    final albums = List.generate(
-      4,
-      (index) => {
-        'title': 'Album ${index + 1}',
-        'year': '${2020 + index}',
-      },
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Albums',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
-                ),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  'See All',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            scrollDirection: Axis.horizontal,
-            itemCount: albums.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final album = albums[index];
-              return SizedBox(
-                width: 160,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 160,
-                      width: 160,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.album_rounded,
-                        size: 48,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      album['title']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textMain,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      album['year']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+  Widget _placeholderArt() {
+    return Container(
+      height: 48,
+      width: 48,
+      color: AppColors.primary.withValues(alpha: 0.2),
+      child: const Icon(Icons.music_note_rounded, color: AppColors.primary),
     );
   }
 }

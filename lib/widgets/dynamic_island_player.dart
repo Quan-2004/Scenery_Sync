@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../screens/now_playing_screen.dart';
 import '../models/music_models.dart';
 import '../services/audio_player_service.dart'
     show AudioPlayerService, RepeatMode;
+import '../services/firebase_service.dart';
+import '../services/downloads_service.dart';
 
 class DynamicIslandPlayer extends StatefulWidget {
   const DynamicIslandPlayer({super.key});
@@ -19,6 +23,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
   bool _isPlaying = false;
   bool _isShuffled = false;
   bool _isLiked = false;
+  bool _isDownloading = false;
   int _repeatMode = 0; // 0: off, 1: repeat all, 2: repeat one
   double _progress = 0.0;
   double _volume = 0.7;
@@ -68,11 +73,19 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     _isShuffled = player.isShuffleOn;
     _repeatMode = player.repeatMode.index;
 
+    // Load initial favorite status after frame so Provider is available
+    if (_track != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadFavoriteStatus(_track!.id);
+      });
+    }
+
     _trackSub = player.trackStream.listen((t) {
       if (!mounted) return;
       setState(() {
         _track = t;
       });
+      if (t != null) _loadFavoriteStatus(t.id);
     });
 
     _playingSub = player.playingStream.listen((playing) {
@@ -174,21 +187,76 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     }
   }
 
-  void _toggleLike() {
-    setState(() {
-      _isLiked = !_isLiked;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isLiked ? '❤️ Added to Liked Songs' : '💔 Removed from Liked Songs',
+  Future<void> _loadFavoriteStatus(String trackId) async {
+    final firebase = Provider.of<FirebaseService>(context, listen: false);
+    final isFav = await firebase.isFavorite(trackId);
+    if (mounted) setState(() => _isLiked = isFav);
+  }
+
+  void _toggleLike() async {
+    final track = _track;
+    if (track == null) return;
+    final firebase = Provider.of<FirebaseService>(context, listen: false);
+    final newLiked = !_isLiked;
+    setState(() => _isLiked = newLiked);
+    if (newLiked) {
+      await firebase.addToFavorites({
+        'id': track.id,
+        'name': track.name,
+        'artistName': track.artistName,
+        'artistId': track.artistId,
+        'albumName': track.albumName,
+        'albumId': track.albumId,
+        'imageUrl': track.imageUrl,
+        'previewUrl': track.previewUrl ?? '',
+        'durationMs': track.durationMs,
+        'popularity': track.popularity,
+      });
+    } else {
+      await firebase.removeFromFavorites(track.id);
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(newLiked ? '❤️ Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích'),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: newLiked ? AppColors.primary : Colors.grey.shade700,
         ),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: _isLiked ? AppColors.primary : Colors.grey.shade700,
-      ),
-    );
+      );
+    }
+  }
+
+  Future<void> _toggleDownload() async {
+    final track = _track;
+    if (track == null) return;
+    final dl = DownloadsService.instance;
+    if (dl.isDownloaded(track.id)) {
+      await dl.deleteTrack(track);
+      if (mounted) setState(() {});
+    } else {
+      if (track.previewUrl == null || track.previewUrl!.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bài này không có link tải')),
+          );
+        }
+        return;
+      }
+      setState(() => _isDownloading = true);
+      await dl.downloadTrack(track);
+      if (mounted) setState(() => _isDownloading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Đã tải xong!'),
+            duration: Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _toggleShuffle() async {
@@ -303,30 +371,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     final safeAreaTop = MediaQuery.of(context).padding.top;
 
     // Calculate position based on stash state
-    double leftPosition;
-    if (_stashState == 0) {
-      // Center
-      leftPosition =
-          (screenWidth / 2) - (_isExpanded ? (screenWidth - 32) / 2 : 100);
-      // Adjust for drag
-      if (!_isExpanded) leftPosition += _dragOffset;
-    } else if (_stashState == -1) {
-      // Stashed Left (show small part)
-      leftPosition = -180; // Tuck most of it away
-    } else {
-      // Stashed Right
-      leftPosition = screenWidth - 20; // Show small part
-    }
-
     // Width logic
-    double width;
-    if (_isExpanded) {
-      width = screenWidth - 32;
-    } else if (_stashState != 0) {
-      width = 200; // Keep original width but hide it
-    } else {
-      width = 200;
-    }
 
     return Stack(
       children: [
@@ -653,6 +698,45 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
                               size: 18,
                             ),
                           ),
+                        ),
+                        const SizedBox(width: 6),
+                        // Download button
+                        ValueListenableBuilder(
+                          valueListenable: Hive.box<Map>('downloads').listenable(),
+                          builder: (context, box, _) {
+                            final downloaded = _track != null &&
+                                DownloadsService.instance.isDownloaded(_track!.id);
+                            return GestureDetector(
+                              onTap: _toggleDownload,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: downloaded
+                                      ? AppColors.primary.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: _isDownloading
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(8),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Icon(
+                                        downloaded
+                                            ? Icons.download_done_rounded
+                                            : Icons.download_outlined,
+                                        color: downloaded
+                                            ? AppColors.primary
+                                            : Colors.white,
+                                        size: 18,
+                                      ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

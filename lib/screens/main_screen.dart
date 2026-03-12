@@ -4,8 +4,6 @@ import '../widgets/draggable_chat_bot.dart';
 import '../widgets/dynamic_island_player.dart';
 import '../services/app_language.dart';
 import 'home_screen.dart';
-import 'search_screen.dart';
-import 'library_screen.dart';
 import 'profile_screen.dart';
 import 'scenery_camera_screen.dart';
 
@@ -22,11 +20,9 @@ class _MainScreenState extends State<MainScreen> {
 
   List<Widget> get _screens => [
     const HomeScreen(),
-    const SearchScreen(),
-    const LibraryScreen(),
     const ProfileScreen(),
     SceneryCameraScreen(
-      isActive: _currentIndex == 4,
+      isActive: _currentIndex == 2,
       onClose: () => setState(() => _currentIndex = 0),
     ),
   ];
@@ -55,13 +51,13 @@ class _MainScreenState extends State<MainScreen> {
           IndexedStack(index: _currentIndex, children: _screens),
 
           // Dynamic Island Player (hide when in camera)
-          if (_currentIndex != 4) const DynamicIslandPlayer(),
+          if (_currentIndex != 2) const DynamicIslandPlayer(),
 
           // Draggable Chat Bot (hide when in camera)
-          if (_currentIndex != 4) const DraggableChatBot(),
+          if (_currentIndex != 2) const DraggableChatBot(),
 
           // Navigation Bar (hide when in camera)
-          if (_currentIndex != 4)
+          if (_currentIndex != 2)
             Positioned(
               bottom: 0,
               left: 0,
@@ -85,10 +81,8 @@ class _MainScreenState extends State<MainScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildNavItem(Icons.home_rounded, 0),
-                    _buildNavItem(Icons.search_rounded, 1),
-                    _buildNavItem(Icons.camera, 4),
-                    _buildNavItem(Icons.library_music_rounded, 2),
-                    _buildNavItem(Icons.person_rounded, 3),
+                    _buildNavItem(Icons.camera, 2),
+                    _buildNavItem(Icons.person_rounded, 1),
                   ],
                 ),
               ),

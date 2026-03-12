@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
+import '../models/music_models.dart';
+import '../services/deezer_service.dart';
+import '../services/jamendo_service.dart';
 import 'artist_detail_screen.dart';
 
 class AllArtistsScreen extends StatefulWidget {
@@ -10,7 +13,51 @@ class AllArtistsScreen extends StatefulWidget {
 }
 
 class _AllArtistsScreenState extends State<AllArtistsScreen> {
-  final List<Map<String, String>> allArtists = [];
+  List<Artist> _artists = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArtists();
+  }
+
+  Future<void> _loadArtists() async {
+    final results = await Future.wait([
+      DeezerService().getChartArtists(limit: 100),
+      JamendoService().getInstrumentalTracks(
+        tags: ['ambient', 'nature', 'cinematic'],
+        limit: 200,
+      ),
+    ]);
+
+    final deezerArtists = results[0] as List<Artist>;
+    final jamendoTracks = results[1] as List<Track>;
+
+    // Extract unique Jamendo artists from tracks (avoid duplicating Deezer IDs)
+    final seenIds = <String>{...deezerArtists.map((a) => a.id)};
+    final jamendoArtists = <Artist>[];
+    for (final track in jamendoTracks) {
+      if (track.artistId.isNotEmpty && !seenIds.contains(track.artistId)) {
+        seenIds.add(track.artistId);
+        jamendoArtists.add(Artist(
+          id: track.artistId,
+          name: track.artistName,
+          imageUrl: track.imageUrl,
+          genres: ['Ambient'],
+          followers: 0,
+          popularity: track.popularity,
+        ));
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _artists = [...deezerArtists, ...jamendoArtists];
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +81,7 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               title: const Text(
-                'Your Top Artists',
+                'All Artists',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
@@ -44,21 +91,41 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
               titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
             ),
           ),
-          // Artists Grid
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 20,
+          // Loading / Empty / Grid
+          if (_isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return _ArtistGridCard(artist: allArtists[index], index: index);
-              }, childCount: allArtists.length),
+            )
+          else if (_artists.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'No artists available',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.72,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 20,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _ArtistGridCard(
+                    artist: _artists[index],
+                    index: index,
+                  ),
+                  childCount: _artists.length,
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -66,7 +133,7 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
 }
 
 class _ArtistGridCard extends StatefulWidget {
-  final Map<String, String> artist;
+  final Artist artist;
   final int index;
 
   const _ArtistGridCard({required this.artist, required this.index});
@@ -89,8 +156,9 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
           context,
           MaterialPageRoute(
             builder: (context) => ArtistDetailScreen(
-              artistName: widget.artist['name']!,
-              artistImage: widget.artist['image']!,
+              artistName: widget.artist.name,
+              artistImage: widget.artist.imageUrl,
+              artistId: widget.artist.id,
             ),
           ),
         );
@@ -116,7 +184,7 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
               // Artist Image
               Container(
                 width: double.infinity,
-                height: 170,
+                height: 140,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -129,28 +197,21 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    widget.artist['image']!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        child: const Icon(
-                          Icons.person,
-                          size: 80,
-                          color: AppColors.primary,
-                        ),
-                      );
-                    },
-                  ),
+                  child: widget.artist.imageUrl.isNotEmpty
+                      ? Image.network(
+                          widget.artist.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _placeholder(),
+                        )
+                      : _placeholder(),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               // Artist Name
               Text(
-                widget.artist['name']!,
+                widget.artist.name,
                 style: const TextStyle(
-                  fontSize: 17,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textMain,
                 ),
@@ -159,11 +220,15 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              // Genre
+              // Followers or genre tag
               Text(
-                widget.artist['genre']!,
+                widget.artist.followers > 0
+                    ? widget.artist.followersFormatted
+                    : (widget.artist.genres.isNotEmpty
+                        ? widget.artist.genres.first
+                        : ''),
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMuted.withValues(alpha: 0.7),
                 ),
@@ -171,30 +236,17 @@ class _ArtistGridCardState extends State<_ArtistGridCard> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              // Followers
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${widget.artist['followers']} followers',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _placeholder() {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.2),
+      child: const Icon(Icons.person, size: 60, color: AppColors.primary),
     );
   }
 }

@@ -333,17 +333,54 @@ class FirebaseService extends ChangeNotifier {
     }
   }
 
-  // Favorites Stubs
-  Future<void> addToFavorites(String trackId) async {
-    debugPrint('Stub: addToFavorites $trackId');
+  // Favorites
+  Stream<List<Map<String, dynamic>>> favoritesStream() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+    return _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList());
+  }
+
+  Future<void> addToFavorites(Map<String, dynamic> trackData) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final id = trackData['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .doc(id)
+        .set(trackData);
   }
 
   Future<void> removeFromFavorites(String trackId) async {
-    debugPrint('Stub: removeFromFavorites $trackId');
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .doc(trackId)
+        .delete();
   }
 
-  bool isFavorite(String trackId) {
-    return false;
+  Future<bool> isFavorite(String trackId) async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final doc = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .doc(trackId)
+        .get();
+    return doc.exists;
   }
 
   List<String> getFavorites() {
@@ -441,8 +478,19 @@ class FirebaseService extends ChangeNotifier {
   }
 
   Future<String?> deletePlaylist(String playlistId) async {
-    debugPrint('Stub: deletePlaylist called');
-    return null;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('playlists')
+          .doc(playlistId)
+          .delete();
+      return null;
+    } catch (e) {
+      return 'Failed to delete playlist: $e';
+    }
   }
 
   // Artist Stubs
@@ -458,24 +506,135 @@ class FirebaseService extends ChangeNotifier {
     return false;
   }
 
-  // Tracks Management Stubs
+  // Tracks Management (Optimized for Production/Scalability)
   Future<List<Map<String, dynamic>>> getAllTracks({int limit = 50}) async {
-    return [];
+    try {
+      final snapshot = await _firestore
+          .collection('tracks')
+          .where('status', isEqualTo: 'published')
+          .get();
+
+      final results = snapshot.docs
+          .where((doc) {
+            final isPublicField = doc.data()['isPublic'];
+            return isPublicField != false;
+          })
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          })
+          .toList();
+
+      results.sort((a, b) {
+        final aDate = FirebaseService._parseCreatedAt(a['createdAt']);
+        final bDate = FirebaseService._parseCreatedAt(b['createdAt']);
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+
+      return results.take(limit).toList();
+    } catch (e) {
+      debugPrint('Error getting all tracks: $e');
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> searchTracks(
     String query, {
     int limit = 30,
   }) async {
-    return [];
+    try {
+      final snapshot = await _firestore
+          .collection('tracks')
+          .limit(100) // Increase limit for local filtering
+          .get();
+
+      final results = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          })
+          .where((track) {
+            final isPublished = track['status'] == 'published';
+            final isPublicField = track['isPublic'];
+            if (!isPublished || isPublicField == false) return false;
+
+            final title = (track['title'] as String? ?? '').toLowerCase();
+            final artist = (track['artist'] as String? ?? '').toLowerCase();
+            final search = query.toLowerCase();
+            return title.contains(search) || artist.contains(search);
+          })
+          .toList();
+
+      return results.take(limit).toList();
+    } catch (e) {
+      debugPrint('Error searching tracks: $e');
+      return [];
+    }
   }
 
   Future<Map<String, dynamic>?> getTrackById(String trackId) async {
+    try {
+      final doc = await _firestore.collection('tracks').doc(trackId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          data['id'] = doc.id;
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting track by id: $e');
+      return null;
+    }
+  }
+
+  /// Parse createdAt field that may be a Firestore Timestamp OR an ISO string
+  /// saved by the admin web panel.
+  static DateTime? _parseCreatedAt(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
     return null;
   }
 
   Stream<List<Map<String, dynamic>>> tracksStream({int limit = 50}) {
-    return Stream.value([]);
+    return _firestore
+        .collection('tracks')
+        .where('status', isEqualTo: 'published')
+        .snapshots()
+        .map((snapshot) {
+          final docs = snapshot.docs
+              .where((doc) {
+                final data = doc.data();
+                // Accept tracks that are explicitly public OR where isPublic is not set
+                final isPublicField = data['isPublic'];
+                if (isPublicField == false) return false;
+                return true;
+              })
+              .map((doc) {
+                final data = doc.data();
+                data['id'] = doc.id;
+                return data;
+              })
+              .toList();
+
+          docs.sort((a, b) {
+            final aDate = _parseCreatedAt(a['createdAt']);
+            final bDate = _parseCreatedAt(b['createdAt']);
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1;
+            if (bDate == null) return -1;
+            return bDate.compareTo(aDate);
+          });
+
+          return docs.take(limit).toList();
+        });
   }
 
   // Sign Out
