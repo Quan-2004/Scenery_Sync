@@ -33,6 +33,12 @@ async function cloudinaryUpload(file: File, preset: string, resourceType = 'auto
   return json.secure_url as string;
 }
 
+const GENRE_OPTIONS = [
+  'Pop', 'Ballad', 'R&B', 'Hip-hop', 'Rap', 'Rock', 'Indie',
+  'Acoustic', 'Electronic', 'EDM', 'Jazz', 'Classical', 'Folk',
+  'Country', 'Lo-fi', 'OST', 'Bolero', 'Dân ca', 'Khác',
+];
+
 export default function ArtistTracksPage() {
   const user = useArtist();
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -41,11 +47,19 @@ export default function ArtistTracksPage() {
   const [processing, setProcessing] = useState<string | null>(null);
 
   // Upload form state
-  const [title, setTitle] = useState('');
-  const [genre, setGenre] = useState('');
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [title, setTitle]             = useState('');
+  const [genre, setGenre]             = useState('');
+  const [customGenre, setCustomGenre] = useState('');
+  const [description, setDescription] = useState('');
+  const [releaseYear, setReleaseYear] = useState(new Date().getFullYear().toString());
+  const [language, setLanguage]       = useState('Tiếng Việt');
+  const [tags, setTags]               = useState('');
+  const [lyrics, setLyrics]           = useState('');
+  const [lyricsMode, setLyricsMode]   = useState<'plain' | 'synced'>('plain');
+  const [audioFile, setAudioFile]     = useState<File | null>(null);
+  const [coverFile, setCoverFile]     = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState('');
+  const [uploading, setUploading]     = useState<string>(''); // step description
   const [uploadError, setUploadError] = useState('');
   const audioRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -57,17 +71,33 @@ export default function ArtistTracksPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setCoverFile(file);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCoverPreview(url);
+    } else {
+      setCoverPreview('');
+    }
+  }
+
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!audioFile || !title || !user?.uid) return;
-    setUploading(true);
+    setUploading('Đang upload file nhạc…');
     setUploadError('');
 
     try {
-      const [audioUrl, coverUrl] = await Promise.all([
-        cloudinaryUpload(audioFile, AUDIO_PRESET, 'video'),
-        coverFile ? cloudinaryUpload(coverFile, COVER_PRESET, 'image') : Promise.resolve(''),
-      ]);
+      const audioUrl = await cloudinaryUpload(audioFile, AUDIO_PRESET, 'video');
+      let coverUrl = '';
+      if (coverFile) {
+        setUploading('Đang upload ảnh bìa…');
+        coverUrl = await cloudinaryUpload(coverFile, COVER_PRESET, 'image');
+      }
+      setUploading('Đang lưu thông tin…');
+
+      const finalGenre = genre === 'Khác' ? customGenre : genre;
 
       const ref = await createTrack({
         title,
@@ -80,7 +110,13 @@ export default function ArtistTracksPage() {
         previewUrl: audioUrl,
         imageUrl: coverUrl,
         artworkUrl: coverUrl,
-        genre,
+        genre: finalGenre,
+        description,
+        releaseYear: parseInt(releaseYear) || new Date().getFullYear(),
+        language,
+        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        lyrics,
+        lyricsMode,
         status: 'published',
         isHidden: false,
         isPublic: true,
@@ -88,20 +124,23 @@ export default function ArtistTracksPage() {
       });
 
       setTracks(prev => [{
-        id: ref.id, title, name: title, genre, status: 'published',
+        id: ref.id, title, name: title, genre: finalGenre, status: 'published',
         isHidden: false, imageUrl: coverUrl, audioUrl,
         stats: { playCount: 0, favoriteCount: 0, sceneryMatchCount: 0 },
       }, ...prev]);
 
       // Reset
-      setTitle(''); setGenre(''); setAudioFile(null); setCoverFile(null);
+      setTitle(''); setGenre(''); setCustomGenre(''); setDescription('');
+      setReleaseYear(new Date().getFullYear().toString()); setLanguage('Tiếng Việt');
+      setTags(''); setLyrics(''); setLyricsMode('plain');
+      setAudioFile(null); setCoverFile(null); setCoverPreview('');
       if (audioRef.current) audioRef.current.value = '';
       if (coverRef.current) coverRef.current.value = '';
       setShowUpload(false);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload thất bại');
     } finally {
-      setUploading(false);
+      setUploading('');
     }
   }
 
@@ -134,40 +173,193 @@ export default function ArtistTracksPage() {
         </button>
       </div>
 
-      {/* Upload Form */}
+      {/* ── Upload Form Modal ─────────────────────────── */}
       {showUpload && (
-        <div className="chart-card" style={{ marginBottom: 24 }}>
-          <div className="chart-title">📤 Upload bài hát mới</div>
-          {uploadError && <div className="login-error">{uploadError}</div>}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-solid)', borderRadius: 16, padding: 28, marginBottom: 28, boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-solid)' }}>
+            <span style={{ fontSize: 22 }}>📤</span>
+            <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>Upload bài hát mới</span>
+          </div>
+
+          {uploadError && (
+            <div style={{ background: '#ffeaea', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#dc2626', fontSize: 13 }}>
+              ⚠️ {uploadError}
+            </div>
+          )}
+
           <form onSubmit={handleUpload}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div className="form-group">
-                <label className="form-label">Tên bài hát *</label>
-                <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} required placeholder="VD: Lặng yên bên em" />
+
+            {/* ── SECTION 1: Basic Info ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                🎵 Thông tin cơ bản
               </div>
-              <div className="form-group">
-                <label className="form-label">Thể loại</label>
-                <input className="form-control" value={genre} onChange={e => setGenre(e.target.value)} placeholder="VD: Ballad, Pop, Acoustic…" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Tên bài hát <span style={{ color: 'var(--primary)' }}>*</span></label>
+                  <input className="form-control" value={title} onChange={e => setTitle(e.target.value)} required placeholder="VD: Lặng yên bên em" />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Thể loại</label>
+                  <select className="form-control" value={genre} onChange={e => setGenre(e.target.value)} style={{ cursor: 'pointer' }}>
+                    <option value="">-- Chọn thể loại --</option>
+                    {GENRE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+
+                {genre === 'Khác' && (
+                  <div className="form-group">
+                    <label className="form-label">Nhập thể loại khác</label>
+                    <input className="form-control" value={customGenre} onChange={e => setCustomGenre(e.target.value)} placeholder="VD: City Pop, Vocaloid…" />
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Ngôn ngữ</label>
+                  <select className="form-control" value={language} onChange={e => setLanguage(e.target.value)} style={{ cursor: 'pointer' }}>
+                    {['Tiếng Việt', 'English', 'Korean', 'Japanese', 'Chinese', 'Instrumental', 'Khác'].map(l =>
+                      <option key={l} value={l}>{l}</option>
+                    )}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Năm phát hành</label>
+                  <input className="form-control" type="number" min={1900} max={new Date().getFullYear()} value={releaseYear} onChange={e => setReleaseYear(e.target.value)} />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Mô tả / Câu chuyện bài hát</label>
+                  <textarea className="form-control" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Chia sẻ cảm hứng hay câu chuyện đằng sau bài hát này…" style={{ resize: 'vertical' }} />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Tags (ngăn cách bằng dấu phẩy)</label>
+                  <input className="form-control" value={tags} onChange={e => setTags(e.target.value)} placeholder="VD: buồn, mưa, tình yêu, acoustic, chill…" />
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Tags giúp AI nhận diện cảm xúc và gợi ý bài hát phù hợp với phong cảnh
+                  </div>
+                </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div className="form-group">
-                <label className="form-label">File nhạc * (MP3, AAC, WAV)</label>
-                <input ref={audioRef} type="file" accept="audio/*" className="form-control" onChange={e => setAudioFile(e.target.files?.[0] ?? null)} required />
+
+            {/* ── SECTION 2: Files ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                📁 File media
               </div>
-              <div className="form-group">
-                <label className="form-label">Ảnh bìa (JPG, PNG)</label>
-                <input ref={coverRef} type="file" accept="image/*" className="form-control" onChange={e => setCoverFile(e.target.files?.[0] ?? null)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+                {/* Audio */}
+                <div className="form-group">
+                  <label className="form-label">File nhạc <span style={{ color: 'var(--primary)' }}>*</span> <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(MP3, AAC, WAV, FLAC)</span></label>
+                  <label style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 8, cursor: 'pointer', border: '2px dashed var(--border-solid)', borderRadius: 10,
+                    padding: '20px 16px', background: audioFile ? 'rgba(212,114,42,0.06)' : 'var(--bg-sidebar)',
+                    borderColor: audioFile ? 'var(--primary)' : 'var(--border-solid)', transition: 'all 0.2s',
+                  }}>
+                    <input ref={audioRef} type="file" accept="audio/*" style={{ display: 'none' }} required onChange={e => setAudioFile(e.target.files?.[0] ?? null)} />
+                    <span style={{ fontSize: 28 }}>{audioFile ? '🎵' : '🎧'}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: audioFile ? 'var(--primary)' : 'var(--text-muted)' }}>
+                      {audioFile ? audioFile.name : 'Nhấn để chọn file nhạc'}
+                    </span>
+                    {audioFile && (
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {(audioFile.size / 1024 / 1024).toFixed(1)} MB
+                      </span>
+                    )}
+                  </label>
+                </div>
+
+                {/* Cover */}
+                <div className="form-group">
+                  <label className="form-label">Ảnh bìa <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(JPG, PNG — khuyến nghị 1:1)</span></label>
+                  <label style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 8, cursor: 'pointer', border: '2px dashed var(--border-solid)', borderRadius: 10,
+                    padding: coverPreview ? 0 : '20px 16px', background: 'var(--bg-sidebar)',
+                    borderColor: coverFile ? 'var(--primary)' : 'var(--border-solid)',
+                    overflow: 'hidden', transition: 'all 0.2s', minHeight: 100,
+                  }}>
+                    <input ref={coverRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverChange} />
+                    {coverPreview ? (
+                      <img src={coverPreview} alt="preview" style={{ width: '100%', objectFit: 'cover', maxHeight: 180 }} />
+                    ) : (
+                      <>
+                        <span style={{ fontSize: 28 }}>🖼️</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>Nhấn để chọn ảnh bìa</span>
+                      </>
+                    )}
+                  </label>
+                </div>
               </div>
             </div>
-            <button type="submit" className="btn btn-primary" disabled={uploading}>
-              {uploading ? '⏳ Đang upload…' : '📤 Upload bài hát'}
-            </button>
+
+            {/* ── SECTION 3: Lyrics ── */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  📝 Lời bài hát
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['plain', 'synced'] as const).map(m => (
+                    <button
+                      key={m} type="button"
+                      onClick={() => setLyricsMode(m)}
+                      style={{
+                        border: '1px solid var(--border-solid)', borderRadius: 6, padding: '3px 10px',
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        background: lyricsMode === m ? 'var(--primary)' : 'var(--bg-sidebar)',
+                        color: lyricsMode === m ? '#fff' : 'var(--text-muted)',
+                      }}
+                    >
+                      {m === 'plain' ? '📄 Thường' : '⏱ Có timestamp'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {lyricsMode === 'synced' && (
+                <div style={{ background: 'rgba(212,114,42,0.08)', borderRadius: 8, padding: '8px 12px', marginBottom: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+                  💡 Định dạng timestamp: <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 3 }}>[mm:ss.xx]</code> mỗi dòng. VD: <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 3 }}>[00:12.34] Lặng yên bên em…</code>
+                </div>
+              )}
+
+              <textarea
+                className="form-control"
+                rows={10}
+                value={lyrics}
+                onChange={e => setLyrics(e.target.value)}
+                placeholder={lyricsMode === 'plain'
+                  ? 'Nhập lời bài hát…\n\n[Verse 1]\n...\n\n[Chorus]\n...'
+                  : '[00:00.00] Intro\n[00:12.34] Dòng lời đầu tiên\n[00:18.50] Dòng tiếp theo…'
+                }
+                style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.7 }}
+              />
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                {lyrics.split('\n').length} dòng · {lyrics.length} ký tự
+              </div>
+            </div>
+
+            {/* ── Submit ── */}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button type="submit" className="btn btn-primary" disabled={!!uploading} style={{ minWidth: 160 }}>
+                {uploading ? `⏳ ${uploading}` : '📤 Publish bài hát'}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => setShowUpload(false)}>
+                Hủy
+              </button>
+              {uploading && (
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Vui lòng không đóng trang…</span>
+              )}
+            </div>
           </form>
         </div>
       )}
 
-      {/* Track List */}
+      {/* ── Track List ──────────────────────────────── */}
       <div className="card-grid">
         {loading
           ? [1, 2, 3].map(i => (
