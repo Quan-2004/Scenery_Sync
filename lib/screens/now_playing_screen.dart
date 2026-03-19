@@ -13,8 +13,22 @@ import '../services/firebase_service.dart';
 import '../services/downloads_service.dart';
 import '../models/music_models.dart';
 
-class NowPlayingScreen extends StatelessWidget {
+class NowPlayingScreen extends StatefulWidget {
   const NowPlayingScreen({super.key});
+
+  @override
+  State<NowPlayingScreen> createState() => _NowPlayingScreenState();
+}
+
+class _NowPlayingScreenState extends State<NowPlayingScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +36,9 @@ class NowPlayingScreen extends StatelessWidget {
       backgroundColor: AppColors.backgroundLight,
       body: Stack(
         children: [
-          // Background Gradient Blur
+          // Background Gradient
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+            top: 0, left: 0, right: 0,
             height: MediaQuery.of(context).size.height * 0.6,
             child: Container(
               decoration: BoxDecoration(
@@ -41,44 +53,360 @@ class NowPlayingScreen extends StatelessWidget {
               ),
             ),
           ),
-          
-          // Main Content
-          SafeArea(
-            child: Column(
-              children: [
-                const _Header(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      child: Column(
-                        children: const [
-                          _AlbumArt(),
-                          SizedBox(height: 24),
-                          _TrackInfo(),
-                          SizedBox(height: 32),
-                          _ProgressBar(),
-                          SizedBox(height: 32),
-                          _PlaybackControls(),
-                          SizedBox(height: 40),
-                          _UpNextList(),
-                          SizedBox(height: 24),
-                          _DeviceSelector(),
-                          SizedBox(height: 24),
+
+          // PageView: Player | Lyrics
+          PageView(
+            controller: _pageController,
+            onPageChanged: (p) => setState(() => _currentPage = p),
+            children: [
+              // ── Page 0: Player ──────────────────────
+              SafeArea(
+                child: Column(
+                  children: [
+                    const _Header(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          child: Column(
+                            children: const [
+                              _AlbumArt(),
+                              SizedBox(height: 24),
+                              _TrackInfo(),
+                              SizedBox(height: 32),
+                              _ProgressBar(),
+                              SizedBox(height: 32),
+                              _PlaybackControls(),
+                              SizedBox(height: 40),
+                              _UpNextList(),
+                              SizedBox(height: 24),
+                              _DeviceSelector(),
+                              SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Swipe hint
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chevron_right_rounded,
+                              size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                          Text(
+                            'Vuốt để xem lời bài hát',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textMuted.withValues(alpha: 0.5),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+
+              // ── Page 1: Lyrics ──────────────────────
+              const LyricsPanel(),
+            ],
+          ),
+
+          // Page dots indicator
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 4,
+            left: 0, right: 0,
+            child: _PageDots(current: _currentPage, total: 2),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Page dots ─────────────────────────────────────────────────────────────────
+class _PageDots extends StatelessWidget {
+  final int current;
+  final int total;
+  const _PageDots({required this.current, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(total, (i) {
+        final active = i == current;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: active ? 16 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            color: active
+                ? AppColors.primary
+                : AppColors.textMuted.withValues(alpha: 0.3),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ── Lyrics Panel ──────────────────────────────────────────────────────────────
+class LyricsPanel extends StatefulWidget {
+  const LyricsPanel({super.key});
+
+  @override
+  State<LyricsPanel> createState() => _LyricsPanelState();
+}
+
+class _LyricsPanelState extends State<LyricsPanel> {
+  final ScrollController _scroll = ScrollController();
+  int _activeIndex = 0;
+
+  /// Parse synced lyrics: '[mm:ss.xx] text' -> list of {ms, text}
+  List<Map<String, dynamic>> _parseSynced(String raw) {
+    final lines = <Map<String, dynamic>>[];
+    final re = RegExp(r'^\[(\d{2}):(\d{2})[\.:]?(\d{0,2})\]\s*(.*)');
+    for (final line in raw.split('\n')) {
+      final m = re.firstMatch(line.trim());
+      if (m != null) {
+        final min = int.parse(m.group(1)!);
+        final sec = int.parse(m.group(2)!);
+        final cs = m.group(3)!.isEmpty ? 0 : int.parse(m.group(3)!);
+        final ms = (min * 60 + sec) * 1000 + cs * 10;
+        lines.add({'ms': ms, 'text': m.group(4) ?? ''});
+      }
+    }
+    return lines;
+  }
+
+  void _syncToPosition(int posMs, List<Map<String, dynamic>> synced) {
+    int idx = 0;
+    for (int i = 0; i < synced.length; i++) {
+      if (posMs >= (synced[i]['ms'] as int)) idx = i;
+    }
+    if (idx != _activeIndex) {
+      setState(() => _activeIndex = idx);
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          (idx * 72.0).clamp(0, _scroll.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final player = AudioPlayerService.instance;
+
+    return StreamBuilder<Track?>(
+      stream: player.trackStream,
+      initialData: player.currentTrack,
+      builder: (context, snapshot) {
+        final track = snapshot.data;
+        final lyrics = track?.lyrics ?? '';
+        final mode = track?.lyricsMode ?? 'plain';
+        final synced = mode == 'synced' && lyrics.isNotEmpty
+            ? _parseSynced(lyrics)
+            : <Map<String, dynamic>>[];
+        final plainLines = lyrics.isNotEmpty
+            ? lyrics.split('\n')
+            : <String>[];
+
+        return Container(
+          color: AppColors.backgroundLight,
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 48, width: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.lyrics_rounded,
+                            color: AppColors.primary, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'LỜI BÀI HÁT',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                                color: AppColors.primary.withValues(alpha: 0.8),
+                              ),
+                            ),
+                            if (track != null)
+                              Text(
+                                '${track.name} — ${track.artistName}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (mode == 'synced')
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            '⏱ Synced',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Lyrics body
+                Expanded(
+                  child: lyrics.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.lyrics_outlined,
+                                  size: 56,
+                                  color: AppColors.textMuted.withValues(alpha: 0.3)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Bài hát này chưa có lời',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : mode == 'synced' && synced.isNotEmpty
+                          // ── Synced lyrics with position tracking ──
+                          ? StreamBuilder<Duration>(
+                              stream: player.player.positionStream,
+                              builder: (context, posSnap) {
+                                final posMs = (posSnap.data ?? Duration.zero).inMilliseconds;
+                                _syncToPosition(posMs, synced);
+                                return ShaderMask(
+                                  shaderCallback: (r) => const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+                                    stops: [0.0, 0.08, 0.92, 1.0],
+                                  ).createShader(r),
+                                  blendMode: BlendMode.dstIn,
+                                  child: ListView.builder(
+                                    controller: _scroll,
+                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+                                    itemCount: synced.length,
+                                    itemBuilder: (ctx, i) {
+                                      final active = i == _activeIndex;
+                                      final past = i < _activeIndex;
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        child: AnimatedDefaultTextStyle(
+                                          duration: const Duration(milliseconds: 300),
+                                          style: TextStyle(
+                                            fontSize: active ? 26 : 19,
+                                            fontWeight: active ? FontWeight.w800 : FontWeight.w500,
+                                            color: active
+                                                ? AppColors.textMain
+                                                : past
+                                                    ? AppColors.textMuted.withValues(alpha: 0.45)
+                                                    : AppColors.textMuted.withValues(alpha: 0.25),
+                                            height: 1.4,
+                                          ),
+                                          child: Text(
+                                            synced[i]['text'] as String,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            )
+                          // ── Plain lyrics ──
+                          : ShaderMask(
+                              shaderCallback: (r) => const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+                                stops: [0.0, 0.06, 0.94, 1.0],
+                              ).createShader(r),
+                              blendMode: BlendMode.dstIn,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                                itemCount: plainLines.length,
+                                itemBuilder: (ctx, i) {
+                                  final line = plainLines[i];
+                                  final isSection = line.startsWith('[') && line.endsWith(']');
+                                  return Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: isSection ? 14 : 6),
+                                    child: Text(
+                                      line,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: isSection ? 13 : 18,
+                                        fontWeight: isSection
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSection
+                                            ? AppColors.primary
+                                            : AppColors.textMain.withValues(alpha: 0.85),
+                                        letterSpacing: isSection ? 1.2 : 0,
+                                        height: 1.55,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 class _Header extends StatelessWidget {
   const _Header();

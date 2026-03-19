@@ -7,10 +7,12 @@ class Track {
   final String albumId;
   final String imageUrl;
   final String? previewUrl;
-  final String? localPath; // path to downloaded file if available
+  final String? localPath;
   final bool isDownloaded;
   final int durationMs;
   final int popularity;
+  final String? lyrics;
+  final String? lyricsMode; // 'plain' | 'synced'
 
   Track({
     required this.id,
@@ -25,6 +27,8 @@ class Track {
     this.isDownloaded = false,
     required this.durationMs,
     required this.popularity,
+    this.lyrics,
+    this.lyricsMode,
   });
 
   factory Track.fromDeezerJson(Map<String, dynamic> json) {
@@ -91,6 +95,8 @@ class Track {
       isDownloaded: false,
       durationMs: readInt(json['durationMs']),
       popularity: readInt(json['popularity']),
+      lyrics: json['lyrics'] as String?,
+      lyricsMode: json['lyricsMode'] as String?,
     );
   }
 
