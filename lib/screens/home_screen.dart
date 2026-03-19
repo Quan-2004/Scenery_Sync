@@ -1592,39 +1592,49 @@ class _AlbumSectionState extends State<_AlbumSection> {
   }
 
   Future<void> _loadAlbums() async {
-    final results = await Future.wait([
-      DeezerService().getChartTracks(limit: 100),
-      JamendoService().getInstrumentalTracks(
-        tags: ['ambient', 'nature', 'cinematic'],
-        limit: 200,
-      ),
-    ]);
+    try {
+      final results = await Future.wait([
+        DeezerService().getChartTracks(limit: 100),
+        JamendoService().getInstrumentalTracks(
+          tags: ['ambient', 'nature', 'cinematic'],
+          limit: 200,
+        ),
+      ]).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => [<Track>[], <Track>[]],
+      );
 
-    final allTracks = [
-      ...results[0],
-      ...results[1],
-    ];
+      final allTracks = [
+        ...results[0],
+        ...results[1],
+      ];
 
-    final seenIds = <String>{};
-    final albums = <Album>[];
-    for (final track in allTracks) {
-      if (track.albumId.isNotEmpty && !seenIds.contains(track.albumId)) {
-        seenIds.add(track.albumId);
-        albums.add(Album(
-          id: track.albumId,
-          name: track.albumName.isNotEmpty ? track.albumName : 'Unknown Album',
-          artistName: track.artistName,
-          imageUrl: track.imageUrl,
-          releaseDate: '',
-          totalTracks: 0,
-        ));
+      final seenIds = <String>{};
+      final albums = <Album>[];
+      for (final track in allTracks) {
+        if (track.albumId.isNotEmpty && !seenIds.contains(track.albumId)) {
+          seenIds.add(track.albumId);
+          albums.add(Album(
+            id: track.albumId,
+            name: track.albumName.isNotEmpty ? track.albumName : 'Unknown Album',
+            artistName: track.artistName,
+            imageUrl: track.imageUrl,
+            releaseDate: '',
+            totalTracks: 0,
+          ));
+        }
       }
-    }
-    if (mounted) {
-      setState(() {
-        _albums = albums;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _albums = albums;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('_loadAlbums error: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
