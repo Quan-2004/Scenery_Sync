@@ -22,6 +22,12 @@ class FirebaseService extends ChangeNotifier {
   Map<String, dynamic>? _userProfile;
   Map<String, dynamic>? get userProfile => _userProfile;
 
+  /// Returns the current user's role: 'user', 'artist', or 'admin'.
+  /// Defaults to 'user' if not set.
+  String get userRole => (_userProfile?['role'] as String?) ?? 'user';
+  bool get isAdmin => userRole == 'admin';
+  bool get isArtist => userRole == 'artist';
+
   FirebaseService() {
     // Listen to auth state changes to notify listeners
     _auth.authStateChanges().listen((user) {
@@ -387,13 +393,40 @@ class FirebaseService extends ChangeNotifier {
     return [];
   }
 
-  // Recently Played Stubs
+  // Recently Played (real-time)
   Future<void> saveRecentlyPlayed(Map<String, dynamic> track) async {
-    debugPrint('Stub: saveRecentlyPlayed called');
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final trackId = (track['id'] ?? '').toString();
+    if (trackId.isEmpty) return;
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('recently_played')
+        .doc(trackId)
+        .set({
+          ...track,
+          'playedAt': FieldValue.serverTimestamp(),
+          'playCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
   }
 
-  Stream<dynamic> getRecentlyPlayed() {
-    return const Stream.empty();
+  Stream<List<Map<String, dynamic>>> getRecentlyPlayed({int limit = 50}) {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+
+    return _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('recently_played')
+        .orderBy('playedAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList());
   }
 
   // Playlist Stubs
@@ -516,8 +549,11 @@ class FirebaseService extends ChangeNotifier {
 
       final results = snapshot.docs
           .where((doc) {
-            final isPublicField = doc.data()['isPublic'];
-            return isPublicField != false;
+            final data = doc.data();
+            final isPublicField = data['isPublic'];
+            // Exclude hidden tracks for regular users
+            final isHidden = data['isHidden'] == true;
+            return isPublicField != false && !isHidden;
           })
           .map((doc) {
             final data = doc.data();
@@ -540,6 +576,52 @@ class FirebaseService extends ChangeNotifier {
       debugPrint('Error getting all tracks: $e');
       return [];
     }
+  }
+
+  // ── Stats Tracking ──────────────────────────────────────────────────────────
+
+  /// Increment play count for a track (fire-and-forget).
+  Future<void> incrementPlayCount(String trackId) async {
+    if (trackId.isEmpty) return;
+    try {
+      await _firestore.collection('tracks').doc(trackId).update({
+        'stats.playCount': FieldValue.increment(1),
+      });
+    } catch (_) {
+      // Non-critical — don't surface errors to user
+    }
+  }
+
+  /// Increment scenery match count when ChatBot suggests a track.
+  Future<void> incrementSceneryMatch(String trackId) async {
+    if (trackId.isEmpty) return;
+    try {
+      await _firestore.collection('tracks').doc(trackId).update({
+        'stats.sceneryMatchCount': FieldValue.increment(1),
+      });
+    } catch (_) {
+      // Non-critical
+    }
+  }
+
+  /// Increment favorite count when user likes a track.
+  Future<void> incrementFavoriteCount(String trackId) async {
+    if (trackId.isEmpty) return;
+    try {
+      await _firestore.collection('tracks').doc(trackId).update({
+        'stats.favoriteCount': FieldValue.increment(1),
+      });
+    } catch (_) {}
+  }
+
+  /// Decrement favorite count when user unlikes a track.
+  Future<void> decrementFavoriteCount(String trackId) async {
+    if (trackId.isEmpty) return;
+    try {
+      await _firestore.collection('tracks').doc(trackId).update({
+        'stats.favoriteCount': FieldValue.increment(-1),
+      });
+    } catch (_) {}
   }
 
   Future<List<Map<String, dynamic>>> searchTracks(
@@ -612,9 +694,10 @@ class FirebaseService extends ChangeNotifier {
           final docs = snapshot.docs
               .where((doc) {
                 final data = doc.data();
-                // Accept tracks that are explicitly public OR where isPublic is not set
                 final isPublicField = data['isPublic'];
                 if (isPublicField == false) return false;
+                // Filter out hidden tracks for end-users
+                if (data['isHidden'] == true) return false;
                 return true;
               })
               .map((doc) {
@@ -635,6 +718,182 @@ class FirebaseService extends ChangeNotifier {
 
           return docs.take(limit).toList();
         });
+  }
+
+  // Chat history (persisted for 24h)
+  Future<void> saveChatMessage(Map<String, dynamic> message) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final now = DateTime.now();
+    final expiresAt = now.add(const Duration(hours: 24));
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('chat_messages')
+        .add({
+          ...message,
+          'createdAt': FieldValue.serverTimestamp(),
+          'clientCreatedAt': Timestamp.fromDate(now),
+          'expiresAt': Timestamp.fromDate(expiresAt),
+        });
+  }
+
+  Future<void> deleteExpiredChatMessages() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final now = Timestamp.fromDate(DateTime.now());
+    final expired = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('chat_messages')
+        .where('expiresAt', isLessThanOrEqualTo: now)
+        .limit(200)
+        .get();
+
+    if (expired.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+    for (final doc in expired.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentChatMessages({
+    int limit = 120,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('chat_messages')
+        .orderBy('clientCreatedAt', descending: false)
+        .limit(limit)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
+  }
+
+  String _keywordDocId(String keyword) {
+    return Uri.encodeComponent(keyword.toLowerCase().trim());
+  }
+
+  Future<List<String>> reportLearnedKeywords({
+    required List<String> keywords,
+    required Map<String, double> weightedKeywords,
+    String? imagePath,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || keywords.isEmpty) return const [];
+
+    final sanitized = keywords
+        .map((k) => k.toLowerCase().trim())
+        .where((k) => k.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (sanitized.isEmpty) return const [];
+
+    final userKeywordCol = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('learned_keywords');
+
+    final newlyLearned = <String>[];
+    final now = DateTime.now();
+
+    for (final keyword in sanitized) {
+      final docRef = userKeywordCol.doc(_keywordDocId(keyword));
+      final existing = await docRef.get();
+
+      await docRef.set({
+        'keyword': keyword,
+        'count': FieldValue.increment(1),
+        'lastSeenAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
+        if (!existing.exists) 'firstClientSeenAt': Timestamp.fromDate(now),
+      }, SetOptions(merge: true));
+
+      if (!existing.exists) {
+        newlyLearned.add(keyword);
+      }
+    }
+
+    if (newlyLearned.isNotEmpty) {
+      final topDetected = weightedKeywords.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+
+      await _firestore.collection('admin_keyword_reports').add({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName,
+        'keywords': newlyLearned,
+        'topDetected': topDetected
+            .take(8)
+            .map((e) => {'keyword': e.key, 'score': e.value})
+            .toList(),
+        'imagePath': imagePath,
+        'source': 'chat_image_analysis',
+        'status': 'new',
+        'createdAt': FieldValue.serverTimestamp(),
+        'clientCreatedAt': Timestamp.fromDate(now),
+      });
+    }
+
+    return newlyLearned;
+  }
+
+  Future<Map<String, double>> getLearnedKeywordWeights({
+    int limit = 120,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return const {};
+
+    Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchDocs() async {
+      try {
+        final ordered = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('learned_keywords')
+            .orderBy('count', descending: true)
+            .limit(limit)
+            .get();
+        return ordered.docs;
+      } catch (_) {
+        final raw = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('learned_keywords')
+            .limit(limit)
+            .get();
+        return raw.docs;
+      }
+    }
+
+    try {
+      final docs = await fetchDocs();
+      final result = <String, double>{};
+      for (final doc in docs) {
+        final data = doc.data();
+        final keyword = (data['keyword'] ?? doc.id).toString().trim().toLowerCase();
+        if (keyword.isEmpty) continue;
+        final count = (data['count'] as num?)?.toDouble() ?? 1.0;
+        final normalized = (count.clamp(1, 30) / 30.0);
+        result[keyword] = 0.35 + normalized;
+      }
+      return result;
+    } catch (e) {
+      debugPrint('getLearnedKeywordWeights error: $e');
+      return const {};
+    }
   }
 
   // Sign Out

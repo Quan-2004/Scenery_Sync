@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -42,20 +43,20 @@ class _QueueScreenState extends State<QueueScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Up Next',
-                          style: TextStyle(
+                          'up_next'.tr(),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
                         Text(
-                          '5 songs in queue',
+                          'songs_in_queue'.tr(namedArgs: {'count': '5'}),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.black54,
@@ -91,7 +92,7 @@ class _QueueScreenState extends State<QueueScreen> {
                   Expanded(
                     child: _buildActionButton(
                       icon: Icons.shuffle_rounded,
-                      label: 'Shuffle',
+                      label: 'shuffle'.tr(),
                       onTap: _shuffleQueue,
                     ),
                   ),
@@ -99,7 +100,7 @@ class _QueueScreenState extends State<QueueScreen> {
                   Expanded(
                     child: _buildActionButton(
                       icon: Icons.save_alt_rounded,
-                      label: 'Save as Playlist',
+                      label: 'save_as_playlist'.tr(),
                       onTap: _saveAsPlaylist,
                     ),
                   ),
@@ -115,9 +116,9 @@ class _QueueScreenState extends State<QueueScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'NOW PLAYING',
-                    style: TextStyle(
+                  Text(
+                    'now_playing_label'.tr(),
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.black54,
@@ -138,9 +139,9 @@ class _QueueScreenState extends State<QueueScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'NEXT IN QUEUE',
-                    style: TextStyle(
+                  Text(
+                    'next_in_queue'.tr(),
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.black54,
@@ -417,9 +418,9 @@ class _QueueScreenState extends State<QueueScreen> {
       _queue.shuffle();
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Queue shuffled'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text('queue_shuffled'.tr()),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -429,12 +430,12 @@ class _QueueScreenState extends State<QueueScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Clear Queue'),
-        content: const Text('Are you sure you want to clear the entire queue?'),
+        title: Text('clear_queue'.tr()),
+        content: Text('clear_queue_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr()),
           ),
           TextButton(
             onPressed: () {
@@ -443,8 +444,8 @@ class _QueueScreenState extends State<QueueScreen> {
               });
               Navigator.pop(context);
             },
-            child: const Text(
-              'Clear',
+            child: Text(
+              'clear'.tr(),
               style: TextStyle(color: Colors.red),
             ),
           ),
@@ -455,9 +456,9 @@ class _QueueScreenState extends State<QueueScreen> {
 
   void _saveAsPlaylist() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Queue saved as new playlist'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text('queue_saved'.tr()),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

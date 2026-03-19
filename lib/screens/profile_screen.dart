@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:scenery_sync/utils/avatar_image.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
-import '../services/app_language.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../services/firebase_service.dart';
 import '../services/downloads_service.dart';
 import 'downloads_screen.dart';
@@ -21,24 +21,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final AppLanguage _appLanguage = AppLanguage();
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(_onLanguageChanged);
-  }
-
-  @override
-  void dispose() {
-    _appLanguage.removeListener(_onLanguageChanged);
-    super.dispose();
-  }
-
-  void _onLanguageChanged() {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -80,7 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const _ProfileCard(),
                   const SizedBox(height: 32),
                   _StatsSection(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                    const SizedBox(height: 8),
                   const _SettingsSection(),
                   const SizedBox(height: 24),
                 ],
@@ -101,20 +84,12 @@ class _Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<_Header> {
-  final AppLanguage _appLanguage = AppLanguage();
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(() => setState(() {}));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Text(
-        _appLanguage.translate('profile'),
+        'profile'.tr(),
         style: const TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
@@ -133,16 +108,9 @@ class _ProfileCard extends StatefulWidget {
 }
 
 class _ProfileCardState extends State<_ProfileCard> {
-  final AppLanguage _appLanguage = AppLanguage();
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isUploadingAvatar = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(() => setState(() {}));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -304,8 +272,8 @@ class _ProfileCardState extends State<_ProfileCard> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Edit Profile',
+                  child: Text(
+                    'edit_profile'.tr(),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -338,23 +306,31 @@ class _ProfileCardState extends State<_ProfileCard> {
         ),
         child: Column(
           children: [
-            Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.2),
-              ),
-              child: Icon(
-                Icons.person_outline,
-                size: 50,
-                color: AppColors.primary,
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              child: Container(
+                height: 100,
+                width: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  size: 50,
+                  color: AppColors.primary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Guest User',
-              style: TextStyle(
+            Text(
+              'guest_user'.tr(),
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
                 color: AppColors.textMain,
@@ -362,7 +338,7 @@ class _ProfileCardState extends State<_ProfileCard> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Sign in to save your music',
+              'sign_in_to_save'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -389,9 +365,9 @@ class _ProfileCardState extends State<_ProfileCard> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Sign In',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              child: Text(
+                'sign_in'.tr(),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -424,8 +400,8 @@ class _ProfileCardState extends State<_ProfileCard> {
           _showSnack(
             messenger,
             source == ImageSource.camera
-                ? 'Thiết bị này không hỗ trợ chụp ảnh'
-                : 'Tính năng chọn ảnh không được hỗ trợ',
+                ? 'device_no_camera_short'.tr()
+                : 'photo_pick_unsupported'.tr(),
             isError: true,
           );
           return;
@@ -447,11 +423,11 @@ class _ProfileCardState extends State<_ProfileCard> {
       if (error != null) {
         _showSnack(messenger, error, isError: true);
       } else {
-        _showSnack(messenger, 'Ảnh đại diện đã được cập nhật');
+        _showSnack(messenger, 'avatar_updated'.tr());
       }
     } catch (e) {
       if (!mounted) return;
-      _showSnack(messenger, 'Không thể cập nhật ảnh: $e', isError: true);
+      _showSnack(messenger, '${'avatar_update_error'.tr()}: $e', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isUploadingAvatar = false);
@@ -474,11 +450,11 @@ class _ProfileCardState extends State<_ProfileCard> {
       if (error != null) {
         _showSnack(messenger, error, isError: true);
       } else {
-        _showSnack(messenger, 'Đã xoá ảnh đại diện');
+        _showSnack(messenger, 'avatar_removed'.tr());
       }
     } catch (e) {
       if (!mounted) return;
-      _showSnack(messenger, 'Không thể xoá ảnh: $e', isError: true);
+      _showSnack(messenger, '${'avatar_remove_error'.tr()}: $e', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isUploadingAvatar = false);
@@ -514,9 +490,9 @@ class _ProfileCardState extends State<_ProfileCard> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Change Profile Picture',
-                style: TextStyle(
+              Text(
+                'change_profile_picture'.tr(),
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textMain,
@@ -525,7 +501,7 @@ class _ProfileCardState extends State<_ProfileCard> {
               const SizedBox(height: 24),
               _buildChangeAvatarOption(
                 Icons.camera_alt_rounded,
-                'Take Photo',
+                'take_photo'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _pickAndUploadAvatar(ImageSource.camera);
@@ -534,7 +510,7 @@ class _ProfileCardState extends State<_ProfileCard> {
               const SizedBox(height: 12),
               _buildChangeAvatarOption(
                 Icons.photo_library_rounded,
-                'Choose from Gallery',
+                'choose_from_gallery'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _pickAndUploadAvatar(ImageSource.gallery);
@@ -543,7 +519,7 @@ class _ProfileCardState extends State<_ProfileCard> {
               const SizedBox(height: 12),
               _buildChangeAvatarOption(
                 Icons.delete_outline_rounded,
-                'Remove Photo',
+                'remove_photo'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _removeAvatar();
@@ -554,43 +530,6 @@ class _ProfileCardState extends State<_ProfileCard> {
         ),
       ),
     );
-  }
-
-  void _handleLogout(
-    BuildContext context,
-    FirebaseService firebaseService,
-  ) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await firebaseService.logout();
-      if (context.mounted) {
-        // Clear all routes and go back to login screen
-        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-      }
-    }
   }
 
   void _showSnack(
@@ -655,18 +594,9 @@ class _StatsSection extends StatefulWidget {
 }
 
 class _StatsSectionState extends State<_StatsSection> {
-  final AppLanguage _appLanguage = AppLanguage();
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(() => setState(() {}));
-  }
-
   @override
   Widget build(BuildContext context) {
     final firebaseService = Provider.of<FirebaseService>(context);
-    final songsCount = DownloadsService.instance.getDownloadedTracks().length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -682,10 +612,17 @@ class _StatsSectionState extends State<_StatsSection> {
                   ),
                 );
               },
-              child: _StatCard(
-                icon: Icons.music_note_rounded,
-                value: songsCount.toString(),
-                label: _appLanguage.translate('songs'),
+              child: ValueListenableBuilder(
+                valueListenable: DownloadsService.instance.downloadsListenable(),
+                builder: (context, _, __) {
+                  final songsCount =
+                      DownloadsService.instance.getDownloadedTracks().length;
+                  return _StatCard(
+                    icon: Icons.download_done_rounded,
+                    value: songsCount.toString(),
+                    label: 'downloaded_songs'.tr(),
+                  );
+                },
               ),
             ),
           ),
@@ -705,7 +642,7 @@ class _StatsSectionState extends State<_StatsSection> {
                 builder: (context, snap) => _StatCard(
                   icon: Icons.playlist_play_rounded,
                   value: (snap.data?.length ?? 0).toString(),
-                  label: _appLanguage.translate('playlists'),
+                  label: 'playlists'.tr(),
                 ),
               ),
             ),
@@ -726,7 +663,7 @@ class _StatsSectionState extends State<_StatsSection> {
                 builder: (context, snap) => _StatCard(
                   icon: Icons.favorite_rounded,
                   value: (snap.data?.length ?? 0).toString(),
-                  label: _appLanguage.translate('favorites'),
+                  label: 'favorites'.tr(),
                 ),
               ),
             ),
@@ -794,14 +731,6 @@ class _SettingsSection extends StatefulWidget {
 }
 
 class _SettingsSectionState extends State<_SettingsSection> {
-  final AppLanguage _appLanguage = AppLanguage();
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(() => setState(() {}));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -822,7 +751,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
           children: [
             _SettingItem(
               icon: Icons.notifications_outlined,
-              title: _appLanguage.translate('notifications'),
+              title: 'notifications'.tr(),
               trailing: Switch(
                 value: true,
                 onChanged: (value) {},
@@ -832,7 +761,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
             const Divider(height: 1),
             _SettingItem(
               icon: Icons.download_outlined,
-              title: _appLanguage.translate('downloaded_songs'),
+              title: 'downloaded_songs'.tr(),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 Navigator.push(
@@ -846,7 +775,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
             const Divider(height: 1),
             _SettingItem(
               icon: Icons.info_outline_rounded,
-              title: _appLanguage.translate('about'),
+              title: 'about'.tr(),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 _showAboutDialog(context);
@@ -855,7 +784,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
             const Divider(height: 1),
             _SettingItem(
               icon: Icons.logout_rounded,
-              title: _appLanguage.translate('logout'),
+              title: 'logout'.tr(),
               trailing: const Icon(Icons.chevron_right_rounded),
               textColor: Colors.red,
               onTap: () {
@@ -904,188 +833,13 @@ class _SettingItem extends StatelessWidget {
 }
 
 // Dialog Functions
-void _showDataUsageDialog(BuildContext context) {
-  final AppLanguage appLanguage = AppLanguage();
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        appLanguage.translate('data_usage'),
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _DataUsageItem(
-            appLanguage.translate('streaming'),
-            '2.4 GB',
-            Icons.wifi_rounded,
-          ),
-          const SizedBox(height: 12),
-          _DataUsageItem(
-            appLanguage.translate('downloads'),
-            '1.8 GB',
-            Icons.download_rounded,
-          ),
-          const SizedBox(height: 12),
-          _DataUsageItem(
-            appLanguage.translate('cache'),
-            '456 MB',
-            Icons.cached_rounded,
-          ),
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                appLanguage.translate('total_usage'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const Text(
-                '4.7 GB',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(appLanguage.translate('close')),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(appLanguage.translate('cache_cleared'))),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: Text(appLanguage.translate('clear_cache')),
-        ),
-      ],
-    ),
-  );
-}
-
-void _showLanguageDialog(BuildContext context, Function() onLanguageChanged) {
-  final AppLanguage appLanguage = AppLanguage();
-  final languages = [
-    {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
-    {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
-  ];
-
-  showDialog(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setDialogState) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            appLanguage.translate('select_language'),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: languages.map((language) {
-                final isSelected =
-                    appLanguage.currentLanguage == language['code'];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withAlpha((0.1 * 255).round())
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : Colors.grey.withAlpha((0.3 * 255).round()),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: ListTile(
-                    leading: Text(
-                      language['flag'] as String,
-                      style: const TextStyle(fontSize: 28),
-                    ),
-                    title: Text(
-                      language['name'] as String,
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textMain,
-                      ),
-                    ),
-                    trailing: isSelected
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: AppColors.primary,
-                          )
-                        : null,
-                    onTap: () {
-                      // Thay đổi ngôn ngữ
-                      appLanguage.setLanguage(language['code'] as String);
-                      onLanguageChanged();
-                      Navigator.pop(context);
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${appLanguage.translate('language_changed')} ${language['name']}',
-                          ),
-                          duration: const Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(appLanguage.translate('cancel')),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
-
 void _showAboutDialog(BuildContext context) {
-  final AppLanguage appLanguage = AppLanguage();
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
-        appLanguage.translate('about_scenery_sync'),
+        'about_scenery_sync'.tr(),
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: Column(
@@ -1113,18 +867,18 @@ void _showAboutDialog(BuildContext context) {
           ),
           const SizedBox(height: 8),
           Text(
-            appLanguage.translate('version'),
+            'version'.tr(),
             style: const TextStyle(color: AppColors.textMuted),
           ),
           const SizedBox(height: 16),
           Text(
-            appLanguage.translate('music_companion'),
+            'music_companion'.tr(),
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textMuted),
           ),
           const SizedBox(height: 16),
           Text(
-            appLanguage.translate('copyright'),
+            'copyright'.tr(),
             style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
           ),
         ],
@@ -1132,7 +886,7 @@ void _showAboutDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(appLanguage.translate('close')),
+          child: Text('close'.tr()),
         ),
       ],
     ),
@@ -1140,20 +894,19 @@ void _showAboutDialog(BuildContext context) {
 }
 
 void _showLogoutDialog(BuildContext context) {
-  final AppLanguage appLanguage = AppLanguage();
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
-        appLanguage.translate('logout'),
+        'logout'.tr(),
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      content: Text(appLanguage.translate('logout_confirm')),
+      content: Text('logout_confirm'.tr()),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(appLanguage.translate('cancel')),
+          child: Text('cancel'.tr()),
         ),
         ElevatedButton(
           onPressed: () {
@@ -1170,36 +923,11 @@ void _showLogoutDialog(BuildContext context) {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(appLanguage.translate('logout')),
+          child: Text('logout'.tr()),
         ),
       ],
     ),
   );
 }
 
-class _DataUsageItem extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-
-  const _DataUsageItem(this.title, this.value, this.icon);
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.primary),
-        const SizedBox(width: 12),
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 14))),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textMain,
-          ),
-        ),
-      ],
-    );
-  }
-}
 

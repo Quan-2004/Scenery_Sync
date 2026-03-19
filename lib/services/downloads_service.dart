@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -47,6 +48,10 @@ class DownloadsService {
 
   List<Track> getDownloadedTracks() {
     return _box.values.map(_mapToTrack).toList();
+  }
+
+  ValueListenable<Box<Map>> downloadsListenable() {
+    return _box.listenable();
   }
 
   bool isDownloaded(String trackId) => _box.containsKey(trackId);

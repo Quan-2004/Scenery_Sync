@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../models/music_models.dart';
@@ -72,9 +73,9 @@ class _MySongsScreenState extends State<MySongsScreen> {
             pinned: true,
             backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Downloaded Songs',
-                style: TextStyle(
+              title: Text(
+                'downloaded_songs'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -108,10 +109,10 @@ class _MySongsScreenState extends State<MySongsScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'recent', child: Text('Recently Added')),
-                  PopupMenuItem(value: 'title', child: Text('Title')),
-                  PopupMenuItem(value: 'artist', child: Text('Artist')),
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'recent', child: Text('recently_added'.tr())),
+                  PopupMenuItem(value: 'title', child: Text('title'.tr())),
+                  PopupMenuItem(value: 'artist', child: Text('artist'.tr())),
                 ],
               ),
             ],
@@ -134,14 +135,14 @@ class _MySongsScreenState extends State<MySongsScreen> {
                       color: AppColors.textMuted.withValues(alpha: 0.4),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'No downloaded songs',
-                      style: TextStyle(fontSize: 18, color: AppColors.textMuted),
+                    Text(
+                      'no_downloaded_songs'.tr(),
+                      style: const TextStyle(fontSize: 18, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Download songs to listen offline',
-                      style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                    Text(
+                      'download_songs_offline'.tr(),
+                      style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
                     ),
                   ],
                 ),

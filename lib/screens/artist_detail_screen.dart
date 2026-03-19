@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../services/deezer_service.dart';
@@ -154,7 +155,7 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                   const SizedBox(height: 8),
                   if (!_isLoading && _tracks.isNotEmpty)
                     Text(
-                      '${_tracks.length} tracks on Deezer',
+                      'tracks_on_deezer'.tr(namedArgs: {'count': '${_tracks.length}'}),
                       style: const TextStyle(
                           fontSize: 14, color: Colors.white70),
                     ),
@@ -201,9 +202,9 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                     color: Colors.white, strokeWidth: 2),
               )
             : const Icon(Icons.play_arrow_rounded, size: 28),
-        label: const Text(
-          'Play',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        label: Text(
+          'play'.tr(),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -213,11 +214,11 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Popular',
-            style: TextStyle(
+            'popular'.tr(),
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppColors.textMain,
@@ -233,11 +234,11 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
             ),
           )
         else if (_tracks.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
-              child: Text('No tracks found',
-                  style: TextStyle(color: AppColors.textMuted)),
+              padding: const EdgeInsets.all(32),
+              child: Text('no_tracks_found'.tr(),
+                  style: const TextStyle(color: AppColors.textMuted)),
             ),
           )
         else

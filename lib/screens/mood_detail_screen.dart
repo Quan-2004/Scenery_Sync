@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -126,7 +127,7 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '${moodPlaylists.length} Playlists • Curated for you',
+                              'playlists_curated'.tr(namedArgs: {'count': '${moodPlaylists.length}'}),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -161,14 +162,14 @@ class _MoodDetailScreenState extends State<MoodDetailScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.play_arrow_rounded, size: 28),
-                          SizedBox(width: 8),
+                          const Icon(Icons.play_arrow_rounded, size: 28),
+                          const SizedBox(width: 8),
                           Text(
-                            'Play All',
-                            style: TextStyle(
+                            'play_all'.tr(),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
@@ -277,7 +278,7 @@ class _PlaylistCardState extends State<_PlaylistCard> {
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Playing ${widget.playlist['title']}'),
+            content: Text('playing_title'.tr(namedArgs: {'title': widget.playlist['title']!})),
             backgroundColor: widget.accentColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

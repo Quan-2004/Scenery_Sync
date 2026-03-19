@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -66,21 +67,21 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Equalizer',
-                          style: TextStyle(
+                          'equalizer'.tr(),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
                         Text(
-                          'Customize your sound',
-                          style: TextStyle(
+                          'equalizer_desc'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black54,
                           ),
@@ -119,9 +120,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'PRESETS',
-                            style: TextStyle(
+                          Text(
+                            'presets_label'.tr(),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.black54,
@@ -163,9 +164,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       ),
                       child: Column(
                         children: [
-                          const Text(
-                            'Frequency Bands',
-                            style: TextStyle(
+                          Text(
+                            'frequency_bands'.tr(),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
@@ -212,9 +213,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'AUDIO EFFECTS',
-                            style: TextStyle(
+                          Text(
+                            'audio_effects_label'.tr(),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.black54,
@@ -223,14 +224,14 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                           ),
                           const SizedBox(height: 12),
                           _buildEffectCard(
-                            'Bass Boost',
+                            'bass_boost'.tr(),
                             Icons.graphic_eq_rounded,
                             _bassBoost,
                             (value) => setState(() => _bassBoost = value),
                           ),
                           const SizedBox(height: 12),
                           _buildEffectCard(
-                            'Virtualizer',
+                            'virtualizer'.tr(),
                             Icons.surround_sound_rounded,
                             _virtualizer,
                             (value) => setState(() => _virtualizer = value),
@@ -257,7 +258,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                           ),
                           icon: Icon(Icons.restore_rounded, color: AppColors.primary),
                           label: Text(
-                            'Reset to Default',
+                            'reset_to_default'.tr(),
                             style: TextStyle(
                               color: AppColors.primary,
                               fontSize: 16,
@@ -451,9 +452,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
       _virtualizer = 0;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Equalizer reset to default'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text('equalizer_reset'.tr()),
+        duration: const Duration(seconds: 1),
       ),
     );
   }

@@ -7,7 +7,7 @@ class AdminPanelScreen {
   AdminPanelScreen._();
 
   static void openIfAuthorized(BuildContext context) {
-    // TODO: add role-based auth check before pushing if needed.
+    // Role-based auth gate can be added here before navigation if required.
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
     );

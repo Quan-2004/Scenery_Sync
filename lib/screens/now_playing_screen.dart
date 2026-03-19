@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -124,7 +125,7 @@ class _Header extends StatelessWidget {
           children: [
             ListTile(
               leading: Icon(Icons.lyrics_rounded, color: AppColors.primary),
-              title: const Text('Lyrics'),
+              title: Text('lyrics'.tr()),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -135,7 +136,7 @@ class _Header extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.queue_music_rounded, color: AppColors.primary),
-              title: const Text('Up Next'),
+              title: Text('up_next'.tr()),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -146,7 +147,7 @@ class _Header extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.equalizer_rounded, color: AppColors.primary),
-              title: const Text('Equalizer'),
+              title: Text('equalizer'.tr()),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -157,7 +158,7 @@ class _Header extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.graphic_eq_rounded, color: AppColors.primary),
-              title: const Text('Visualizer'),
+              title: Text('visualizer'.tr()),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -168,7 +169,7 @@ class _Header extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.share_rounded, color: AppColors.primary),
-              title: const Text('Share'),
+              title: Text('share'.tr()),
               onTap: () {
                 final player = AudioPlayerService.instance;
                 final track = player.currentTrack;
@@ -337,7 +338,7 @@ class _TrackInfoState extends State<_TrackInfo> {
       if (track.previewUrl == null || track.previewUrl!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bài này không có link tải')),
+            SnackBar(content: Text('no_download_link'.tr())),
           );
         }
         return;
@@ -860,9 +861,9 @@ class _UpNextList extends StatelessWidget {
                   await player.removeFromQueue(queueIndex);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã xóa khỏi hàng chờ'),
-                        duration: Duration(seconds: 1),
+                      SnackBar(
+                        content: Text('removed_from_queue'.tr()),
+                        duration: const Duration(seconds: 1),
                       ),
                     );
                   }

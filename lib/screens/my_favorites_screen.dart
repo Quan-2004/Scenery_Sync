@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
@@ -21,9 +22,9 @@ class MyFavoritesScreen extends StatelessWidget {
             pinned: true,
             backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Favorites',
-                style: TextStyle(
+              title: Text(
+                'favorites'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -77,14 +78,14 @@ class MyFavoritesScreen extends StatelessWidget {
                             color: AppColors.textMuted.withValues(alpha: 0.4),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'No favorites yet',
-                            style: TextStyle(fontSize: 18, color: AppColors.textMuted),
+                          Text(
+                            'no_favorites'.tr(),
+                            style: const TextStyle(fontSize: 18, color: AppColors.textMuted),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Songs you love will appear here',
-                            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                          Text(
+                            'favorites_hint'.tr(),
+                            style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
                           ),
                         ],
                       ),

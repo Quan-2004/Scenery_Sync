@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -97,7 +98,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$songCount songs',
+                    'song_count'.tr(namedArgs: {'count': '$songCount'}),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.white70,
@@ -154,9 +155,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                 elevation: 0,
               ),
               icon: const Icon(Icons.play_arrow_rounded, size: 28),
-              label: const Text(
-                'Play All',
-                style: TextStyle(
+              label: Text(
+                'play_all'.tr(),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
@@ -54,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       if (!_acceptTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Vui lòng chấp nhận Điều khoản & Điều kiện'),
+            content: Text('please_accept_terms'.tr()),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -98,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('🎉 Đăng ký thành công! Vui lòng đăng nhập.'),
+              content: Text('register_success'.tr()),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
@@ -178,9 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
+                      Text(
+                        'create_account'.tr(),
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textMain,
@@ -194,11 +195,11 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const Padding(
-                    padding: EdgeInsets.only(left: 64),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 64),
                     child: Text(
-                      'Sign up to get started',
-                      style: TextStyle(
+                      'sign_up_subtitle'.tr(),
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textMuted,
                       ),
@@ -214,9 +215,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Full Name',
-                        style: TextStyle(
+                      Text(
+                        'full_name'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -226,7 +227,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
-                          hintText: 'Enter your full name',
+                          hintText: 'enter_full_name'.tr(),
                           prefixIcon: const Icon(Icons.person_outline),
                           filled: true,
                           fillColor: AppColors.surfaceLight,
@@ -244,7 +245,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your name';
+                            return 'please_enter_name'.tr();
                           }
                           return null;
                         },
@@ -261,9 +262,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Email',
-                        style: TextStyle(
+                      Text(
+                        'email'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -274,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'enter_your_email'.tr(),
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
                           fillColor: AppColors.surfaceLight,
@@ -292,10 +293,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
+                            return 'please_enter_email'.tr();
                           }
                           if (!value.contains('@')) {
-                            return 'Please enter a valid email';
+                            return 'please_enter_valid_email'.tr();
                           }
                           return null;
                         },
@@ -312,9 +313,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Password',
-                        style: TextStyle(
+                      Text(
+                        'password'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -325,7 +326,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         controller: _passwordController,
                         obscureText: !_isPasswordVisible,
                         decoration: InputDecoration(
-                          hintText: 'Create a password',
+                          hintText: 'create_a_password'.tr(),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -355,10 +356,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
+                            return 'please_enter_a_password'.tr();
                           }
                           if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return 'password_min_length'.tr();
                           }
                           return null;
                         },
@@ -375,9 +376,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Confirm Password',
-                        style: TextStyle(
+                      Text(
+                        'confirm_password'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -388,7 +389,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         controller: _confirmPasswordController,
                         obscureText: !_isConfirmPasswordVisible,
                         decoration: InputDecoration(
-                          hintText: 'Confirm your password',
+                          hintText: 'confirm_your_password'.tr(),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -419,10 +420,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please confirm your password';
+                            return 'please_confirm_password'.tr();
                           }
                           if (value != _passwordController.text) {
-                            return 'Passwords do not match';
+                            return 'passwords_do_not_match'.tr();
                           }
                           return null;
                         },
@@ -451,30 +452,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ),
                       ),
                       Expanded(
-                        child: RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                            ),
-                            children: [
-                              TextSpan(text: 'I agree to the '),
-                              TextSpan(
-                                text: 'Terms & Conditions',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              TextSpan(text: ' and '),
-                              TextSpan(
-                                text: 'Privacy Policy',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        child: Text(
+                          'i_agree_to_terms'.tr(),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ),
@@ -512,9 +494,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Sign Up',
-                              style: TextStyle(
+                          : Text(
+                              'sign_up'.tr(),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -532,18 +514,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Already have an account? ',
-                          style: TextStyle(
+                        Text(
+                          'already_have_account'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
                           ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
+                          child: Text(
+                            'login'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,

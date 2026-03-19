@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
@@ -71,7 +72,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('📧 Email đặt lại mật khẩu đã được gửi!'),
+              content: Text('reset_email_sent'.tr()),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -131,9 +132,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Text(
-                      'Forgot Password',
-                      style: TextStyle(
+                    Text(
+                      'forgot_password_title'.tr(),
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textMain,
@@ -173,9 +174,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
 
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const Text(
-                    'Reset Your Password',
-                    style: TextStyle(
+                  child: Text(
+                    'reset_your_password'.tr(),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textMain,
@@ -187,9 +188,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
 
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const Text(
-                    'Enter your email address and we\'ll send you instructions to reset your password.',
-                    style: TextStyle(
+                  child: Text(
+                    'forgot_password_desc'.tr(),
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textMuted,
                       height: 1.5,
@@ -207,9 +208,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Email',
-                          style: TextStyle(
+                        Text(
+                          'email'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textMain,
@@ -220,7 +221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            hintText: 'Enter your email',
+                            hintText: 'enter_your_email'.tr(),
                             prefixIcon: const Icon(Icons.email_outlined),
                             filled: true,
                             fillColor: AppColors.surfaceLight,
@@ -238,10 +239,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
+                              return 'please_enter_email'.tr();
                             }
                             if (!value.contains('@')) {
-                              return 'Please enter a valid email';
+                              return 'please_enter_valid_email'.tr();
                             }
                             return null;
                           },
@@ -279,9 +280,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Send Reset Link',
-                              style: TextStyle(
+                          : Text(
+                              'send_reset_link'.tr(),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -310,9 +311,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                           ),
                         ),
                         const SizedBox(height: 32),
-                        const Text(
-                          'Email Sent!',
-                          style: TextStyle(
+                        Text(
+                          'email_sent_title'.tr(),
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textMain,
@@ -320,8 +321,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'We\'ve sent password reset instructions to:',
-                          style: TextStyle(
+                          'reset_email_body'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
                           ),
@@ -344,9 +345,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Text(
-                            'Please check your email and click on the reset link. Don\'t forget to check your spam folder!',
-                            style: TextStyle(
+                          child: Text(
+                            'check_email_hint'.tr(),
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textMuted,
                               height: 1.5,
@@ -368,9 +369,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                               ),
                               elevation: 0,
                             ),
-                            child: const Text(
-                              'Back to Login',
-                              style: TextStyle(
+                            child: Text(
+                              'back_to_login'.tr(),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -384,9 +385,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                               _isEmailSent = false;
                             });
                           },
-                          child: const Text(
-                            'Resend Email',
-                            style: TextStyle(
+                          child: Text(
+                            'resend_email'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,

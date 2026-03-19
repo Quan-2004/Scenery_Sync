@@ -1,18 +1,15 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
-import '../services/app_language.dart';
 import '../services/firebase_service.dart';
 import '../services/deezer_service.dart';
 import '../services/jamendo_service.dart';
 import '../services/audio_player_service.dart';
 import '../models/music_models.dart';
 import 'now_playing_screen.dart';
-import 'downloads_screen.dart';
 import 'recently_played_screen.dart';
-import 'sleep_timer_screen.dart';
-import 'playlist_detail_screen.dart';
 import 'all_artists_screen.dart';
 import 'all_albums_screen.dart';
 import 'artist_detail_screen.dart';
@@ -20,6 +17,7 @@ import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
 import 'liked_songs_screen.dart';
 import 'admin_panel_screen.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -135,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: _fadeAnimations[1],
                     child: SlideTransition(
                       position: _slideAnimations[1],
-                      child: const _QuickActionsSection(),
+                      child: const SizedBox.shrink(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -143,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: _fadeAnimations[1],
                     child: SlideTransition(
                       position: _slideAnimations[1],
-                      child: _FeaturedPlaylistsSection(),
+                      child: const SizedBox.shrink(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -175,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: _fadeAnimations[4],
                     child: SlideTransition(
                       position: _slideAnimations[4],
-                      child: const _DailyMixSection(),
+                      child: const SizedBox.shrink(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -346,14 +344,7 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
                     ),
                   )
                 else
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Icon(
-                      Icons.mic_none_rounded,
-                      color: AppColors.textMuted,
-                      size: 20,
-                    ),
-                  ),
+                  const SizedBox(width: 16),
               ],
             ),
           ),
@@ -378,9 +369,9 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
                       color: AppColors.textMuted.withValues(alpha: 0.4),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'No results found',
-                      style: TextStyle(
+                    Text(
+                      'no_results_found'.tr(),
+                      style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 15,
                       ),
@@ -390,7 +381,7 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
               )
             else ...[
               Text(
-                '${_results.length} results',
+                'search_results_count'.tr(namedArgs: {'count': _results.length.toString()}),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -422,10 +413,20 @@ class _SearchResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
+        final firebaseService = context.read<FirebaseService>();
         final player = AudioPlayerService.instance;
         try {
           await player.setTrack(track);
           await player.play();
+          await firebaseService.saveRecentlyPlayed({
+            'id': track.id,
+            'name': track.name,
+            'artistName': track.artistName,
+            'imageUrl': track.imageUrl,
+            'previewUrl': track.previewUrl,
+            'durationMs': track.durationMs,
+            'popularity': track.popularity,
+          });
         } catch (_) {
           return;
         }
@@ -618,6 +619,13 @@ class _HeaderSectionState extends State<_HeaderSection> {
               // Profile
               GestureDetector(
                 onTap: () {
+                  if (!firebaseService.isLoggedIn) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                    return;
+                  }
                   _showProfileSheet(context);
                 },
                 child: Container(
@@ -690,7 +698,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('✓ All notifications marked as read'),
+        content: Text('all_notifications_read'.tr()),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -755,7 +763,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text('close'.tr()),
           ),
         ],
       ),
@@ -788,9 +796,9 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Notifications',
-                  style: TextStyle(
+                Text(
+                  'notifications'.tr(),
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textMain,
@@ -798,9 +806,9 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                 ),
                 TextButton(
                   onPressed: _markAllRead,
-                  child: const Text(
-                    'Mark all read',
-                    style: TextStyle(
+                  child: Text(
+                    'mark_all_read'.tr(),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -949,7 +957,7 @@ class _ProfileSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            firebaseService.userName ?? 'User',
+            firebaseService.userName ?? 'user'.tr(),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
@@ -969,14 +977,17 @@ class _ProfileSheet extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStat(
-                firebaseService.getFavorites().length.toString(),
-                'Playlists',
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: firebaseService.favoritesStream(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data?.length ?? 0;
+                  return _buildStat(count.toString(), 'favorites'.tr());
+                },
               ),
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildStat('0', 'Followers'), // TODO: Implement followers
+              _buildStat('0', 'followers'.tr()),
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildStat('0', 'Following'), // TODO: Implement following
+              _buildStat('0', 'following'.tr()),
             ],
           ),
           const SizedBox(height: 24),
@@ -987,7 +998,7 @@ class _ProfileSheet extends StatelessWidget {
               children: [
                 _buildMenuItem(
                   Icons.person_outline_rounded,
-                  'Edit Profile',
+                  'edit_profile'.tr(),
                   () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -998,7 +1009,7 @@ class _ProfileSheet extends StatelessWidget {
                     );
                   },
                 ),
-                _buildMenuItem(Icons.settings_outlined, 'Settings', () {
+                _buildMenuItem(Icons.settings_outlined, 'settings'.tr(), () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -1009,7 +1020,7 @@ class _ProfileSheet extends StatelessWidget {
                 }),
                 _buildMenuItem(
                   Icons.favorite_outline_rounded,
-                  'Liked Songs',
+                  'liked_songs'.tr(),
                   () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -1020,7 +1031,7 @@ class _ProfileSheet extends StatelessWidget {
                     );
                   },
                 ),
-                _buildMenuItem(Icons.history_rounded, 'Listening History', () {
+                _buildMenuItem(Icons.history_rounded, 'listening_history'.tr(), () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -1030,7 +1041,7 @@ class _ProfileSheet extends StatelessWidget {
                   );
                 }),
                 const Divider(height: 32),
-                _buildMenuItem(Icons.logout_rounded, 'Logout', () async {
+                _buildMenuItem(Icons.logout_rounded, 'logout'.tr(), () async {
                   Navigator.pop(context);
                   await firebaseService.signOut();
                   if (context.mounted) {
@@ -1108,281 +1119,6 @@ class _ProfileSheet extends StatelessWidget {
   }
 }
 
-// Featured Playlists Section - Beautiful cards for new users
-class _FeaturedPlaylistsSection extends StatelessWidget {
-  _FeaturedPlaylistsSection();
-
-  final List<Map<String, dynamic>> _playlists = [
-    {
-      'title': 'Top Hits',
-      'subtitle': 'Most played today',
-      'image': 'https://picsum.photos/seed/tophits/300/300',
-      'icon': Icons.trending_up_rounded,
-      'gradient': [const Color(0xFFE8603C), const Color(0xFFE8A045)],
-    },
-    {
-      'title': 'Chill Vibes',
-      'subtitle': 'Relax your mind',
-      'image': 'https://picsum.photos/seed/chillvibes/300/300',
-      'icon': Icons.waves_rounded,
-      'gradient': [const Color(0xFF3498DB), const Color(0xFF1ABC9C)],
-    },
-    {
-      'title': 'Energy Boost',
-      'subtitle': 'Power up your day',
-      'image': 'https://picsum.photos/seed/energy/300/300',
-      'icon': Icons.bolt_rounded,
-      'gradient': [const Color(0xFF9B59B6), const Color(0xFFE74C3C)],
-    },
-    {
-      'title': 'Late Night',
-      'subtitle': 'Perfect for the night',
-      'image': 'https://picsum.photos/seed/latenight/300/300',
-      'icon': Icons.nightlight_round,
-      'gradient': [const Color(0xFF2C3E50), const Color(0xFF4A148C)],
-    },
-    {
-      'title': 'Feel Good',
-      'subtitle': 'Brighten your mood',
-      'image': 'https://picsum.photos/seed/feelgood/300/300',
-      'icon': Icons.sentiment_very_satisfied_rounded,
-      'gradient': [const Color(0xFF4CAF50), const Color(0xFF8BC34A)],
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Made for you',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textMain,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 200,
-          child: _playlists.isEmpty
-              ? const Center(child: Text('No playlists available'))
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _playlists.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 16),
-                  itemBuilder: (context, index) {
-                    return _FeaturedPlaylistCard(
-                      playlist: _playlists[index],
-                      index: index,
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeaturedPlaylistCard extends StatefulWidget {
-  final Map<String, dynamic> playlist;
-  final int index;
-
-  const _FeaturedPlaylistCard({required this.playlist, required this.index});
-
-  @override
-  State<_FeaturedPlaylistCard> createState() => _FeaturedPlaylistCardState();
-}
-
-class _FeaturedPlaylistCardState extends State<_FeaturedPlaylistCard> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final playlist = widget.playlist;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PlaylistDetailScreen(
-              playlistName: playlist['title'],
-              playlistCover: playlist['image'],
-              songCount: 50,
-            ),
-          ),
-        );
-      },
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
-        duration: Duration(milliseconds: 400 + (widget.index * 100)),
-        curve: Curves.easeOutCubic,
-        builder: (context, value, child) {
-          return Opacity(
-            opacity: value,
-            child: Transform.translate(
-              offset: Offset(0, 30 * (1 - value)),
-              child: child,
-            ),
-          );
-        },
-        child: AnimatedScale(
-          scale: _isPressed ? 0.95 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          child: Container(
-            width: 160,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: playlist['gradient'],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: playlist['gradient'][0].withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                  spreadRadius: -5,
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  // Background pattern
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: 0.15,
-                      child: Image.network(
-                        playlist['image'],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ),
-                  // Decorative circles
-                  Positioned(
-                    top: -30,
-                    right: -30,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -40,
-                    left: -40,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Icon
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            playlist['icon'],
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const Spacer(),
-                        // Title
-                        Text(
-                          playlist['title'],
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        // Subtitle
-                        Text(
-                          playlist['subtitle'],
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.85),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Play button overlay on hover
-                  Positioned(
-                    bottom: 16,
-                    right: 16,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.play_arrow_rounded,
-                        color: playlist['gradient'][0],
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _HeroCard extends StatefulWidget {
   const _HeroCard();
 
@@ -1394,488 +1130,225 @@ class _HeroCardState extends State<_HeroCard>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
 
+  Map<String, dynamic>? _pickFeaturedTrack(List<Map<String, dynamic>> tracks) {
+    if (tracks.isEmpty) return null;
+
+    final preferred = tracks.where((t) {
+      final title = (t['title'] ?? t['name'] ?? '').toString().toLowerCase();
+      final artist = (t['artist'] ?? t['artistName'] ?? '').toString().toLowerCase();
+      final text = '$title $artist';
+      return text.contains('lofi') ||
+          text.contains('chill') ||
+          text.contains('focus') ||
+          text.contains('ambient');
+    }).toList();
+
+    return preferred.isNotEmpty ? preferred.first : tracks.first;
+  }
+
+  Future<void> _playFeaturedTrack(Map<String, dynamic>? trackMap) async {
+    if (trackMap == null) return;
+
+    final id = (trackMap['id'] ?? '').toString();
+    final track = Track.fromFirestore(trackMap, id: id);
+    try {
+      await AudioPlayerService.instance.setTrack(track);
+      await AudioPlayerService.instance.play();
+
+      if (!mounted) return;
+      final firebaseService = context.read<FirebaseService>();
+      await firebaseService.saveRecentlyPlayed({
+        'id': track.id,
+        'name': track.name,
+        'artistName': track.artistName,
+        'imageUrl': track.imageUrl,
+        'previewUrl': track.previewUrl,
+        'durationMs': track.durationMs,
+        'popularity': track.popularity,
+      });
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const NowPlayingScreen(),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cannot_play_track'.tr())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  const NowPlayingScreen(),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position:
-                            Tween<Offset>(
-                              begin: const Offset(0, 0.1),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeOutCubic,
-                              ),
-                            ),
-                        child: child,
-                      ),
-                    );
-                  },
-              transitionDuration: const Duration(milliseconds: 400),
-            ),
-          );
-        },
-        child: AnimatedScale(
-          scale: _isPressed ? 0.95 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          child: Container(
-            height: 320,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8A598),
-                  Color(0xFFFFD6A5),
-                  Color(0xFFB8CBE3),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  offset: const Offset(0, 20),
-                  blurRadius: 40,
-                  spreadRadius: -12,
+      child: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: firebaseService.tracksStream(limit: 40),
+        builder: (context, snapshot) {
+          final featuredTrack = snapshot.hasData
+              ? _pickFeaturedTrack(snapshot.data!)
+              : null;
+          final title = (featuredTrack?['title'] ?? featuredTrack?['name'])
+                  ?.toString() ??
+              'lofi_beats'.tr();
+          final subtitle = (featuredTrack?['artist'] ?? featuredTrack?['artistName'])
+                  ?.toString() ??
+              'relax_focus'.tr();
+
+          return GestureDetector(
+            onTapDown: (_) => setState(() => _isPressed = true),
+            onTapUp: (_) => setState(() => _isPressed = false),
+            onTapCancel: () => setState(() => _isPressed = false),
+            onTap: () => _playFeaturedTrack(featuredTrack),
+            child: AnimatedScale(
+              scale: _isPressed ? 0.95 : 1.0,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeInOut,
+              child: Container(
+                height: 320,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFE8A598),
+                      Color(0xFFFFD6A5),
+                      Color(0xFFB8CBE3),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      offset: const Offset(0, 20),
+                      blurRadius: 40,
+                      spreadRadius: -12,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Nội dung Text & Button
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'featured'.tr(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.0,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      subtitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
+                                height: 56,
+                                width: 56,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                  ),
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
                                 ),
-                                child: const Text(
-                                  'FEATURED',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Lo-Fi\nBeats',
-                                style: TextStyle(
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
                                   color: Colors.white,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.0,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Relax & Focus',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
+                                  size: 36,
                                 ),
                               ),
                             ],
                           ),
-                          Container(
-                            height: 56,
-                            width: 56,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow_rounded,
-                              color: Colors.white,
-                              size: 36,
-                            ),
-                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DailyMixSection extends StatelessWidget {
-  const _DailyMixSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final firebaseService = Provider.of<FirebaseService>(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            AppLanguage().translate('daily_mix'),
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textMain,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: firebaseService.tracksStream(limit: 10),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
-              }
-
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No tracks available yet',
-                    style: TextStyle(color: AppColors.textMuted),
-                  ),
-                );
-              }
-
-              final tracks = snapshot.data!;
-
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                scrollDirection: Axis.horizontal,
-                itemCount: tracks.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 20),
-                itemBuilder: (context, index) {
-                  final track = tracks[index];
-                  return _DailyMixCard(
-                    title: track['title'] ?? 'Unknown Title',
-                    subtitle: track['artist'] ?? 'Unknown Artist',
-                    imageUrl:
-                        track['artworkUrl'] ??
-                        'https://via.placeholder.com/150',
-                    index: index,
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DailyMixCard extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final String imageUrl;
-  final int index;
-
-  const _DailyMixCard({
-    required this.title,
-    required this.subtitle,
-    required this.imageUrl,
-    required this.index,
-  });
-
-  @override
-  State<_DailyMixCard> createState() => _DailyMixCardState();
-}
-
-class _DailyMixCardState extends State<_DailyMixCard> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + (widget.index * 100)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - value)),
-            child: child,
-          ),
-        );
-      },
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PlaylistDetailScreen(
-                playlistName: widget.title,
-                playlistCover: widget.imageUrl,
-                songCount: 50,
               ),
             ),
           );
         },
-        child: AnimatedScale(
-          scale: _isPressed ? 0.95 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          child: SizedBox(
-            width: 160,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Hero(
-                    tag: 'daily_mix_${widget.index}',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        image: DecorationImage(
-                          image: NetworkImage(widget.imageUrl),
-                          fit: BoxFit.cover,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(
-                              alpha: _isPressed ? 0.05 : 0.1,
-                            ),
-                            blurRadius: _isPressed ? 5 : 10,
-                            offset: Offset(0, _isPressed ? 2 : 5),
-                          ),
-                        ],
-                      ),
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Container(
-                            height: 36,
-                            width: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow_rounded,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textMain,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  widget.subtitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Quick Actions Section
-class _QuickActionsSection extends StatelessWidget {
-  const _QuickActionsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textMain,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 110,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _buildQuickAction(
-                context,
-                Icons.history_rounded,
-                AppLanguage().translate('recently_played'),
-                Colors.purple,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RecentlyPlayedScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 12),
-              _buildQuickAction(
-                context,
-                Icons.download_rounded,
-                'Downloads',
-                Colors.green,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DownloadsScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 12),
-              _buildQuickAction(
-                context,
-                Icons.bedtime_rounded,
-                'Sleep Timer',
-                Colors.indigo,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SleepTimerScreen(),
-                    ),
-                  );
-                },
-              ),
-
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickAction(
-    BuildContext context,
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 130,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color.withValues(alpha: 0.2),
-              color.withValues(alpha: 0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
       ),
     );
   }

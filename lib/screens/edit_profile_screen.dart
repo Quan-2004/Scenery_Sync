@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -114,10 +115,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            body: const Center(
+            body: Center(
               child: Text(
-                'Bạn cần đăng nhập để chỉnh sửa hồ sơ.',
-                style: TextStyle(color: AppColors.textMain),
+                'login_to_edit_profile'.tr(),
+                style: const TextStyle(color: AppColors.textMain),
               ),
             ),
           );
@@ -129,9 +130,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
           appBar: AppBar(
-            title: const Text(
-              'Edit Profile',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              'edit_profile'.tr(),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -149,9 +150,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        'Save',
-                        style: TextStyle(
+                    : Text(
+                        'save'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
@@ -246,20 +247,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // Fields
                   _buildTextField(
                     controller: _nameController,
-                    label: 'Display Name',
+                    label: 'display_name'.tr(),
                     icon: Icons.person_outline_rounded,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: _emailController,
-                    label: 'Email',
+                    label: 'email'.tr(),
                     icon: Icons.email_outlined,
                     enabled: false,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: _phoneController,
-                    label: 'Phone Number',
+                    label: 'phone_number'.tr(),
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                   ),
@@ -269,9 +270,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Gender',
-                        style: TextStyle(
+                      Text(
+                        'gender'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textMain,
@@ -292,14 +293,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        items: ['Male', 'Female', 'Other']
-                            .map(
-                              (label) => DropdownMenuItem(
-                                value: label,
-                                child: Text(label),
-                              ),
-                            )
-                            .toList(),
+                        items: [
+                            DropdownMenuItem(value: 'Male', child: Text('male'.tr())),
+                            DropdownMenuItem(value: 'Female', child: Text('female'.tr())),
+                            DropdownMenuItem(value: 'Other', child: Text('other_gender'.tr())),
+                          ],
                         onChanged: (val) => setState(() => _gender = val),
                       ),
                     ],
@@ -316,7 +314,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ? "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}"
                               : "",
                         ),
-                        label: 'Birthday',
+                        label: 'birthday'.tr(),
                         icon: Icons.cake_outlined,
                       ),
                     ),
@@ -325,7 +323,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   _buildTextField(
                     controller: _bioController,
-                    label: 'Bio',
+                    label: 'bio'.tr(),
                     icon: Icons.description_outlined,
                     maxLines: 3,
                   ),
@@ -333,19 +331,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   // Options
                   _buildOptionTile(
-                    'Change Password',
+                    'change_password'.tr(),
                     Icons.lock_outline_rounded,
                     () => _showChangePasswordDialog(context),
                   ),
                   const SizedBox(height: 12),
                   _buildOptionTile(
-                    'Privacy Settings',
+                    'privacy_settings'.tr(),
                     Icons.shield_outlined,
                     () => _showPrivacySettingsBottomSheet(context),
                   ),
                   const SizedBox(height: 12),
                   _buildOptionTile(
-                    'Connected Accounts',
+                    'connected_accounts'.tr(),
                     Icons.link_rounded,
                     () => _showConnectedAccountsBottomSheet(context),
                   ),
@@ -474,8 +472,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       } else {
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
+          SnackBar(
+            content: Text('profile_updated'.tr()),
             backgroundColor: Colors.green,
           ),
         );
@@ -485,7 +483,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('error_prefix'.tr(namedArgs: {'message': '$e'})), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -521,9 +519,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Change Profile Picture',
-                style: TextStyle(
+              Text(
+                'change_profile_picture'.tr(),
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textMain,
@@ -532,7 +530,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 24),
               _buildChangeAvatarOption(
                 Icons.camera_alt_rounded,
-                'Take Photo',
+                'take_photo'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _pickAndUploadAvatar(ImageSource.camera);
@@ -541,7 +539,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 12),
               _buildChangeAvatarOption(
                 Icons.photo_library_rounded,
-                'Choose from Gallery',
+                'choose_from_gallery'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _pickAndUploadAvatar(ImageSource.gallery);
@@ -550,7 +548,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 12),
               _buildChangeAvatarOption(
                 Icons.delete_outline_rounded,
-                'Remove Photo',
+                'remove_photo'.tr(),
                 () {
                   Navigator.pop(sheetContext);
                   _removeAvatar();
@@ -644,8 +642,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       } else {
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Ảnh đại diện đã được cập nhật'),
+          SnackBar(
+            content: Text('avatar_updated'.tr()),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -654,7 +652,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Không thể cập nhật ảnh: $e'),
+            content: Text('cannot_update_photo'.tr(namedArgs: {'error': '$e'})),
             backgroundColor: Colors.red,
           ),
         );
@@ -679,8 +677,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã xoá ảnh đại diện'),
+          SnackBar(
+            content: Text('avatar_removed'.tr()),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -689,7 +687,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Không thể xoá ảnh: $e'),
+            content: Text('cannot_remove_photo'.tr(namedArgs: {'error': '$e'})),
             backgroundColor: Colors.red,
           ),
         );
@@ -703,10 +701,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final firebaseService = context.read<FirebaseService>();
     if (!firebaseService.linkedProviders.contains('password')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'You are logged in via a social account. Please manage your password there.',
-          ),
+        SnackBar(
+          content: Text('social_login_password_hint'.tr()),
           backgroundColor: Colors.orange,
         ),
       );
@@ -722,9 +718,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (dialogBuilderContext, setDialogState) {
           return AlertDialog(
-            title: const Text('Change Password'),
+            title: Text('change_password'.tr()),
             content: Form(
               key: formKey,
               child: Column(
@@ -733,28 +729,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextFormField(
                     controller: currentPassController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Password',
+                    decoration: InputDecoration(
+                      labelText: 'current_password'.tr(),
                     ),
-                    validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                    validator: (v) => v?.isEmpty == true ? 'required_field'.tr() : null,
                   ),
                   TextFormField(
                     controller: newPassController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'New Password',
+                    decoration: InputDecoration(
+                      labelText: 'new_password'.tr(),
                     ),
                     validator: (v) =>
-                        (v?.length ?? 0) < 6 ? 'Min 6 chars' : null,
+                        (v?.length ?? 0) < 6 ? 'min_6_chars'.tr() : null,
                   ),
                   TextFormField(
                     controller: confirmPassController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm New Password',
+                    decoration: InputDecoration(
+                      labelText: 'confirm_new_password'.tr(),
                     ),
                     validator: (v) => v != newPassController.text
-                        ? 'Passwords do not match'
+                        ? 'passwords_do_not_match'.tr()
                         : null,
                   ),
                 ],
@@ -763,7 +759,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: Text('cancel'.tr()),
               ),
               ElevatedButton(
                 onPressed: isUpdating
@@ -775,19 +771,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             currentPassword: currentPassController.text,
                             newPassword: newPassController.text,
                           );
-                          if (!mounted) return;
+                          if (!dialogBuilderContext.mounted) return;
 
                           if (error == null) {
-                            Navigator.pop(dialogContext);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Password changed successfully'),
+                            Navigator.of(dialogBuilderContext).pop();
+                            ScaffoldMessenger.of(dialogBuilderContext).showSnackBar(
+                              SnackBar(
+                                content: Text('password_changed_success'.tr()),
                                 backgroundColor: Colors.green,
                               ),
                             );
                           } else {
                             setDialogState(() => isUpdating = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            ScaffoldMessenger.of(dialogBuilderContext).showSnackBar(
                               SnackBar(
                                 content: Text(error),
                                 backgroundColor: Colors.red,
@@ -802,7 +798,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Change'),
+                    : Text('change_btn'.tr()),
               ),
             ],
           );
@@ -824,20 +820,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Privacy Settings',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'privacy_settings'.tr(),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Public Profile'),
-              subtitle: const Text('Allow others to see your profile'),
+              title: Text('public_profile'.tr()),
+              subtitle: Text('public_profile_desc'.tr()),
               value: true,
               onChanged: (val) {},
             ),
             SwitchListTile(
-              title: const Text('Show Email'),
-              subtitle: const Text('Display your email on your profile'),
+              title: Text('show_email'.tr()),
+              subtitle: Text('show_email_desc'.tr()),
               value: false,
               onChanged: (val) {},
             ),
@@ -863,24 +859,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Connected Accounts',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'connected_accounts'.tr(),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildProviderTile(
               Icons.email,
-              'Email/Password',
+              'email_password'.tr(),
               providers.contains('password'),
             ),
             _buildProviderTile(
               Icons.g_mobiledata,
-              'Google',
+              'google_provider'.tr(),
               providers.contains('google.com'),
             ),
             _buildProviderTile(
               Icons.facebook,
-              'Facebook',
+              'facebook_provider'.tr(),
               providers.contains('facebook.com'),
             ),
           ],
@@ -895,7 +891,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       title: Text(name),
       trailing: isConnected
           ? const Icon(Icons.check_circle, color: Colors.green)
-          : const Text('Not Linked', style: TextStyle(color: Colors.grey)),
+          : Text('not_linked'.tr(), style: const TextStyle(color: Colors.grey)),
     );
   }
 }

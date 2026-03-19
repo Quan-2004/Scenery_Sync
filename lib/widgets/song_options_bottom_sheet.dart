@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xóa khỏi Yêu thích')),
+          SnackBar(content: Text('removed_from_favorites'.tr())),
         );
       }
     } else {
@@ -58,7 +59,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã thêm vào Yêu thích')),
+          SnackBar(content: Text('added_to_favorites'.tr())),
         );
       }
     }
@@ -71,14 +72,14 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xóa bài đã tải')),
+          SnackBar(content: Text('removed_download'.tr())),
         );
       }
     } else {
       if (widget.track.previewUrl == null || widget.track.previewUrl!.isEmpty) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bài này không có link tải')),
+          SnackBar(content: Text('no_download_url'.tr())),
         );
         return;
       }
@@ -88,7 +89,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
         setState(() => _isDownloading = false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Đã tải xong!')),
+          SnackBar(content: Text('download_complete'.tr())),
         );
       }
     }
@@ -176,7 +177,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
                 context,
                 icon: isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                 iconColor: isFav ? Colors.red : AppColors.textMain,
-                title: isFav ? 'Xóa khỏi Yêu thích' : 'Thêm vào Yêu thích',
+                title: isFav ? 'remove_from_favorites_action'.tr() : 'add_to_favorites_action'.tr(),
                 onTap: () => _toggleFavorite(isFav),
               );
             },
@@ -184,7 +185,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
           _buildOption(
             context,
             icon: Icons.playlist_add_rounded,
-            title: 'Add to Playlist',
+            title: 'add_to_playlist'.tr(),
             onTap: () => Navigator.pop(context),
           ),
           // Download option - reads Hive state
@@ -198,7 +199,7 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
                     ? Icons.download_done_rounded
                     : Icons.download_outlined,
                 iconColor: downloaded ? AppColors.primary : AppColors.textMain,
-                title: downloaded ? 'Xóa bài đã tải' : 'Tải xuống',
+                title: downloaded ? 'delete_downloaded'.tr() : 'download'.tr(),
                 onTap: _isDownloading ? null : () => _toggleDownload(downloaded),
                 trailing: _isDownloading
                     ? const SizedBox(
@@ -216,18 +217,18 @@ class _SongOptionsSheetState extends State<_SongOptionsSheet> {
           _buildOption(
             context,
             icon: Icons.queue_music_rounded,
-            title: 'Add to Queue',
+            title: 'add_to_queue'.tr(),
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Added to Queue')),
+                SnackBar(content: Text('added_to_queue'.tr())),
               );
             },
           ),
           _buildOption(
             context,
             icon: Icons.share_outlined,
-            title: 'Share',
+            title: 'share'.tr(),
             onTap: () => Navigator.pop(context),
           ),
           const SizedBox(height: 24),

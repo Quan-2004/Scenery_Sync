@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'playlist_detail_screen.dart';
@@ -33,9 +34,9 @@ class _AllMoodsScreenState extends State<AllMoodsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Browse by Mood',
-                style: TextStyle(
+              title: Text(
+                'browse_by_mood'.tr(),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textMain,
@@ -56,10 +57,10 @@ class _AllMoodsScreenState extends State<AllMoodsScreen> {
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 if (allMoods.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
-                      'No moods available',
-                      style: TextStyle(color: AppColors.textMain, fontSize: 16),
+                      'no_moods'.tr(),
+                      style: const TextStyle(color: AppColors.textMain, fontSize: 16),
                     ),
                   );
                 }

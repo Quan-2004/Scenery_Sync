@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../models/music_models.dart';
@@ -83,9 +84,9 @@ class _AllAlbumsScreenState extends State<AllAlbumsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'All Albums',
-                style: TextStyle(
+              title: Text(
+                'all_albums'.tr(),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textMain,
@@ -102,11 +103,11 @@ class _AllAlbumsScreenState extends State<AllAlbumsScreen> {
               ),
             )
           else if (_albums.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               child: Center(
                 child: Text(
-                  'No albums available',
-                  style: TextStyle(color: AppColors.textMuted),
+                  'no_albums'.tr(),
+                  style: const TextStyle(color: AppColors.textMuted),
                 ),
               ),
             )

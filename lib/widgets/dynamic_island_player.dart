@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -169,7 +170,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     if (player.currentTrack == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Chưa có bài đang phát.')));
+      ).showSnackBar(SnackBar(content: Text('no_track_playing'.tr())));
       return;
     }
 
@@ -182,7 +183,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không điều khiển được phát nhạc: $e')),
+        SnackBar(content: Text('playback_control_error'.tr(namedArgs: {'error': '$e'}))),
       );
     }
   }
@@ -218,7 +219,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(newLiked ? '❤️ Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích'),
+          content: Text(newLiked ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
           duration: const Duration(seconds: 1),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -239,7 +240,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
       if (track.previewUrl == null || track.previewUrl!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bài này không có link tải')),
+            SnackBar(content: Text('no_download_url'.tr())),
           );
         }
         return;
@@ -249,9 +250,9 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
       if (mounted) setState(() => _isDownloading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Đã tải xong!'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text('download_complete'.tr()),
+            duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -264,7 +265,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isShuffled ? '🔀 Shuffle ON' : '➡️ Shuffle OFF'),
+        content: Text(_isShuffled ? 'shuffle_on'.tr() : 'shuffle_off'.tr()),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
       ),
@@ -281,7 +282,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
         : 'ONE';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('🔁 Repeat $mode'),
+        content: Text('repeat_mode'.tr(namedArgs: {'mode': mode})),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
       ),
@@ -295,7 +296,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: $e'),
+          content: Text('error_prefix'.tr(namedArgs: {'message': '$e'})),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -309,7 +310,7 @@ class _DynamicIslandPlayerState extends State<DynamicIslandPlayer>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: $e'),
+          content: Text('error_prefix'.tr(namedArgs: {'message': '$e'})),
           duration: const Duration(seconds: 1),
         ),
       );

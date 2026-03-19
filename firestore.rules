@@ -1,0 +1,138 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════
+
+    // Get the calling user's role from Firestore
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return request.auth != null && getUserRole() == 'admin';
+    }
+
+    function isArtist() {
+      return request.auth != null && getUserRole() == 'artist';
+    }
+
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // ═══════════════════════════════════════════
+    // USERS COLLECTION
+    // ═══════════════════════════════════════════
+    match /users/{uid} {
+      // Users can read their own profile; admin can read everyone
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Users can create their own profile on signup
+      allow create: if isOwner(uid)
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active';
+
+      // Users can update their own profile but cannot change role or status
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['role', 'status'])
+        // OR admin can update anything (role, status, ban etc.)
+        || isAdmin();
+
+      // Only admin can delete a user document
+      allow delete: if isAdmin();
+
+      // Sub-collections: favorites, playlists, recently_played, chat_messages, learned_keywords
+      match /favorites/{trackId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      match /recently_played/{trackId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      match /playlists/{playlistId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      match /chat_messages/{msgId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /learned_keywords/{keyword} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // TRACKS COLLECTION
+    // ═══════════════════════════════════════════
+    match /tracks/{trackId} {
+      // Regular users: only read visible, published tracks
+      allow read: if isLoggedIn()
+        && (resource.data.isHidden == false || resource.data.isHidden == null)
+        && resource.data.status == 'published'
+        // OR admin sees everything
+        || isAdmin()
+        // OR the artist who owns it sees it regardless of isHidden
+        || (isArtist() && resource.data.ownerId == request.auth.uid);
+
+      // Artists can create tracks (must set their own ownerId)
+      allow create: if isArtist()
+        && request.resource.data.ownerId == request.auth.uid
+        // Admin can also create (backfill / admin panel uploads)
+        || isAdmin();
+
+      // Artists can update only their own tracks, but cannot change isHidden
+      // (isHidden is admin-only; hiddenBy == 'artist' they can toggle themselves)
+      allow update: if
+        // Admin can update anything including isHidden
+        isAdmin()
+        // Artist can update own track metadata, but can only set isHidden if hiddenBy == 'artist'
+        || (isArtist()
+          && resource.data.ownerId == request.auth.uid
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isHidden'])
+              || request.resource.data.hiddenBy == 'artist'));
+
+      // Only admin can delete tracks permanently
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // ADMIN KEYWORD REPORTS (admin read-only from users)
+    // ═══════════════════════════════════════════
+    match /admin_keyword_reports/{reportId} {
+      allow read: if isAdmin();
+      // Logged-in users can create reports (ChatBot learning pipeline)
+      allow create: if isLoggedIn();
+      // Only admin can update/delete
+      allow update, delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // ADMIN STATS (read-only for admin dashboard)
+    // ═══════════════════════════════════════════
+    match /admin_stats/{docId} {
+      allow read: if isAdmin() || isArtist();
+      // Cloud Functions / trusted backend write stats; from client only admin
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // ARTIST PENDING REQUESTS (artist applies for upgrade)
+    // ═══════════════════════════════════════════
+    match /artist_requests/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && getUserRole() == 'user';
+      allow update, delete: if isAdmin();
+    }
+  }
+}

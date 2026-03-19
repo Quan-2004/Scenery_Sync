@@ -1,8 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/colors.dart';
-import '../services/app_language.dart';
 import '../services/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -77,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  AppLanguage().translate('settings'),
+                  'settings'.tr(),
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.bold,
@@ -94,14 +94,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // Appearance Section
-                  _buildSectionTitle('Appearance'),
+                  _buildSectionTitle('appearance'.tr()),
                   const SizedBox(height: 12),
                   Consumer<ThemeProvider>(
                     builder: (context, themeProvider, child) {
                       return _buildSettingCard(
                         icon: Icons.dark_mode_rounded,
-                        title: AppLanguage().translate('dark_mode'),
-                        subtitle: 'Toggle dark theme',
+                          title: 'dark_mode'.tr(),
+                          subtitle: 'toggle_dark_theme'.tr(),
                         trailing: Switch(
                           value: themeProvider.isDarkMode,
                           onChanged: (value) async {
@@ -111,8 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               SnackBar(
                                 content: Text(
                                   themeProvider.isDarkMode
-                                      ? '🌙 Dark mode activated!'
-                                      : '☀️ Light mode active',
+                                      ? 'dark_mode_activated'.tr()
+                                      : 'light_mode_active'.tr(),
                                 ),
                                 duration: const Duration(seconds: 2),
                                 backgroundColor: AppColors.primary,
@@ -134,8 +134,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.language_rounded,
-                    title: AppLanguage().translate('language'),
-                    subtitle: AppLanguage().currentLanguage == 'vi'
+                    title: 'language'.tr(),
+                    subtitle: context.locale.languageCode == 'vi'
                         ? 'Tiếng Việt'
                         : 'English',
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -145,11 +145,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   // Audio Section
-                  _buildSectionTitle('Audio'),
+                  _buildSectionTitle('audio'.tr()),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.high_quality_rounded,
-                    title: AppLanguage().translate('audio_quality'),
+                    title: 'audio_quality'.tr(),
                     subtitle: _audioQuality,
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () => _showQualityDialog(),
@@ -157,8 +157,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.equalizer_rounded,
-                    title: 'Equalizer',
-                    subtitle: 'Customize sound settings',
+                    title: 'equalizer'.tr(),
+                    subtitle: 'customize_sound'.tr(),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       // Navigate to equalizer
@@ -168,12 +168,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   // Download Section
-                  _buildSectionTitle('Downloads'),
+                  _buildSectionTitle('downloads'.tr()),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.download_rounded,
-                    title: 'Auto Download',
-                    subtitle: 'Download liked songs automatically',
+                    title: 'auto_download'.tr(),
+                    subtitle: 'download_liked_auto'.tr(),
                     trailing: Switch(
                       value: _autoDownload,
                       onChanged: (value) {
@@ -192,7 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.storage_rounded,
-                    title: 'Storage',
+                    title: 'storage'.tr(),
                     subtitle: '2.4 GB used',
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
@@ -203,12 +203,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   // Notifications Section
-                  _buildSectionTitle(AppLanguage().translate('notifications')),
+                  _buildSectionTitle('notifications'.tr()),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.notifications_rounded,
-                    title: 'Push Notifications',
-                    subtitle: 'Enable or disable all notifications',
+                    title: 'push_notifications'.tr(),
+                    subtitle: 'enable_disable_notifications'.tr(),
                     trailing: Switch(
                       value: _notificationsEnabled,
                       onChanged: (value) {
@@ -232,8 +232,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     _buildSettingCard(
                       icon: Icons.new_releases_rounded,
-                      title: 'New Releases',
-                      subtitle: 'Notify about new music releases',
+                      title: 'new_releases'.tr(),
+                      subtitle: 'notify_new_releases'.tr(),
                       trailing: Switch(
                         value: _newReleasesNotif,
                         onChanged: (value) {
@@ -253,8 +253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     _buildSettingCard(
                       icon: Icons.playlist_play_rounded,
-                      title: 'Playlist Updates',
-                      subtitle: 'Notify about playlist changes',
+                      title: 'playlist_updates'.tr(),
+                      subtitle: 'notify_playlist'.tr(),
                       trailing: Switch(
                         value: _playlistUpdatesNotif,
                         onChanged: (value) {
@@ -277,8 +277,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     _buildSettingCard(
                       icon: Icons.person_rounded,
-                      title: 'Artist Updates',
-                      subtitle: 'Notify about favorite artist activities',
+                      title: 'artist_updates'.tr(),
+                      subtitle: 'notify_artist'.tr(),
                       trailing: Switch(
                         value: _artistUpdatesNotif,
                         onChanged: (value) {
@@ -303,33 +303,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   // About Section
-                  _buildSectionTitle('About'),
+                  _buildSectionTitle('about'.tr()),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.info_rounded,
-                    title: 'App Version',
+                    title: 'app_version'.tr(),
                     subtitle: '1.0.0 (Build 100)',
                     trailing: const SizedBox(),
                   ),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.code_rounded,
-                    title: 'Developer',
+                    title: 'developer'.tr(),
                     subtitle: 'Scenery Sync Team © 2024',
                     trailing: const SizedBox(),
                   ),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.update_rounded,
-                    title: 'Last Updated',
+                    title: 'last_updated'.tr(),
                     subtitle: 'December 29, 2024',
                     trailing: const SizedBox(),
                   ),
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.library_books_rounded,
-                    title: 'Open Source Licenses',
-                    subtitle: 'View third-party licenses',
+                    title: 'open_source_licenses'.tr(),
+                    subtitle: 'view_third_party_licenses'.tr(),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       _showLicensesDialog();
@@ -338,13 +338,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.policy_rounded,
-                    title: 'Privacy Policy',
-                    subtitle: 'Read our privacy policy',
+                    title: 'privacy_policy'.tr(),
+                    subtitle: 'read_privacy_policy'.tr(),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Opening Privacy Policy...'),
+                        SnackBar(
+                          content: Text('opening_privacy_policy'.tr()),
                         ),
                       );
                     },
@@ -352,13 +352,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildSettingCard(
                     icon: Icons.description_rounded,
-                    title: 'Terms of Service',
-                    subtitle: 'Read terms and conditions',
+                    title: 'terms_of_service'.tr(),
+                    subtitle: 'read_terms'.tr(),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Opening Terms of Service...'),
+                        SnackBar(
+                          content: Text('opening_terms'.tr()),
                         ),
                       );
                     },
@@ -390,10 +390,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onTap: () {
                           _showLogoutDialog();
                         },
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'Logout',
-                            style: TextStyle(
+                            'logout'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -505,22 +505,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguageDialog() {
-    final AppLanguage appLanguage = AppLanguage();
     final languages = [
-      {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
       {'code': 'vi', 'name': 'Tiếng Việt', 'flag': '🇻🇳'},
+      {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
     ];
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
             title: Text(
-              appLanguage.translate('select_language'),
+              'select_language'.tr(),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             content: SizedBox(
@@ -529,7 +528,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: languages.map((language) {
                   final isSelected =
-                      appLanguage.currentLanguage == language['code'];
+                      ctx.locale.languageCode == language['code'];
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
@@ -567,15 +566,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             )
                           : null,
                       onTap: () {
-                        // Change language globally
-                        appLanguage.setLanguage(language['code'] as String);
-                        setState(() {}); // Rebuild settings screen
-                        Navigator.pop(context);
-
+                        ctx.setLocale(Locale(language['code'] as String));
+                        Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              '${appLanguage.translate('language_changed')} ${language['name']}',
+                              '${'language_changed'.tr()} ${language['name']}',
                             ),
                             duration: const Duration(seconds: 2),
                             behavior: SnackBarBehavior.floating,
@@ -598,21 +594,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Audio Quality'),
+        title: Text('audio_quality'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildQualityOption('Low', '96 kbps'),
-            _buildQualityOption('Medium', '160 kbps'),
-            _buildQualityOption('High', '320 kbps'),
-            _buildQualityOption('Lossless', 'FLAC'),
+            _buildQualityOption('Low', 'audio_quality_low'.tr(), '96 kbps'),
+            _buildQualityOption('Medium', 'audio_quality_medium'.tr(), '160 kbps'),
+            _buildQualityOption('High', 'audio_quality_high'.tr(), '320 kbps'),
+            _buildQualityOption('Lossless', 'audio_quality_lossless'.tr(), 'FLAC'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQualityOption(String quality, String bitrate) {
+  Widget _buildQualityOption(String quality, String label, String bitrate) {
     return RadioListTile<String>(
       value: quality,
       groupValue: _audioQuality,
@@ -620,7 +616,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() => _audioQuality = value!);
         Navigator.pop(context);
       },
-      title: Text(quality),
+      title: Text(label),
       subtitle: Text(bitrate, style: const TextStyle(fontSize: 12)),
       activeColor: AppColors.primary,
     );
@@ -632,9 +628,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.backgroundLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Open Source Licenses',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'open_source_licenses'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: SizedBox(
           width: double.maxFinite,
@@ -653,7 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text('close'.tr()),
           ),
         ],
       ),
@@ -665,12 +661,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text('logout'.tr()),
+        content: Text('logout_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr()),
           ),
           TextButton(
             onPressed: () {
@@ -681,7 +677,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 (route) => false,
               );
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            child: Text('logout'.tr(), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

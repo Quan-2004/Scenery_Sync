@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../screens/chat_bot_screen.dart';
+import '../screens/login_screen.dart';
+import '../services/firebase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DraggableChatBot extends StatefulWidget {
@@ -114,8 +117,17 @@ class _DraggableChatBotState extends State<DraggableChatBot> with SingleTickerPr
         return Transform.scale(
           scale: _pulseAnimation.value,
           child: GestureDetector(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final firebaseService = context.read<FirebaseService>();
+              if (!firebaseService.isLoggedIn) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+                return;
+              }
+
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ChatBotScreen()),
               );

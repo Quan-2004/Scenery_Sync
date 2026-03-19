@@ -6,7 +6,7 @@ import '../models/music_models.dart';
 /// Jamendo API - nhạc không lời, Creative Commons, full song
 /// Đăng ký tại: https://devportal.jamendo.com
 class JamendoService {
-  // TODO: Thay YOUR_CLIENT_ID bằng client_id lấy từ devportal.jamendo.com
+  // Thay bằng client_id thật nếu cần cấu hình riêng cho môi trường deploy.
   static const String _clientId = '675bd2b4';
   static const String _baseUrl = 'https://api.jamendo.com/v3.0';
 

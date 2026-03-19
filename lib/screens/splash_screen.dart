@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../theme/colors.dart';
@@ -106,9 +107,9 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 32),
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: const Text(
-                  'Music App',
-                  style: TextStyle(
+                child: Text(
+                  'app_name'.tr(),
+                  style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -119,9 +120,9 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 8),
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: const Text(
-                  'Your vibe, your music',
-                  style: TextStyle(
+                child: Text(
+                  'app_tagline'.tr(),
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.white70,
                     letterSpacing: 0.5,

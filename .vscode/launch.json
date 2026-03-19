@@ -2,11 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "scenery_sync (Local Keys)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define-from-file=.env.local.json",
+                "--dart-define=CLOUDINARY_CLOUD_NAME=dvcebine7",
+                "--dart-define=CLOUDINARY_UPLOAD_PRESET=scenery_upload"
+            ]
+        },
+        {
             "name": "scenery_sync (Cloudinary)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
             "args": [
+                "--dart-define-from-file=.env.local.json",
                 "--dart-define=CLOUDINARY_CLOUD_NAME=dvcebine7",
                 "--dart-define=CLOUDINARY_UPLOAD_PRESET=scenery_upload"
             ]
@@ -18,6 +30,7 @@
             "type": "dart",
             "flutterMode": "release",
             "args": [
+                "--dart-define-from-file=.env.local.json",
                 "--dart-define=CLOUDINARY_CLOUD_NAME=dvcebine7",
                 "--dart-define=CLOUDINARY_UPLOAD_PRESET=scenery_upload"
             ]

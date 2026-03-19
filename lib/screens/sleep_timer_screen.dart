@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../theme/colors.dart';
@@ -71,8 +72,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
 
   void _onTimerComplete() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Music stopped - Sleep well! 😴'),
+      SnackBar(
+        content: Text('music_stopped_sleep'.tr()),
         duration: Duration(seconds: 3),
       ),
     );
@@ -120,21 +121,21 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sleep Timer',
-                          style: TextStyle(
+                          'sleep_timer'.tr(),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
                         Text(
-                          'Auto-stop music after time',
-                          style: TextStyle(
+                          'sleep_timer_desc'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black54,
                           ),
@@ -219,7 +220,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                           const SizedBox(height: 8),
 
                           Text(
-                            _isActive ? 'Music will stop in' : 'Set a timer',
+                            _isActive ? 'music_will_stop_in'.tr() : 'set_a_timer'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               color: _isActive ? Colors.white70 : Colors.grey.shade500,
@@ -237,9 +238,9 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'QUICK TIMERS',
-                            style: TextStyle(
+                          Text(
+                            'quick_timers'.tr(),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.black54,
@@ -277,9 +278,9 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'OPTIONS',
-                            style: TextStyle(
+                          Text(
+                            'options'.tr(),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.black54,
@@ -289,8 +290,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                           const SizedBox(height: 12),
                           _buildOptionCard(
                             icon: Icons.volume_down_rounded,
-                            title: 'Fade Out',
-                            subtitle: 'Gradually decrease volume',
+                            title: 'fade_out'.tr(),
+                            subtitle: 'gradually_decrease_volume'.tr(),
                             value: _fadeOutEnabled,
                             onChanged: (value) {
                               setState(() {
@@ -327,8 +328,8 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                                   shadowColor: Colors.red.withValues(alpha: 0.3),
                                 ),
                                 icon: const Icon(Icons.stop_rounded),
-                                label: const Text(
-                                  'Cancel Timer',
+                                label: Text(
+                                  'cancel_timer'.tr(),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -354,7 +355,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                                 ),
                                 icon: Icon(Icons.add_rounded, color: AppColors.primary),
                                 label: Text(
-                                  'Add 5 Minutes',
+                                  'add_5_minutes'.tr(),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -521,10 +522,10 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                 child: Icon(Icons.timer_outlined, color: AppColors.primary),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Custom Timer',
-                  style: TextStyle(
+                  'custom_timer'.tr(),
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
@@ -548,7 +549,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Custom Timer'),
+          title: Text('custom_timer'.tr()),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -575,7 +576,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text('cancel'.tr()),
             ),
             TextButton(
               onPressed: () {
@@ -585,7 +586,7 @@ class _SleepTimerScreenState extends State<SleepTimerScreen>
                 }
                 Navigator.pop(context);
               },
-              child: const Text('Start'),
+              child: Text('start'.tr()),
             ),
           ],
         ),

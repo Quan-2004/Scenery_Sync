@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+set -eu
+
+# Allow bypass for emergency pushes: SKIP_VERSION_BUMP=1 git push
+if [ "${SKIP_VERSION_BUMP:-}" = "1" ]; then
+  echo "[pre-push] Skip version bump via SKIP_VERSION_BUMP=1"
+  exit 0
+fi
+
+# Prevent recursion when hook triggers nested git push/commands
+if [ "${SCENERYSYNC_HOOK_RUNNING:-}" = "1" ]; then
+  exit 0
+fi
+export SCENERYSYNC_HOOK_RUNNING=1
+
+# Do not run if pubspec.yaml is missing
+if [ ! -f "pubspec.yaml" ]; then
+  exit 0
+fi
+
+# No staged/unstaged changes from previous operations
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "[pre-push] Ban dang co thay doi chua commit. Vui long commit truoc khi push de hook co the bump version chinh xac."
+  exit 1
+fi
+
+# Configure bump level with: git config scenerysync.versionBump minor
+BUMP_LEVEL=$(git config --get scenerysync.versionBump || true)
+if [ -z "$BUMP_LEVEL" ]; then
+  BUMP_LEVEL="patch"
+fi
+
+NEW_VERSION=$(powershell -NoProfile -ExecutionPolicy Bypass -File "scripts/bump-version.ps1" -Bump "$BUMP_LEVEL" -PubspecPath "pubspec.yaml")
+
+if [ -z "$NEW_VERSION" ]; then
+  echo "[pre-push] Khong bump duoc version"
+  exit 1
+fi
+
+git add pubspec.yaml
+git commit -m "chore: bump app version to $NEW_VERSION" >/dev/null
+
+echo "[pre-push] Da bump version -> $NEW_VERSION"
+echo "[pre-push] Da tao commit moi. Hay chay lai: git push"
+
+# Abort current push so the new commit can be included in next push
+exit 1

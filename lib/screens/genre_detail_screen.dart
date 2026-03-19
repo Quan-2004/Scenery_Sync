@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -118,7 +119,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${_songs.length} songs',
+                        'song_count'.tr(namedArgs: {'count': '${_songs.length}'}),
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.white.withValues(alpha: 0.9),
@@ -157,7 +158,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                             Expanded(
                               child: _ActionButton(
                                 icon: Icons.play_arrow_rounded,
-                                label: 'Play All',
+                                label: 'play_all'.tr(),
                                 color: AppColors.primary,
                                 onTap: () {},
                               ),
@@ -166,7 +167,7 @@ class _GenreDetailScreenState extends State<GenreDetailScreen>
                             Expanded(
                               child: _ActionButton(
                                 icon: Icons.shuffle_rounded,
-                                label: 'Shuffle',
+                                label: 'shuffle'.tr(),
                                 color: widget.genreColor,
                                 onTap: () {},
                               ),

@@ -4,13 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'firebase_options.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/main_screen.dart';
 import 'theme/colors.dart';
-import 'services/app_language.dart';
 import 'services/theme_provider.dart';
 import 'services/audio_player_service.dart';
 import 'services/firebase_service.dart';
@@ -29,6 +29,9 @@ void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize EasyLocalization
+  await EasyLocalization.ensureInitialized();
+
   // Initialize Hive
   await Hive.initFlutter();
   await Hive.openBox<Map>('downloads');
@@ -41,7 +44,15 @@ void main() async {
 
   // Áp dụng HTTP override để fix lỗi SSL certificate
   HttpOverrides.global = MyHttpOverrides();
-  runApp(const MyApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('vi'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('vi'),
+      startLocale: const Locale('vi'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -59,31 +70,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppContent extends StatefulWidget {
+class MyAppContent extends StatelessWidget {
   const MyAppContent({super.key});
-
-  @override
-  State<MyAppContent> createState() => _MyAppContentState();
-}
-
-class _MyAppContentState extends State<MyAppContent> {
-  final AppLanguage _appLanguage = AppLanguage();
-
-  @override
-  void initState() {
-    super.initState();
-    _appLanguage.addListener(_onLanguageChanged);
-  }
-
-  @override
-  void dispose() {
-    _appLanguage.removeListener(_onLanguageChanged);
-    super.dispose();
-  }
-
-  void _onLanguageChanged() {
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +80,9 @@ class _MyAppContentState extends State<MyAppContent> {
     return MaterialApp(
       title: 'Scenery Sync Music',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
         useMaterial3: true,
@@ -120,9 +111,10 @@ class _MyAppContentState extends State<MyAppContent> {
         cardColor: AppColors.cardDark,
       ),
       // Define named routes
-      initialRoute: '/',
+      initialRoute: '/main',
       routes: {
-        '/': (context) => const OnboardingScreen(),
+        '/': (context) => const MainScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/main': (context) => const MainScreen(),

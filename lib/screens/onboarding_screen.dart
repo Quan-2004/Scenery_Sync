@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'login_screen.dart';
@@ -15,31 +16,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, dynamic>> _pages = [
     {
+      'titleKey': 'onboard_title_1',
+      'descKey': 'onboard_desc_1',
       'icon': Icons.music_note_rounded,
-      'title': 'Welcome to Scenery Sync',
-      'description':
-          'Discover millions of songs and create your perfect soundtrack for every moment',
       'color': Colors.purple,
     },
     {
+      'titleKey': 'onboard_title_2',
+      'descKey': 'onboard_desc_2',
       'icon': Icons.library_music_rounded,
-      'title': 'Your Music Library',
-      'description':
-          'Build playlists, save favorites, and organize your music collection effortlessly',
       'color': Colors.blue,
     },
     {
+      'titleKey': 'onboard_title_3',
+      'descKey': 'onboard_desc_3',
       'icon': Icons.downloading_rounded,
-      'title': 'Listen Offline',
-      'description':
-          'Download your favorite songs and enjoy music anywhere, anytime without internet',
       'color': Colors.green,
     },
     {
+      'titleKey': 'onboard_title_4',
+      'descKey': 'onboard_desc_4',
       'icon': Icons.person_rounded,
-      'title': 'Personalized Experience',
-      'description':
-          'Get recommendations tailored to your taste and discover new music you\'ll love',
       'color': Colors.orange,
     },
   ];
@@ -64,9 +61,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: _skipToHome,
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
+                  child: Text(
+                    'skip'.tr(),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.black54,
@@ -122,9 +119,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           elevation: 8,
                           shadowColor: AppColors.primary.withValues(alpha: 0.4),
                         ),
-                        child: const Text(
-                          'Get Started',
-                          style: TextStyle(
+                        child: Text(
+                          'get_started'.tr(),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -149,9 +146,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'Next',
-                              style: TextStyle(
+                            Text(
+                              'next'.tr(),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -225,7 +222,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Transform.translate(
                   offset: Offset(0, 20 * (1 - value)),
                   child: Text(
-                    page['title'] as String,
+                    (page['titleKey'] as String).tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 28,
@@ -251,7 +248,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Transform.translate(
                   offset: Offset(0, 20 * (1 - value)),
                   child: Text(
-                    page['description'] as String,
+                    (page['descKey'] as String).tr(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,

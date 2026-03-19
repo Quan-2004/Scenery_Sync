@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
@@ -23,9 +24,9 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
             pinned: true,
             backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'My Playlists',
-                style: TextStyle(
+              title: Text(
+                'my_playlists'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -108,16 +109,16 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
-          'Create Playlist',
-          style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold),
+        title: Text(
+          'create_playlist'.tr(),
+          style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: nameController,
           autofocus: true,
           style: const TextStyle(color: AppColors.textMain),
           decoration: InputDecoration(
-            hintText: 'Playlist name',
+            hintText: 'playlist_name_hint'.tr(),
             hintStyle: const TextStyle(color: AppColors.textSecondary),
             filled: true,
             fillColor: AppColors.background,
@@ -130,7 +131,7 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('cancel'.tr(), style: const TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -139,7 +140,7 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Playlist "${nameController.text}" created'),
+                    content: Text('playlist_created'.tr(namedArgs: {'name': nameController.text})),
                     backgroundColor: AppColors.primary,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -150,7 +151,7 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Create'),
+            child: Text('create'.tr()),
           ),
         ],
       ),
@@ -180,22 +181,22 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.play_circle, color: AppColors.primary),
-              title: const Text('Play Playlist', style: TextStyle(color: AppColors.textMain)),
+              title: Text('play_playlist'.tr(), style: const TextStyle(color: AppColors.textMain)),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.edit, color: AppColors.textMain),
-              title: const Text('Edit Details', style: TextStyle(color: AppColors.textMain)),
+              title: Text('edit_details'.tr(), style: const TextStyle(color: AppColors.textMain)),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.share, color: AppColors.textMain),
-              title: const Text('Share', style: TextStyle(color: AppColors.textMain)),
+              title: Text('share'.tr(), style: const TextStyle(color: AppColors.textMain)),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Delete Playlist', style: TextStyle(color: Colors.red)),
+              title: Text('delete_playlist'.tr(), style: const TextStyle(color: Colors.red)),
               onTap: () => Navigator.pop(context),
             ),
             const SizedBox(height: 12),
@@ -290,7 +291,9 @@ class _PlaylistCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${playlist['songCount']} songs',
+                    'song_count'.tr(
+                      namedArgs: {'count': playlist['songCount'].toString()},
+                    ),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

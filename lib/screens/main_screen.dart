@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../widgets/draggable_chat_bot.dart';
 import '../widgets/dynamic_island_player.dart';
-import '../services/app_language.dart';
+import '../services/firebase_service.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'scenery_camera_screen.dart';
+import 'login_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +18,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  final AppLanguage _appLanguage = AppLanguage();
 
   List<Widget> get _screens => [
     const HomeScreen(),
@@ -30,17 +31,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _appLanguage.addListener(_onLanguageChanged);
   }
 
   @override
   void dispose() {
-    _appLanguage.removeListener(_onLanguageChanged);
     super.dispose();
-  }
-
-  void _onLanguageChanged() {
-    setState(() {});
   }
 
   @override
@@ -95,7 +90,17 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildNavItem(IconData icon, int index) {
     final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        final firebaseService = context.read<FirebaseService>();
+
+        if (index == 2 && !firebaseService.isLoggedIn) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+          return;
+        }
+
         setState(() {
           _currentIndex = index;
         });

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../models/music_models.dart';
@@ -80,9 +81,9 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'All Artists',
-                style: TextStyle(
+              title: Text(
+                'all_artists'.tr(),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textMain,
@@ -99,11 +100,11 @@ class _AllArtistsScreenState extends State<AllArtistsScreen> {
               ),
             )
           else if (_artists.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               child: Center(
                 child: Text(
-                  'No artists available',
-                  style: TextStyle(color: AppColors.textMuted),
+                  'no_artists'.tr(),
+                  style: const TextStyle(color: AppColors.textMuted),
                 ),
               ),
             )

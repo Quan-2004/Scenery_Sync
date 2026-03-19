@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
@@ -215,18 +216,18 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           const SizedBox(height: 24),
-                          const Text(
-                            'Welcome Back!',
-                            style: TextStyle(
+                          Text(
+                            'welcome_back'.tr(),
+                            style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textMain,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Login to continue your music journey',
-                            style: TextStyle(
+                          Text(
+                            'login_subtitle'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.textMuted,
                             ),
@@ -245,9 +246,9 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Email',
-                        style: TextStyle(
+                      Text(
+                        'email'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -258,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen>
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'enter_your_email'.tr(),
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
                           fillColor: AppColors.surfaceLight,
@@ -276,10 +277,10 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
+                            return 'please_enter_email'.tr();
                           }
                           if (!value.contains('@')) {
-                            return 'Please enter a valid email';
+                            return 'please_enter_valid_email'.tr();
                           }
                           return null;
                         },
@@ -296,9 +297,9 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Password',
-                        style: TextStyle(
+                      Text(
+                        'password'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMain,
@@ -309,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen>
                         controller: _passwordController,
                         obscureText: !_isPasswordVisible,
                         decoration: InputDecoration(
-                          hintText: 'Enter your password',
+                          hintText: 'enter_your_password'.tr(),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -339,10 +340,10 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return 'please_enter_password'.tr();
                           }
                           if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return 'password_min_length'.tr();
                           }
                           return null;
                         },
@@ -373,9 +374,9 @@ class _LoginScreenState extends State<LoginScreen>
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
-                          const Text(
-                            'Remember me',
-                            style: TextStyle(
+                          Text(
+                            'remember_me'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.textMuted,
                             ),
@@ -392,9 +393,9 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           );
                         },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
+                        child: Text(
+                          'forgot_password'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
@@ -435,9 +436,9 @@ class _LoginScreenState extends State<LoginScreen>
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Login',
-                              style: TextStyle(
+                          : Text(
+                              'login'.tr(),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -459,11 +460,11 @@ class _LoginScreenState extends State<LoginScreen>
                           thickness: 1,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'OR',
-                          style: TextStyle(
+                          'or_divider'.tr(),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textMuted,
                             fontWeight: FontWeight.w600,
@@ -515,9 +516,9 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
+                        Text(
+                          'dont_have_account'.tr(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
                           ),
@@ -526,9 +527,9 @@ class _LoginScreenState extends State<LoginScreen>
                           onPressed: () {
                             Navigator.pushNamed(context, '/register');
                           },
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
+                          child: Text(
+                            'sign_up'.tr(),
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'genre_detail_screen.dart';
@@ -71,9 +72,9 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Text(
-                        'All Genres',
-                        style: TextStyle(
+                      Text(
+                        'all_genres'.tr(),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textMain,
@@ -86,10 +87,10 @@ class _AllGenresScreenState extends State<AllGenresScreen> {
                 // Genres Grid
                 Expanded(
                   child: _allGenres.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'No genres available',
-                            style: TextStyle(
+                            'no_genres'.tr(),
+                            style: const TextStyle(
                               color: AppColors.textMain,
                               fontSize: 16,
                             ),
