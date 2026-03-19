@@ -17,7 +17,7 @@ function AdminSidebar({ user }: { user: AppUser }) {
   return (
     <aside className="sidebar">
       <Link href="/admin/dashboard" className="sidebar-logo">
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-medium)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎵</div>
+        <img src="/logo.png" alt="Scenery Sync" style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'contain' }} />
         <div>
           <div className="sidebar-logo-text">Scenery Sync</div>
           <div className="sidebar-logo-sub">Admin Portal</div>
