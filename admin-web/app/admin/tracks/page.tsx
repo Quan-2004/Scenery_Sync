@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { getAllTracks, hideTrack, unhideTrack } from '@/lib/adminQueries';
+import { exportToCSV, TRACK_COLUMNS } from '@/lib/exportUtils';
 
 interface TrackRow {
   id: string;
@@ -77,7 +78,26 @@ export default function AdminTracksPage() {
           <h1 className="page-title">Quản lý Bài hát</h1>
           <p className="page-subtitle">Xem metadata và tạm ẩn bài hát vi phạm</p>
         </div>
-        <span className="badge badge-draft">{filtered.length} bài</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span className="badge badge-draft">{filtered.length} bài</span>
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={tracks.length === 0}
+            onClick={() => {
+              const rows = tracks.map(t => ({
+                ...t,
+                playCount: (t.stats as Record<string, number>)?.playCount ?? 0,
+                favoriteCount: (t.stats as Record<string, number>)?.favoriteCount ?? 0,
+                sceneryMatchCount: (t.stats as Record<string, number>)?.sceneryMatchCount ?? 0,
+                title: t.title ?? t.name,
+                artistName: t.artistName ?? t.artist ?? t.ownerName,
+              }));
+              exportToCSV(rows as Record<string, unknown>[], `danh-sach-bai-hat-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`, TRACK_COLUMNS);
+            }}
+          >
+            📥 Xuất CSV
+          </button>
+        </div>
       </div>
 
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-solid)', borderRadius: 'var(--radius)', padding: '4px 4px 0', marginBottom: 16, display: 'inline-flex', gap: 4 }}>

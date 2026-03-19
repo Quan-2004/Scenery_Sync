@@ -11,7 +11,6 @@ function AdminSidebar({ user }: { user: AppUser }) {
   const links = [
     { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
     { href: '/admin/users', icon: '👥', label: 'Người dùng' },
-    { href: '/admin/artists', icon: '🎤', label: 'Nghệ sĩ / Công ty' },
     { href: '/admin/tracks', icon: '🎵', label: 'Bài hát' },
   ];
 

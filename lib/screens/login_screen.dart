@@ -127,37 +127,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _handleFacebookLogin() async {
-    setState(() => _isLoading = true);
-
-    final firebaseService = Provider.of<FirebaseService>(
-      context,
-      listen: false,
-    );
-
-    final error = await firebaseService.loginWithFacebook();
-
-    setState(() => _isLoading = false);
-
-    if (error == null) {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/main');
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -486,24 +455,13 @@ class _LoginScreenState extends State<LoginScreen>
                 // Social Login Buttons
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SocialButton(
-                          imagePath: 'assets/images/google_logo.webp',
-                          label: 'Google',
-                          onPressed: _isLoading ? () {} : _handleGoogleLogin,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SocialButton(
-                          imagePath: 'assets/images/facebook_logo.png',
-                          label: 'Facebook',
-                          onPressed: _isLoading ? () {} : _handleFacebookLogin,
-                        ),
-                      ),
-                    ],
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SocialButton(
+                      imagePath: 'assets/images/google_logo.webp',
+                      label: 'Google',
+                      onPressed: _isLoading ? () {} : _handleGoogleLogin,
+                    ),
                   ),
                 ),
 

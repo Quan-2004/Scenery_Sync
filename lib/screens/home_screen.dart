@@ -16,7 +16,6 @@ import 'artist_detail_screen.dart';
 import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
 import 'liked_songs_screen.dart';
-import 'admin_panel_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -516,25 +515,6 @@ class _HeaderSection extends StatefulWidget {
 }
 
 class _HeaderSectionState extends State<_HeaderSection> {
-  int _tapCount = 0;
-  DateTime? _lastTapTime;
-
-  void _onLogoTap() {
-    final now = DateTime.now();
-    // Reset counter if more than 2 seconds since last tap
-    if (_lastTapTime != null &&
-        now.difference(_lastTapTime!) > const Duration(seconds: 2)) {
-      _tapCount = 0;
-    }
-    _lastTapTime = now;
-    _tapCount++;
-
-    if (_tapCount >= 10) {
-      _tapCount = 0;
-      AdminPanelScreen.openIfAuthorized(context);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Get user from provider
@@ -546,15 +526,10 @@ class _HeaderSectionState extends State<_HeaderSection> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Logo – tap 10 times to open the hidden admin panel
-          GestureDetector(
-            onTap: _onLogoTap,
-            child: Container(
+          Container(
             width: 44,
             height: 44,
-            padding: const EdgeInsets.all(
-              2,
-            ), // Spacing between border and image
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -566,7 +541,6 @@ class _HeaderSectionState extends State<_HeaderSection> {
             child: ClipOval(
               child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
             ),
-          ),
           ),
           // Icons row
           Row(

@@ -41,9 +41,11 @@ service cloud.firestore {
         && request.resource.data.status == 'active';
 
       // Users can update their own profile but cannot change role or status
-      allow update: if isOwner(uid)
-        && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['role', 'status'])
+      allow update: if (
+          isOwner(uid)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['role', 'status'])
+        )
         // OR admin can update anything (role, status, ban etc.)
         || isAdmin();
 
@@ -76,14 +78,16 @@ service cloud.firestore {
     // TRACKS COLLECTION
     // ═══════════════════════════════════════════
     match /tracks/{trackId} {
-      // Regular users: only read visible, published tracks
-      allow read: if isLoggedIn()
-        && (resource.data.isHidden == false || resource.data.isHidden == null)
-        && resource.data.status == 'published'
-        // OR admin sees everything
-        || isAdmin()
-        // OR the artist who owns it sees it regardless of isHidden
-        || (isArtist() && resource.data.ownerId == request.auth.uid);
+      // Regular users: read published, non-hidden tracks
+      // Artist: read their own tracks (any status/hidden)
+      // Admin: read everything
+      allow read: if isAdmin()
+        || (isArtist() && resource.data.ownerId == request.auth.uid)
+        || (
+          isLoggedIn()
+          && (resource.data.isHidden == false || resource.data.isHidden == null)
+          && resource.data.status == 'published'
+        );
 
       // Artists can create tracks (must set their own ownerId)
       allow create: if isArtist()

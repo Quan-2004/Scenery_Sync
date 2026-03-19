@@ -1,5 +1,7 @@
 import {
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   User,
@@ -28,6 +30,19 @@ export async function login(email: string, password: string): Promise<string | n
     return null;
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Login failed';
+    return msg;
+  }
+}
+
+const googleProvider = new GoogleAuthProvider();
+
+/** Sign in with Google Popup. Returns error string or null. */
+export async function loginWithGoogle(): Promise<string | null> {
+  try {
+    await signInWithPopup(auth, googleProvider);
+    return null;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Google Login failed';
     return msg;
   }
 }
