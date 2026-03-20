@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scenery_sync/utils/avatar_image.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +11,7 @@ import 'edit_profile_screen.dart';
 import 'my_songs_screen.dart';
 import 'my_playlists_screen.dart';
 import 'my_favorites_screen.dart';
+import 'recently_played_screen.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -757,6 +758,20 @@ class _SettingsSectionState extends State<_SettingsSection> {
                 onChanged: (value) {},
                 thumbColor: WidgetStateProperty.all(AppColors.primary),
               ),
+            ),
+            const Divider(height: 1),
+            _SettingItem(
+              icon: Icons.history_rounded,
+              title: 'Lịch sử nghe',
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RecentlyPlayedScreen(),
+                  ),
+                );
+              },
             ),
             const Divider(height: 1),
             _SettingItem(
