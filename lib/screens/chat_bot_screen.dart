@@ -16,6 +16,7 @@ import 'now_playing_screen.dart';
 import '../services/jamendo_service.dart';
 import '../services/ambient_sound_service.dart';
 import '../services/firebase_service.dart';
+import '../services/gemini_service.dart';
 
 enum _SceneMode {
   urbanTraffic,
@@ -49,6 +50,15 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   StreamSubscription<PlayerState>? _ambientPlayerStateSub;
   String? _ambientPreviewUrl;
   Map<String, double> _learnedKeywordWeights = const {};
+  final GeminiService _geminiService = GeminiService();
+
+  // Quiz state
+  QuizQuestion? _activeQuiz;
+  int _quizHintLevel = 0; // 0 = no quiz, 1-3 = hint level shown
+  bool _songOfDayShown = false;
+
+  // Session management
+  String _currentSessionId = '';
 
   static const Set<String> _knownContextKeywords = {
     'rain', 'mua', 'mưa', 'drizzle', 'storm', 'thunder', 'lightning',
@@ -76,20 +86,44 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     List<String> get _quickSuggestions => _isVietnamese
       ? [
         'Gợi ý cho tôi nhạc chill',
-        'Hôm nay có gì đang thịnh hành?',
-        'Tạo cho tôi playlist tập luyện',
+        '🎲 Chơi đoán bài hát',
+        '😢 Hôm nay buồn quá',
+        '🌧️ Nhạc mưa thư giãn',
         'Tìm bài giống Blinding Lights',
       ]
       : [
-        'Recommend me some chill music',
-        'What\'s trending today?',
-        'Create a workout playlist',
+        'Recommend some chill music',
+        '🎲 Play music quiz',
+        '😢 Feeling sad today',
+        '🌧️ Rainy day vibes',
         'Find songs like Blinding Lights',
       ];
 
-    String get _welcomeMessage => _isVietnamese
-      ? 'Xin chào! 👋 Tôi là trợ lý âm nhạc của bạn. Hôm nay tôi có thể giúp bạn khám phá điều gì?'
-      : 'Hi there! 👋 I\'m your music assistant. How can I help you discover amazing music today?';
+    /// Feature 7: Time-based greeting
+    String get _welcomeMessage {
+      final hour = DateTime.now().hour;
+      if (_isVietnamese) {
+        if (hour >= 5 && hour < 12) {
+          return 'Chào buổi sáng! ☀️ Hôm nay bạn muốn nghe gì nào?';
+        } else if (hour >= 12 && hour < 18) {
+          return 'Chào buổi chiều! 🌤️ Để tôi gợi ý nhạc phù hợp cho bạn nhé!';
+        } else if (hour >= 18 && hour < 22) {
+          return 'Chào buổi tối! 🌆 Thư giãn với chút nhạc hay nhé?';
+        } else {
+          return 'Đêm khuya rồi! 🌙 Nghe nhạc chill và nghỉ ngơi thôi nào~';
+        }
+      } else {
+        if (hour >= 5 && hour < 12) {
+          return 'Good morning! ☀️ What music shall we explore today?';
+        } else if (hour >= 12 && hour < 18) {
+          return 'Good afternoon! 🌤️ Let me find the perfect soundtrack for you!';
+        } else if (hour >= 18 && hour < 22) {
+          return 'Good evening! 🌆 Time to unwind with some great music?';
+        } else {
+          return 'Late night vibes! 🌙 Let\'s find something chill to wind down~';
+        }
+      }
+    }
 
     String get _analyzingSceneryMessage =>
       _isVietnamese ? 'Đang phân tích khung cảnh của bạn... 🔍' : 'Analyzing your scenery... 🔍';
@@ -158,6 +192,15 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     }
 
     await _loadLearnedKeywordWeights();
+
+    // Try to restore existing messages first (including old ones without sessionId)
+    await _restoreChatHistory();
+
+    // Generate a new session ID only if we have no messages to continue
+    if (_currentSessionId.isEmpty) {
+      _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+    }
+
     await _restoreChatHistory();
 
     if (!mounted) return;
@@ -176,6 +219,8 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted || _messages.isNotEmpty) return;
         _addBotMessage(_welcomeMessage);
+        // Feature 3: Song of the Day
+        _showSongOfDay();
       });
     }
   }
@@ -197,14 +242,31 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     }
   }
 
-  Future<void> _restoreChatHistory() async {
+  Future<void> _restoreChatHistory({String? sessionId}) async {
     final firebaseService = context.read<FirebaseService>();
     if (!firebaseService.isLoggedIn) return;
 
     try {
       await firebaseService.deleteExpiredChatMessages();
-      final docs = await firebaseService.getRecentChatMessages(limit: 120);
-      if (docs.isEmpty || !mounted) return;
+
+      // Try to load messages for the specified/current session
+      final targetSession = sessionId ?? _currentSessionId;
+      List<Map<String, dynamic>> docs = [];
+
+      if (targetSession.isNotEmpty) {
+        docs = await firebaseService.getRecentChatMessages(
+          limit: 120,
+          sessionId: targetSession,
+        );
+      }
+
+      // If no messages found for session, try loading ALL recent messages
+      // (handles old messages without sessionId)
+      if (docs.isEmpty && (sessionId == null)) {
+        docs = await firebaseService.getRecentChatMessages(limit: 120);
+      }
+
+      if (!mounted || docs.isEmpty) return;
 
       final restored = docs.map(_messageFromMap).toList();
       setState(() {
@@ -307,7 +369,15 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         'tracks': (message.tracks ?? []).map(_trackToMap).toList(),
         'ambienceSuggestions':
             (message.ambienceSuggestions ?? []).map(_ambientToMap).toList(),
-      });
+      }, sessionId: _currentSessionId);
+
+      // Update session preview with the latest user message
+      if (message.isUser && message.text.isNotEmpty) {
+        unawaited(firebaseService.saveChatSession(
+          sessionId: _currentSessionId,
+          preview: message.text,
+        ));
+      }
     } catch (e) {
       debugPrint('Persist chat message error: $e');
     }
@@ -1499,32 +1569,551 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     }
   }
 
+  // ─── Feature 3: Song of the Day ───────────────────────────────
+  Future<void> _showSongOfDay() async {
+    if (_songOfDayShown || !_geminiService.isConfigured) return;
+    _songOfDayShown = true;
+
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+
+      final result = await _geminiService.generateSongOfDay(
+        hour: DateTime.now().hour,
+        isVietnamese: _isVietnamese,
+      );
+
+      if (!mounted) return;
+
+      final header = _isVietnamese
+          ? '📅 **Bài hát hôm nay cho bạn:**\n\n'
+            '🎵 ${result.songName} — ${result.artistName}\n'
+            '💬 ${result.reason}'
+          : '📅 **Song of the Day:**\n\n'
+            '🎵 ${result.songName} — ${result.artistName}\n'
+            '💬 ${result.reason}';
+
+      // Search and show the track
+      final query = '${result.songName} ${result.artistName}';
+      final tracks = await DeezerService().searchTracks(query, limit: 5);
+
+      if (!mounted) return;
+
+      if (tracks.isNotEmpty) {
+        setState(() {
+          final msg = ChatMessage(
+            text: header,
+            isUser: false,
+            timestamp: DateTime.now(),
+            tracks: tracks.take(3).toList(),
+          );
+          _messages.add(msg);
+          unawaited(_persistMessage(msg));
+        });
+        _scrollToBottom();
+      } else {
+        _addBotMessage(header);
+      }
+    } catch (e) {
+      debugPrint('Song of Day error: $e');
+    }
+  }
+
+  // ─── Feature 1: Emoji Mood Detection ─────────────────────────
+  static const Map<String, String> _emojiMoodMap = {
+    '😢': 'sad emotional ballad',
+    '😭': 'sad crying emotional songs',
+    '😞': 'melancholy indie acoustic',
+    '😔': 'sad soft acoustic',
+    '🥺': 'emotional heartfelt songs',
+    '😊': 'happy upbeat pop',
+    '😄': 'happy feel good music',
+    '🥳': 'party celebration dance',
+    '🎉': 'party hits dance pop',
+    '😡': 'angry rock metal intense',
+    '🤬': 'aggressive rap rock',
+    '😴': 'sleep ambient calm lullaby',
+    '💤': 'sleep relaxing ambient',
+    '😌': 'peaceful relaxing chill',
+    '🧘': 'meditation yoga ambient',
+    '💪': 'workout motivation gym',
+    '🏃': 'running workout energetic',
+    '❤️': 'romantic love songs',
+    '💕': 'romantic sweet love',
+    '💔': 'heartbreak sad ballad',
+    '🌧️': 'rainy day lofi chill',
+    '☀️': 'sunny happy feel good',
+    '🌙': 'night chill ambient lofi',
+    '⭐': 'dreamy ethereal ambient',
+    '🔥': 'hot trending popular hits',
+    '🎸': 'rock guitar indie',
+    '🎹': 'piano classical instrumental',
+    '🎷': 'jazz saxophone smooth',
+    '🍂': 'autumn folk acoustic indie',
+    '❄️': 'winter cozy christmas',
+    '🌊': 'ocean beach tropical chill',
+    '🌴': 'tropical summer reggae',
+    '☕': 'cafe jazz lofi acoustic',
+    '🍷': 'jazz wine romantic evening',
+    '🚗': 'road trip indie pop rock',
+    '✈️': 'travel adventure upbeat',
+    '🎮': 'gaming electronic edm',
+    '📚': 'study focus lofi instrumental',
+  };
+
+  bool _looksLikeEmojiMood(String input) {
+    final emojiPattern = RegExp(
+      r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}\u{FE0F}❤️‍💔💕💤☀️⭐❄️☕✈️]',
+      unicode: true,
+    );
+    final emojis = emojiPattern.allMatches(input);
+    final strippedText = input.replaceAll(emojiPattern, '').trim();
+    // Consider emoji mood if: mostly emojis with little/no text
+    return emojis.length >= 1 && strippedText.length <= 10;
+  }
+
+  Future<void> _handleEmojiMood(String input) async {
+    // Find matching emoji
+    String? searchQuery;
+    String? detectedMood;
+
+    for (final entry in _emojiMoodMap.entries) {
+      if (input.contains(entry.key)) {
+        searchQuery = entry.value;
+        detectedMood = entry.key;
+        break;
+      }
+    }
+
+    searchQuery ??= 'chill popular music';
+    detectedMood ??= '🎵';
+
+    final moodMsg = _isVietnamese
+        ? '🎭 Tôi cảm nhận mood $detectedMood của bạn! Để tôi tìm nhạc phù hợp...'
+        : '🎭 I sense your $detectedMood mood! Let me find matching music...';
+    _addBotMessage(moodMsg);
+
+    try {
+      final tracks = await DeezerService().searchTracks(searchQuery, limit: 15);
+      if (tracks.isNotEmpty && mounted) {
+        final foundMsg = _isVietnamese
+            ? '🎵 Nhạc theo mood $detectedMood cho bạn:'
+            : '🎵 Music for your $detectedMood mood:';
+        setState(() {
+          final msg = ChatMessage(
+            text: foundMsg,
+            isUser: false,
+            timestamp: DateTime.now(),
+            tracks: tracks.take(8).toList(),
+          );
+          _messages.add(msg);
+          unawaited(_persistMessage(msg));
+        });
+        _scrollToBottom();
+        await AudioPlayerService.instance.setQueue(tracks.take(8).toList(), startIndex: 0);
+        await AudioPlayerService.instance.play();
+      }
+    } catch (e) {
+      debugPrint('Emoji mood search error: $e');
+    }
+  }
+
+  // ─── Feature 2: Music Quiz ───────────────────────────────────
+  bool _looksLikeQuizRequest(String input) {
+    final lower = input.toLowerCase();
+    const quizKeywords = [
+      'quiz', 'đoán bài', 'doan bai', 'guess', 'chơi game',
+      'choi game', 'trò chơi', 'tro choi', 'play game', 'music game',
+      '🎲', 'đố', 'do ',
+    ];
+    return quizKeywords.any((kw) => lower.contains(kw));
+  }
+
+  Future<void> _startQuiz() async {
+    final loadingMsg = _isVietnamese
+        ? '🎲 Đang chuẩn bị câu đố...'
+        : '🎲 Preparing your music quiz...';
+    _addBotMessage(loadingMsg);
+
+    try {
+      final quiz = await _geminiService.generateQuizQuestion(
+        isVietnamese: _isVietnamese,
+      );
+
+      if (!mounted) return;
+
+      _activeQuiz = quiz;
+      _quizHintLevel = 1;
+
+      final quizMsg = _isVietnamese
+          ? '🎲 **ĐỐ VUI ÂM NHẠC!**\n\n'
+            '📌 Gợi ý 1: ${quiz.hint1}\n\n'
+            'Bạn đoán được bài gì không? Gõ tên bài hát hoặc gõ **"gợi ý"** để xem thêm gợi ý!'
+          : '🎲 **MUSIC QUIZ!**\n\n'
+            '📌 Hint 1: ${quiz.hint1}\n\n'
+            'Can you guess the song? Type the name or type **"hint"** for more clues!';
+      _addBotMessage(quizMsg);
+    } catch (e) {
+      debugPrint('Quiz start error: $e');
+      final errorMsg = _isVietnamese
+          ? 'Xin lỗi, tôi không thể tạo câu đố lúc này. Thử lại sau nhé! 🎲'
+          : 'Sorry, I couldn\'t create a quiz right now. Try again later! 🎲';
+      _addBotMessage(errorMsg);
+    }
+  }
+
+  Future<void> _handleQuizAnswer(String text) async {
+    if (_activeQuiz == null) return;
+    final quiz = _activeQuiz!;
+    final lower = text.toLowerCase().trim();
+
+    // Check if user wants more hints
+    final wantsHint = lower == 'hint' || lower == 'gợi ý' || lower == 'goi y' || lower == 'tiếp' || lower == 'tiep';
+
+    if (wantsHint) {
+      _quizHintLevel++;
+      if (_quizHintLevel == 2) {
+        final hint2Msg = _isVietnamese
+            ? '📌 Gợi ý 2: 🎶 _"${quiz.hint2}"_\n\nĐoán tiếp hoặc gõ **"gợi ý"** cho gợi ý cuối!'
+            : '📌 Hint 2: 🎶 _"${quiz.hint2}"_\n\nKeep guessing or type **"hint"** for the final clue!';
+        _addBotMessage(hint2Msg);
+      } else if (_quizHintLevel >= 3) {
+        final hint3Msg = _isVietnamese
+            ? '📌 Gợi ý cuối: ${quiz.hint3}\n\nĐoán đi nào! Hoặc gõ **"bỏ cuộc"** để xem đáp án.'
+            : '📌 Final hint: ${quiz.hint3}\n\nLast chance! Or type **"give up"** to see the answer.';
+        _addBotMessage(hint3Msg);
+      }
+      return;
+    }
+
+    // Check if user gives up
+    final givesUp = lower == 'bỏ cuộc' || lower == 'bo cuoc' || lower == 'give up' || lower == 'skip';
+
+    // Check if answer is correct (fuzzy match)
+    final songLower = quiz.songName.toLowerCase();
+    final isCorrect = !givesUp && (
+      lower.contains(songLower) ||
+      songLower.contains(lower) ||
+      _fuzzyMatch(lower, songLower)
+    );
+
+    if (isCorrect) {
+      final correctMsg = _isVietnamese
+          ? '🎉🎉 **CHÍNH XÁC!** 🎉🎉\n\n'
+            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+            '\nĐể tôi phát bài này cho bạn nghe!'
+          : '🎉🎉 **CORRECT!** 🎉🎉\n\n'
+            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+            '\nLet me play it for you!';
+      _addBotMessage(correctMsg);
+    } else {
+      final revealMsg = _isVietnamese
+          ? '${givesUp ? '😅' : '❌ Chưa đúng rồi!'} Đáp án là:\n\n'
+            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+            '\nĐể tôi phát cho bạn nghe nhé!'
+          : '${givesUp ? '😅' : '❌ Not quite!'} The answer is:\n\n'
+            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+            '\nLet me play it for you!';
+      _addBotMessage(revealMsg);
+    }
+
+    // Search and play the song
+    try {
+      final tracks = await DeezerService().searchTracks(
+        '${quiz.songName} ${quiz.artistName}', limit: 5,
+      );
+      if (tracks.isNotEmpty && mounted) {
+        setState(() {
+          final msg = ChatMessage(
+            text: '',
+            isUser: false,
+            timestamp: DateTime.now(),
+            tracks: tracks.take(3).toList(),
+          );
+          _messages.add(msg);
+          unawaited(_persistMessage(msg));
+        });
+        _scrollToBottom();
+        await AudioPlayerService.instance.setQueue(tracks.take(3).toList(), startIndex: 0);
+        await AudioPlayerService.instance.play();
+      }
+    } catch (e) {
+      debugPrint('Quiz play error: $e');
+    }
+
+    // Reset quiz
+    _activeQuiz = null;
+    _quizHintLevel = 0;
+
+    // Suggest playing again
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      final againMsg = _isVietnamese
+          ? '🎲 Muốn chơi tiếp không? Gõ **"đoán bài"** để chơi câu tiếp!'
+          : '🎲 Want to play again? Type **"quiz"** for another round!';
+      _addBotMessage(againMsg);
+    });
+  }
+
+  bool _fuzzyMatch(String input, String target) {
+    if (input.length < 3) return false;
+    // Remove common words and compare key parts
+    final inputWords = input.split(RegExp(r'\s+')).where((w) => w.length > 2).toSet();
+    final targetWords = target.split(RegExp(r'\s+')).where((w) => w.length > 2).toSet();
+    if (inputWords.isEmpty || targetWords.isEmpty) return false;
+    final overlap = inputWords.intersection(targetWords);
+    return overlap.length >= (targetWords.length * 0.5).ceil();
+  }
+
+  // ─── Feature 4: Mood Analysis ────────────────────────────────
+  bool _looksLikeMoodExpression(String input) {
+    final lower = input.toLowerCase();
+    const moodPhrases = [
+      // Vietnamese mood expressions
+      'buồn', 'buon', 'chán', 'chan', 'mệt', 'met', 'vui', 'hạnh phúc',
+      'hanh phuc', 'cô đơn', 'co don', 'tức giận', 'tuc gian',
+      'lo lắng', 'lo lang', 'hào hứng', 'hao hung', 'nhớ nhà',
+      'nho nha', 'thất tình', 'that tinh', 'stress', 'áp lực',
+      'ap luc', 'hôm nay', 'hom nay', 'đang cảm thấy', 'dang cam thay',
+      'tâm trạng', 'tam trang', 'mood', 'feeling',
+      // English mood expressions
+      'feeling', 'i feel', 'i am', "i'm", 'so tired', 'so sad',
+      'happy', 'angry', 'lonely', 'anxious', 'stressed',
+      'excited', 'bored', 'nostalgic', 'heartbroken', 'in love',
+      'depressed', 'motivated', 'calm', 'frustrated',
+    ];
+    // Must match mood phrase AND not be a music/scene request
+    final hasMood = moodPhrases.any((p) => lower.contains(p));
+    if (!hasMood) return false;
+    // Exclude if it already looks like a scene or explicit lyrics search
+    return !_looksLikeSceneTextRequest(input) && !_looksLikeLyricsSearch(input);
+  }
+
+  Future<void> _handleMoodMusic(String text) async {
+    try {
+      final result = await _geminiService.analyzeMoodForMusic(
+        text,
+        isVietnamese: _isVietnamese,
+      );
+
+      if (!mounted) return;
+
+      // Show empathic message
+      final moodIcon = _getMoodIcon(result.mood);
+      _addBotMessage('$moodIcon ${result.message}');
+
+      // Search and show music
+      final tracks = await DeezerService().searchTracks(result.searchQuery, limit: 15);
+      if (tracks.isNotEmpty && mounted) {
+        final musicMsg = _isVietnamese
+            ? '🎵 Nhạc phù hợp với tâm trạng "${result.mood}" của bạn:'
+            : '🎵 Music for your "${result.mood}" mood:';
+        setState(() {
+          final msg = ChatMessage(
+            text: musicMsg,
+            isUser: false,
+            timestamp: DateTime.now(),
+            tracks: tracks.take(8).toList(),
+          );
+          _messages.add(msg);
+          unawaited(_persistMessage(msg));
+        });
+        _scrollToBottom();
+        await AudioPlayerService.instance.setQueue(tracks.take(8).toList(), startIndex: 0);
+        await AudioPlayerService.instance.play();
+      }
+    } catch (e) {
+      debugPrint('Mood music error: $e');
+      // Fallback to Gemini chat
+      if (_geminiService.isConfigured && mounted) {
+        try {
+          final aiResponse = await _geminiService.sendMessage(text);
+          if (mounted) _addBotMessage(aiResponse);
+        } catch (_) {
+          if (mounted) _addBotMessage(_generateResponse(text));
+        }
+      }
+    }
+  }
+
+  String _getMoodIcon(String mood) {
+    final lower = mood.toLowerCase();
+    if (lower.contains('sad') || lower.contains('cry')) return '😢';
+    if (lower.contains('happy') || lower.contains('joy')) return '😊';
+    if (lower.contains('angry') || lower.contains('frustrat')) return '😤';
+    if (lower.contains('tired') || lower.contains('exhaust')) return '😴';
+    if (lower.contains('lonely') || lower.contains('lone')) return '🥺';
+    if (lower.contains('romantic') || lower.contains('love')) return '❤️';
+    if (lower.contains('energetic') || lower.contains('excit')) return '🔥';
+    if (lower.contains('peaceful') || lower.contains('calm')) return '😌';
+    if (lower.contains('nostalgic')) return '🍂';
+    if (lower.contains('stress') || lower.contains('anxious')) return '😰';
+    return '🎭';
+  }
+
+  // ─── Lyrics Detection ────────────────────────────────────────
+  bool _looksLikeLyricsSearch(String input) {
+    final lower = input.toLowerCase();
+
+    // Exclude recommendation patterns  ("tìm bài giống", "find songs like")
+    const excludePatterns = [
+      'giống', 'giong', 'tương tự', 'tuong tu', 'like', 'similar',
+      'gợi ý', 'goi y', 'recommend', 'suggest',
+    ];
+    if (excludePatterns.any((p) => lower.contains(p))) return false;
+
+    const lyricsKeywords = [
+      'lời bài hát', 'loi bai hat', 'lyrics', 'lyric',
+      'quên tên', 'quen ten', 'forget name', 'forgot name',
+      'nhớ lời', 'nho loi', 'remember lyrics',
+      'bài hát có lời', 'bai hat co loi',
+      'tìm bài', 'tim bai', 'find song',
+      'bài nào có', 'bai nao co',
+      'hát như thế nào', 'hat nhu the nao',
+      'có đoạn', 'co doan',
+    ];
+    return lyricsKeywords.any((kw) => lower.contains(kw));
+  }
+
+  Future<void> _handleLyricsSearch(String text) async {
+    final searchingMsg = _isVietnamese
+        ? '🔍 Đang tìm bài hát từ lời bạn nhớ...'
+        : '🔍 Searching for the song based on lyrics you remember...';
+    _addBotMessage(searchingMsg);
+
+    try {
+      final geminiResponse = await _geminiService.findSongByLyrics(
+        text,
+        isVietnamese: _isVietnamese,
+      );
+
+      if (!mounted) return;
+
+      final songName = _geminiService.extractSongName(geminiResponse);
+      final artistName = _geminiService.extractArtistName(geminiResponse);
+
+      _addBotMessage(geminiResponse);
+
+      if (songName != null) {
+        final searchQuery = artistName != null
+            ? '$songName $artistName'
+            : songName;
+        try {
+          final tracks = await DeezerService().searchTracks(searchQuery, limit: 10);
+          if (tracks.isNotEmpty && mounted) {
+            final foundMsg = _isVietnamese
+                ? '🎵 Tôi đã tìm thấy bài hát trên Deezer:'
+                : '🎵 I found the song on Deezer:';
+            setState(() {
+              final musicMessage = ChatMessage(
+                text: foundMsg,
+                isUser: false,
+                timestamp: DateTime.now(),
+                tracks: tracks.take(5).toList(),
+              );
+              _messages.add(musicMessage);
+              unawaited(_persistMessage(musicMessage));
+            });
+            _scrollToBottom();
+            await AudioPlayerService.instance.setQueue(tracks.take(5).toList(), startIndex: 0);
+            await AudioPlayerService.instance.play();
+          }
+        } catch (e) {
+          debugPrint('Error searching Deezer for lyrics result: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Lyrics search error: $e');
+      if (!mounted) return;
+      final errorMsg = _isVietnamese
+          ? 'Xin lỗi, tôi không thể tìm bài hát lúc này. Hãy thử lại sau! 🎧'
+          : 'Sorry, I couldn\'t search for the song right now. Please try again later! 🎧';
+      _addBotMessage(errorMsg);
+    }
+  }
+
+  // ─── Main Message Handler ────────────────────────────────────
   void _handleSubmitted(String text) {
     if (text.trim().isEmpty) return;
 
     _textController.clear();
     _addUserMessage(text);
 
-    // Simulate bot typing
     setState(() {
       _isTyping = true;
     });
 
-    // Simulate bot response
-    Future.delayed(const Duration(milliseconds: 900), () async {
+    Future.delayed(const Duration(milliseconds: 500), () async {
       if (!mounted) return;
 
       setState(() {
         _isTyping = false;
       });
 
+      // 0. Active quiz → handle quiz answer
+      if (_activeQuiz != null) {
+        await _handleQuizAnswer(text);
+        return;
+      }
+
+      // 1. Quiz request → start new quiz
+      if (_looksLikeQuizRequest(text)) {
+        await _startQuiz();
+        return;
+      }
+
+      // 2. Scene/scenery text request → keyword-based music + ambient
       if (_looksLikeSceneTextRequest(text)) {
         await _addSceneRecommendationFromText(text);
         return;
       }
 
-      String response = _generateResponse(text);
-      _addBotMessage(response);
+      // 3. Explicit lyrics search → Gemini finds song name, Deezer plays
+      if (_looksLikeLyricsSearch(text)) {
+        await _handleLyricsSearch(text);
+        return;
+      }
+
+      // 4. Emoji mood → detect mood from emoji, search music
+      if (_looksLikeEmojiMood(text)) {
+        await _handleEmojiMood(text);
+        return;
+      }
+
+      // 5. Mood expression → Gemini analyzes mood, suggests music
+      if (_looksLikeMoodExpression(text)) {
+        await _handleMoodMusic(text);
+        return;
+      }
+
+      // 6. Auto-detect lyrics (Feature 6) → Gemini checks if it looks like lyrics
+      if (_geminiService.isConfigured) {
+        final mightBeLyrics = await _geminiService.detectIfLyrics(text);
+        if (mightBeLyrics && mounted) {
+          await _handleLyricsSearch(text);
+          return;
+        }
+      }
+
+      // 7. General message → Gemini AI chat
+      if (_geminiService.isConfigured) {
+        try {
+          final aiResponse = await _geminiService.sendMessage(text);
+          if (mounted) _addBotMessage(aiResponse);
+          return;
+        } catch (e) {
+          debugPrint('Gemini chat error, falling back to template: $e');
+        }
+      }
+
+      // 8. Fallback: template response (offline / API error)
+      if (mounted) {
+        _addBotMessage(_generateResponse(text));
+      }
     });
   }
 
@@ -1703,6 +2292,42 @@ class _ChatBotScreenState extends State<ChatBotScreen>
             ),
           ),
           const SizedBox(width: 10),
+          // New Chat button
+          GestureDetector(
+            onTap: _startNewChat,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.add_comment_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Chat History button
+          GestureDetector(
+            onTap: _showChatHistory,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.history_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: _pickImageFromGallery,
             child: Container(
@@ -1727,6 +2352,221 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         ],
       ),
     );
+  }
+
+  // ─── New Chat & History ──────────────────────────────────────
+  void _startNewChat() {
+    setState(() {
+      _messages.clear();
+      _activeQuiz = null;
+      _quizHintLevel = 0;
+      _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+    });
+    _geminiService.resetChat();
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _addBotMessage(_welcomeMessage);
+      _showSongOfDay();
+    });
+  }
+
+  void _showChatHistory() async {
+    final firebaseService = context.read<FirebaseService>();
+    final sessions = await firebaseService.getChatSessions(limit: 20);
+
+    if (!mounted) return;
+
+    if (sessions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isVietnamese
+              ? 'Chưa có lịch sử chat nào'
+              : 'No chat history yet'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _buildChatHistorySheet(ctx, sessions),
+    );
+  }
+
+  Widget _buildChatHistorySheet(
+      BuildContext ctx, List<Map<String, dynamic>> sessions) {
+    return Container(
+      height: MediaQuery.of(ctx).size.height * 0.65,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                Icon(Icons.history_rounded,
+                    color: AppColors.primary, size: 24),
+                const SizedBox(width: 10),
+                Text(
+                  _isVietnamese ? 'Lịch sử Chat' : 'Chat History',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Session list
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: sessions.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+              itemBuilder: (_, index) {
+                final session = sessions[index];
+                final sessionId = session['id'] as String? ?? '';
+                final preview = session['preview'] as String? ?? '';
+                final updatedAt = session['updatedAt'];
+                final isCurrentSession = sessionId == _currentSessionId;
+
+                String timeLabel = '';
+                if (updatedAt is Timestamp) {
+                  final dt = updatedAt.toDate();
+                  final now = DateTime.now();
+                  final diff = now.difference(dt);
+                  if (diff.inMinutes < 1) {
+                    timeLabel = _isVietnamese ? 'Vừa xong' : 'Just now';
+                  } else if (diff.inHours < 1) {
+                    timeLabel = '${diff.inMinutes}m';
+                  } else if (diff.inDays < 1) {
+                    timeLabel = '${diff.inHours}h';
+                  } else {
+                    timeLabel = '${diff.inDays}d';
+                  }
+                }
+
+                return ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isCurrentSession
+                          ? AppColors.primary.withValues(alpha: 0.2)
+                          : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isCurrentSession
+                          ? Icons.chat_bubble_rounded
+                          : Icons.chat_bubble_outline_rounded,
+                      color: isCurrentSession
+                          ? AppColors.primary
+                          : Colors.grey[600],
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    preview.isNotEmpty
+                        ? preview
+                        : (_isVietnamese ? 'Cuộc trò chuyện' : 'Conversation'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight:
+                          isCurrentSession ? FontWeight.w600 : FontWeight.w400,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  subtitle: timeLabel.isNotEmpty
+                      ? Text(timeLabel,
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.grey[500]))
+                      : null,
+                  trailing: isCurrentSession
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _isVietnamese ? 'Hiện tại' : 'Current',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(Icons.delete_outline_rounded,
+                              size: 20, color: Colors.red[300]),
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            await context
+                                .read<FirebaseService>()
+                                .deleteChatSession(sessionId);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(_isVietnamese
+                                      ? 'Đã xóa cuộc trò chuyện'
+                                      : 'Chat deleted'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    if (!isCurrentSession) {
+                      _loadSession(sessionId);
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _loadSession(String sessionId) {
+    setState(() {
+      _messages.clear();
+      _activeQuiz = null;
+      _quizHintLevel = 0;
+      _currentSessionId = sessionId;
+    });
+    _geminiService.resetChat();
+    _restoreChatHistory(sessionId: sessionId);
   }
 
   Widget _buildMessageBubble(ChatMessage message) {

@@ -721,7 +721,7 @@ class FirebaseService extends ChangeNotifier {
   }
 
   // Chat history (persisted for 24h)
-  Future<void> saveChatMessage(Map<String, dynamic> message) async {
+  Future<void> saveChatMessage(Map<String, dynamic> message, {String? sessionId}) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -734,6 +734,7 @@ class FirebaseService extends ChangeNotifier {
         .collection('chat_messages')
         .add({
           ...message,
+          'sessionId': sessionId ?? '',
           'createdAt': FieldValue.serverTimestamp(),
           'clientCreatedAt': Timestamp.fromDate(now),
           'expiresAt': Timestamp.fromDate(expiresAt),
@@ -764,21 +765,154 @@ class FirebaseService extends ChangeNotifier {
 
   Future<List<Map<String, dynamic>>> getRecentChatMessages({
     int limit = 120,
+    String? sessionId,
   }) async {
     final user = _auth.currentUser;
     if (user == null) return [];
 
-    final snapshot = await _firestore
+    Query<Map<String, dynamic>> query = _firestore
         .collection('users')
         .doc(user.uid)
-        .collection('chat_messages')
-        .orderBy('clientCreatedAt', descending: false)
-        .limit(limit)
-        .get();
+        .collection('chat_messages');
 
-    return snapshot.docs
-        .map((doc) => {'id': doc.id, ...doc.data()})
-        .toList();
+    if (sessionId != null && sessionId.isNotEmpty) {
+      query = query.where('sessionId', isEqualTo: sessionId);
+    }
+
+    try {
+      final snapshot = await query
+          .orderBy('clientCreatedAt', descending: false)
+          .limit(limit)
+          .get();
+      return snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
+    } catch (e) {
+      // Fallback: if composite index is missing, query without ordering
+      debugPrint('getRecentChatMessages ordered query failed, retrying: $e');
+      try {
+        final snapshot = await query.limit(limit).get();
+        final docs = snapshot.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList();
+        // Sort client-side
+        docs.sort((a, b) {
+          final aTime = a['clientCreatedAt'];
+          final bTime = b['clientCreatedAt'];
+          if (aTime is Timestamp && bTime is Timestamp) {
+            return aTime.compareTo(bTime);
+          }
+          return 0;
+        });
+        return docs;
+      } catch (e2) {
+        debugPrint('getRecentChatMessages fallback also failed: $e2');
+        return [];
+      }
+    }
+  }
+
+  /// Get list of distinct chat sessions with their first message as preview.
+  Future<List<Map<String, dynamic>>> getChatSessions({int limit = 20}) async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    try {
+      // Try ordered query first
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_sessions')
+          .orderBy('updatedAt', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+    } catch (e) {
+      debugPrint('getChatSessions ordered failed, trying without order: $e');
+      try {
+        // Fallback: query without ordering (no index needed)
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('chat_sessions')
+            .limit(limit)
+            .get();
+        final docs = snapshot.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList();
+        // Sort client-side
+        docs.sort((a, b) {
+          final aTime = a['updatedAt'];
+          final bTime = b['updatedAt'];
+          if (aTime is Timestamp && bTime is Timestamp) {
+            return bTime.compareTo(aTime);
+          }
+          return 0;
+        });
+        return docs;
+      } catch (e2) {
+        debugPrint('getChatSessions fallback also failed: $e2');
+        return [];
+      }
+    }
+  }
+
+  /// Create or update a chat session record.
+  Future<void> saveChatSession({
+    required String sessionId,
+    required String preview,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_sessions')
+          .doc(sessionId)
+          .set({
+            'preview': preview.length > 80 ? '${preview.substring(0, 80)}...' : preview,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('saveChatSession error: $e');
+    }
+  }
+
+  /// Delete a chat session and all its messages.
+  Future<void> deleteChatSession(String sessionId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      // Delete session doc
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_sessions')
+          .doc(sessionId)
+          .delete();
+
+      // Delete associated messages
+      final messages = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_messages')
+          .where('sessionId', isEqualTo: sessionId)
+          .limit(500)
+          .get();
+
+      if (messages.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in messages.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      debugPrint('deleteChatSession error: $e');
+    }
   }
 
   String _keywordDocId(String keyword) {

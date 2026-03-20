@@ -1,6 +1,7 @@
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   addDoc,
   updateDoc,
@@ -11,6 +12,22 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { db } from './firebase';
+
+export async function getArtistProfile(uid: string) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (snap.exists()) return { uid, ...snap.data() };
+  return null;
+}
+
+export async function updateArtistProfile(
+  uid: string,
+  data: { displayName?: string; companyName?: string; bio?: string; phoneNumber?: string; photoUrl?: string },
+) {
+  await updateDoc(doc(db, 'users', uid), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
 
 export async function getMyTracks(uid: string) {
   const q = query(

@@ -68,7 +68,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-logo">
-          <div className="login-logo-icon">🎵</div>
+          <img src="/logo.png" alt="Scenery Sync" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'contain' }} />
           <div>
             <div className="login-logo-name">Scenery Sync</div>
             <div className="login-logo-sub">Management Portal</div>

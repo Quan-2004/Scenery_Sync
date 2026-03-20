@@ -11,7 +11,7 @@ function ArtistSidebar({ user }: { user: AppUser }) {
   const links = [
     { href: '/artist/dashboard', icon: '📊', label: 'Dashboard' },
     { href: '/artist/tracks', icon: '🎵', label: 'Sáng tác của tôi' },
-    { href: '/artist/analytics', icon: '📈', label: 'Thống kê chi tiết' },
+    { href: '/artist/profile', icon: '👤', label: 'Hồ sơ của tôi' },
   ];
 
   return (
