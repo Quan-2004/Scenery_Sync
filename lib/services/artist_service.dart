@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -28,9 +27,10 @@ class ArtistService {
         .where('ownerId', isEqualTo: _uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => {'id': doc.id, ...doc.data()})
-            .toList());
+        .map(
+          (snap) =>
+              snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList(),
+        );
   }
 
   /// Upload a new track to Cloudinary then save metadata to Firestore.
@@ -59,7 +59,9 @@ class ArtistService {
       // 2. Upload cover if provided
       String coverUrl = '';
       if (coverBytes != null && coverBytes.isNotEmpty) {
-        final coverResult = await _cloudinary.uploadTrackCover(bytes: coverBytes);
+        final coverResult = await _cloudinary.uploadTrackCover(
+          bytes: coverBytes,
+        );
         coverUrl = coverResult.secureUrl;
       }
 
@@ -82,11 +84,7 @@ class ArtistService {
         'status': 'published',
         'isHidden': false,
         'isPublic': true,
-        'stats': {
-          'playCount': 0,
-          'favoriteCount': 0,
-          'sceneryMatchCount': 0,
-        },
+        'stats': {'playCount': 0, 'favoriteCount': 0, 'sceneryMatchCount': 0},
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -200,8 +198,9 @@ class ArtistService {
       }
 
       // Sort by plays desc
-      trackStats.sort((a, b) =>
-          (b['playCount'] as int).compareTo(a['playCount'] as int));
+      trackStats.sort(
+        (a, b) => (b['playCount'] as int).compareTo(a['playCount'] as int),
+      );
 
       return {
         'totalPlays': totalPlays,

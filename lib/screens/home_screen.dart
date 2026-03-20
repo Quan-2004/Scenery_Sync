@@ -1884,6 +1884,17 @@ class _DeezerChartSectionState extends State<_DeezerChartSection> {
 
   void _playTrack(Track track, int index) {
     AudioPlayerService.instance.setQueue(_tracks, startIndex: index);
+    // Lưu lịch sử nghe (fire-and-forget)
+    final firebaseService = context.read<FirebaseService>();
+    firebaseService.saveRecentlyPlayed({
+      'id': track.id,
+      'title': track.name,
+      'artist': track.artistName,
+      'imageUrl': track.imageUrl,
+      'previewUrl': track.previewUrl,
+      'durationMs': track.durationMs,
+      'source': 'deezer',
+    });
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const NowPlayingScreen()),

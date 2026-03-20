@@ -61,105 +61,205 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   String _currentSessionId = '';
 
   static const Set<String> _knownContextKeywords = {
-    'rain', 'mua', 'mưa', 'drizzle', 'storm', 'thunder', 'lightning',
-    'beach', 'ocean', 'sea', 'wave', 'coast', 'shore', 'bien', 'biển',
-    'song', 'sóng', 'river', 'stream', 'waterfall', 'suoi', 'suối', 'thac', 'thác',
-    'forest', 'jungle', 'tree', 'nature', 'rung', 'rừng', 'thien nhien', 'thiên nhiên',
-    'city', 'urban', 'street', 'traffic', 'downtown', 'thanh pho', 'thành phố',
-    'duong pho', 'đường phố', 'cafe', 'coffee', 'quan ca phe', 'quán cà phê',
-    'night', 'moon', 'star', 'dem', 'đêm', 'sunset', 'sunrise', 'dawn', 'dusk',
-    'hoang hon', 'hoàng hôn', 'binh minh', 'bình minh', 'winter', 'snow', 'cold',
-    'fog', 'mist', 'wind', 'breeze', 'gio', 'gió', 'calm', 'peaceful', 'relax',
-    'chill', 'focus', 'study', 'tap trung', 'tập trung', 'workout', 'gym', 'yoga',
-    'romantic', 'happy', 'sad', 'travel', 'roadtrip', 'driving', 'adventure',
-    'sky', 'cloud', 'mountain', 'lake', 'flower', 'grass', 'landscape', 'scenery',
+    'rain',
+    'mua',
+    'mưa',
+    'drizzle',
+    'storm',
+    'thunder',
+    'lightning',
+    'beach',
+    'ocean',
+    'sea',
+    'wave',
+    'coast',
+    'shore',
+    'bien',
+    'biển',
+    'song',
+    'sóng',
+    'river',
+    'stream',
+    'waterfall',
+    'suoi',
+    'suối',
+    'thac',
+    'thác',
+    'forest',
+    'jungle',
+    'tree',
+    'nature',
+    'rung',
+    'rừng',
+    'thien nhien',
+    'thiên nhiên',
+    'city',
+    'urban',
+    'street',
+    'traffic',
+    'downtown',
+    'thanh pho',
+    'thành phố',
+    'duong pho',
+    'đường phố',
+    'cafe',
+    'coffee',
+    'quan ca phe',
+    'quán cà phê',
+    'night',
+    'moon',
+    'star',
+    'dem',
+    'đêm',
+    'sunset',
+    'sunrise',
+    'dawn',
+    'dusk',
+    'hoang hon',
+    'hoàng hôn',
+    'binh minh',
+    'bình minh',
+    'winter',
+    'snow',
+    'cold',
+    'fog',
+    'mist',
+    'wind',
+    'breeze',
+    'gio',
+    'gió',
+    'calm',
+    'peaceful',
+    'relax',
+    'chill',
+    'focus',
+    'study',
+    'tap trung',
+    'tập trung',
+    'workout',
+    'gym',
+    'yoga',
+    'romantic',
+    'happy',
+    'sad',
+    'travel',
+    'roadtrip',
+    'driving',
+    'adventure',
+    'sky',
+    'cloud',
+    'mountain',
+    'lake',
+    'flower',
+    'grass',
+    'landscape',
+    'scenery',
   };
 
   static const Set<String> _keywordNoise = {
-    'font', 'text', 'logo', 'brand', 'symbol', 'design', 'graphics',
-    'product', 'poster', 'screenshot', 'photo', 'image', 'app', 'website',
-    'screen', 'display', 'document', 'interface', 'ui', 'ux',
+    'font',
+    'text',
+    'logo',
+    'brand',
+    'symbol',
+    'design',
+    'graphics',
+    'product',
+    'poster',
+    'screenshot',
+    'photo',
+    'image',
+    'app',
+    'website',
+    'screen',
+    'display',
+    'document',
+    'interface',
+    'ui',
+    'ux',
   };
 
-    bool get _isVietnamese => context.locale.languageCode == 'vi';
+  bool get _isVietnamese => context.locale.languageCode == 'vi';
 
-    List<String> get _quickSuggestions => _isVietnamese
+  List<String> get _quickSuggestions => _isVietnamese
       ? [
-        'Gợi ý cho tôi nhạc chill',
-        '🎲 Chơi đoán bài hát',
-        '😢 Hôm nay buồn quá',
-        '🌧️ Nhạc mưa thư giãn',
-        'Tìm bài giống Blinding Lights',
-      ]
+          'Gợi ý cho tôi nhạc chill',
+          '🎲 Chơi đoán bài hát',
+          '😢 Hôm nay buồn quá',
+          '🌧️ Nhạc mưa thư giãn',
+          'Tìm bài giống Blinding Lights',
+        ]
       : [
-        'Recommend some chill music',
-        '🎲 Play music quiz',
-        '😢 Feeling sad today',
-        '🌧️ Rainy day vibes',
-        'Find songs like Blinding Lights',
-      ];
+          'Recommend some chill music',
+          '🎲 Play music quiz',
+          '😢 Feeling sad today',
+          '🌧️ Rainy day vibes',
+          'Find songs like Blinding Lights',
+        ];
 
-    /// Feature 7: Time-based greeting
-    String get _welcomeMessage {
-      final hour = DateTime.now().hour;
-      if (_isVietnamese) {
-        if (hour >= 5 && hour < 12) {
-          return 'Chào buổi sáng! ☀️ Hôm nay bạn muốn nghe gì nào?';
-        } else if (hour >= 12 && hour < 18) {
-          return 'Chào buổi chiều! 🌤️ Để tôi gợi ý nhạc phù hợp cho bạn nhé!';
-        } else if (hour >= 18 && hour < 22) {
-          return 'Chào buổi tối! 🌆 Thư giãn với chút nhạc hay nhé?';
-        } else {
-          return 'Đêm khuya rồi! 🌙 Nghe nhạc chill và nghỉ ngơi thôi nào~';
-        }
+  /// Feature 7: Time-based greeting
+  String get _welcomeMessage {
+    final hour = DateTime.now().hour;
+    if (_isVietnamese) {
+      if (hour >= 5 && hour < 12) {
+        return 'Chào buổi sáng! ☀️ Hôm nay bạn muốn nghe gì nào?';
+      } else if (hour >= 12 && hour < 18) {
+        return 'Chào buổi chiều! 🌤️ Để tôi gợi ý nhạc phù hợp cho bạn nhé!';
+      } else if (hour >= 18 && hour < 22) {
+        return 'Chào buổi tối! 🌆 Thư giãn với chút nhạc hay nhé?';
       } else {
-        if (hour >= 5 && hour < 12) {
-          return 'Good morning! ☀️ What music shall we explore today?';
-        } else if (hour >= 12 && hour < 18) {
-          return 'Good afternoon! 🌤️ Let me find the perfect soundtrack for you!';
-        } else if (hour >= 18 && hour < 22) {
-          return 'Good evening! 🌆 Time to unwind with some great music?';
-        } else {
-          return 'Late night vibes! 🌙 Let\'s find something chill to wind down~';
-        }
+        return 'Đêm khuya rồi! 🌙 Nghe nhạc chill và nghỉ ngơi thôi nào~';
+      }
+    } else {
+      if (hour >= 5 && hour < 12) {
+        return 'Good morning! ☀️ What music shall we explore today?';
+      } else if (hour >= 12 && hour < 18) {
+        return 'Good afternoon! 🌤️ Let me find the perfect soundtrack for you!';
+      } else if (hour >= 18 && hour < 22) {
+        return 'Good evening! 🌆 Time to unwind with some great music?';
+      } else {
+        return 'Late night vibes! 🌙 Let\'s find something chill to wind down~';
       }
     }
+  }
 
-    String get _analyzingSceneryMessage =>
-      _isVietnamese ? 'Đang phân tích khung cảnh của bạn... 🔍' : 'Analyzing your scenery... 🔍';
+  String get _analyzingSceneryMessage => _isVietnamese
+      ? 'Đang phân tích khung cảnh của bạn... 🔍'
+      : 'Analyzing your scenery... 🔍';
 
-    String _nonSceneryImageMessage(String preview) => _isVietnamese
+  String _nonSceneryImageMessage(String preview) => _isVietnamese
       ? 'Ảnh này có vẻ giống ảnh chụp màn hình, poster hoặc giao diện hơn là ảnh phong cảnh thật. Tôi nhận ra: $preview. Hãy thử dùng ảnh ngoài trời hoặc ảnh môi trường thực tế để tôi gợi ý nhạc và âm thanh chính xác hơn.'
       : 'This image looks more like a screenshot, poster, or UI capture than a real scenery photo. I detected: $preview. Please try a real outdoor or environmental photo so I can suggest matching music and ambient sounds more accurately.';
 
-    String _detectedMessage(String preview) =>
-      _isVietnamese ? '✨ Tôi nhận ra: $preview\n\n' : '✨ I detected: $preview\n\n';
+  String _detectedMessage(String preview) => _isVietnamese
+      ? '✨ Tôi nhận ra: $preview\n\n'
+      : '✨ I detected: $preview\n\n';
 
-      String get _musicSuggestionsHeader => _isVietnamese
-        ? '🎵 Đây là danh sách nhạc gợi ý cho bạn:'
-        : '🎵 Here are your music suggestions:';
+  String get _musicSuggestionsHeader => _isVietnamese
+      ? '🎵 Đây là danh sách nhạc gợi ý cho bạn:'
+      : '🎵 Here are your music suggestions:';
 
-      String get _ambientSuggestionsHeader => _isVietnamese
-        ? '🌧️ Đây là danh sách âm thanh môi trường gợi ý:'
-        : '🌧️ Here are your ambient sound suggestions:';
+  String get _ambientSuggestionsHeader => _isVietnamese
+      ? '🌧️ Đây là danh sách âm thanh môi trường gợi ý:'
+      : '🌧️ Here are your ambient sound suggestions:';
 
-    String get _manualPlayFallbackMessage => _isVietnamese
+  String get _manualPlayFallbackMessage => _isVietnamese
       ? 'Tôi gặp sự cố khi phát bài hát, nhưng bạn vẫn có thể thử phát thủ công từ danh sách bên dưới.'
       : 'I had trouble playing the track, but you can try playing it manually from the player.';
 
-    String get _imageAnalysisErrorMessage => _isVietnamese
+  String get _imageAnalysisErrorMessage => _isVietnamese
       ? 'Xin lỗi, tôi gặp sự cố khi phân tích ảnh. Nhưng tôi vẫn có thể giúp bạn gợi ý nhạc nếu bạn mô tả khung cảnh bằng chữ. 🎧'
       : 'Sorry, I had trouble analyzing the image. But I\'m still here to help with music recommendations! 🎧';
 
-    String _textSceneDetectedMessage(String detected) => _isVietnamese
+  String _textSceneDetectedMessage(String detected) => _isVietnamese
       ? '✨ Tôi hiểu cảm giác bạn muốn là: $detected\n\n'
       : '✨ I understand this vibe as: $detected\n\n';
 
-    String get _textSceneMusicMessage => _isVietnamese
+  String get _textSceneMusicMessage => _isVietnamese
       ? '🎵 Tôi đã tìm được những bài nhạc phù hợp với điều bạn mô tả.'
       : '🎵 I found music that matches what you described.';
 
-    String get _textSceneAmbientMessage => _isVietnamese
+  String get _textSceneAmbientMessage => _isVietnamese
       ? '🌧️ Tôi cũng chuẩn bị thêm các gợi ý âm thanh môi trường đúng với mood này.'
       : '🌧️ I also prepared ambient sounds that fit this mood.';
 
@@ -170,7 +270,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _ambientPlayerStateSub = _ambientPreviewPlayer.playerStateStream.listen((state) {
+    _ambientPlayerStateSub = _ambientPreviewPlayer.playerStateStream.listen((
+      state,
+    ) {
       if (!mounted) return;
       if (state.processingState == ProcessingState.completed) {
         _ambientPreviewPlayer.seek(Duration.zero);
@@ -288,17 +390,17 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   }
 
   Map<String, dynamic> _trackToMap(Track t) => {
-        'id': t.id,
-        'name': t.name,
-        'artistName': t.artistName,
-        'artistId': t.artistId,
-        'albumName': t.albumName,
-        'albumId': t.albumId,
-        'imageUrl': t.imageUrl,
-        'previewUrl': t.previewUrl,
-        'durationMs': t.durationMs,
-        'popularity': t.popularity,
-      };
+    'id': t.id,
+    'name': t.name,
+    'artistName': t.artistName,
+    'artistId': t.artistId,
+    'albumName': t.albumName,
+    'albumId': t.albumId,
+    'imageUrl': t.imageUrl,
+    'previewUrl': t.previewUrl,
+    'durationMs': t.durationMs,
+    'popularity': t.popularity,
+  };
 
   Track _trackFromMap(Map<String, dynamic> map) {
     return Track(
@@ -316,11 +418,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   }
 
   Map<String, dynamic> _ambientToMap(AmbientSuggestion a) => {
-        'title': a.title,
-        'query': a.query,
-        'provider': a.provider,
-        'previewUrl': a.previewUrl,
-      };
+    'title': a.title,
+    'query': a.query,
+    'provider': a.provider,
+    'previewUrl': a.previewUrl,
+  };
 
   AmbientSuggestion _ambientFromMap(Map<String, dynamic> map) {
     final provider = map['provider']?.toString() ?? 'Ambient';
@@ -367,16 +469,19 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         'isUser': message.isUser,
         'imagePath': message.imagePath,
         'tracks': (message.tracks ?? []).map(_trackToMap).toList(),
-        'ambienceSuggestions':
-            (message.ambienceSuggestions ?? []).map(_ambientToMap).toList(),
+        'ambienceSuggestions': (message.ambienceSuggestions ?? [])
+            .map(_ambientToMap)
+            .toList(),
       }, sessionId: _currentSessionId);
 
       // Update session preview with the latest user message
       if (message.isUser && message.text.isNotEmpty) {
-        unawaited(firebaseService.saveChatSession(
-          sessionId: _currentSessionId,
-          preview: message.text,
-        ));
+        unawaited(
+          firebaseService.saveChatSession(
+            sessionId: _currentSessionId,
+            preview: message.text,
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Persist chat message error: $e');
@@ -400,7 +505,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isVietnamese ? 'Mục này chưa có link nghe thử' : 'No preview link for this item'),
+          content: Text(
+            _isVietnamese
+                ? 'Mục này chưa có link nghe thử'
+                : 'No preview link for this item',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -427,7 +536,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isVietnamese ? 'Không phát được bản xem trước' : 'Could not play preview'),
+          content: Text(
+            _isVietnamese
+                ? 'Không phát được bản xem trước'
+                : 'Could not play preview',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -531,8 +644,18 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   Map<String, double> _extractWeightedKeywords(List<ImageLabel> labels) {
     final weighted = <String, double>{};
     const noise = {
-      'font', 'text', 'logo', 'brand', 'symbol', 'design', 'graphics',
-      'product', 'poster', 'screenshot', 'photo', 'image',
+      'font',
+      'text',
+      'logo',
+      'brand',
+      'symbol',
+      'design',
+      'graphics',
+      'product',
+      'poster',
+      'screenshot',
+      'photo',
+      'image',
     };
 
     for (final label in labels) {
@@ -569,10 +692,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           .toList();
       if (matchedKeys.isEmpty) continue;
 
-      weighted[learned] = math.max(
-        weighted[learned] ?? 0,
-        learnedWeight * 0.8,
-      );
+      weighted[learned] = math.max(weighted[learned] ?? 0, learnedWeight * 0.8);
 
       for (final key in matchedKeys) {
         weighted[key] = (weighted[key] ?? 0) + (learnedWeight * 0.35);
@@ -643,11 +763,49 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   void _applySceneAliasBoost(Map<String, double> weighted) {
     const aliasGroups = [
       ['rain', 'mua', 'mưa', 'drizzle', 'storm', 'thunder'],
-      ['beach', 'ocean', 'sea', 'wave', 'coast', 'bien', 'biển', 'song', 'sóng'],
-      ['forest', 'jungle', 'tree', 'nature', 'rung', 'rừng', 'thien nhien', 'thiên nhiên'],
-      ['city', 'urban', 'street', 'traffic', 'downtown', 'thanh pho', 'thành phố', 'duong pho', 'đường phố'],
+      [
+        'beach',
+        'ocean',
+        'sea',
+        'wave',
+        'coast',
+        'bien',
+        'biển',
+        'song',
+        'sóng',
+      ],
+      [
+        'forest',
+        'jungle',
+        'tree',
+        'nature',
+        'rung',
+        'rừng',
+        'thien nhien',
+        'thiên nhiên',
+      ],
+      [
+        'city',
+        'urban',
+        'street',
+        'traffic',
+        'downtown',
+        'thanh pho',
+        'thành phố',
+        'duong pho',
+        'đường phố',
+      ],
       ['night', 'moon', 'star', 'dem', 'đêm'],
-      ['sunset', 'sunrise', 'dawn', 'dusk', 'hoang hon', 'hoàng hôn', 'binh minh', 'bình minh'],
+      [
+        'sunset',
+        'sunrise',
+        'dawn',
+        'dusk',
+        'hoang hon',
+        'hoàng hôn',
+        'binh minh',
+        'bình minh',
+      ],
       ['wind', 'breeze', 'fog', 'mist', 'gio', 'gió'],
       ['snow', 'winter', 'cold', 'tuyet', 'tuyết'],
       ['cafe', 'coffee', 'quan ca phe', 'quán cà phê'],
@@ -670,14 +828,48 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
   bool _looksLikeNonSceneryImage(Map<String, double> weightedKeywords) {
     const nonSceneryTerms = [
-      'screenshot', 'poster', 'flyer', 'document', 'text', 'font', 'logo',
-      'website', 'app', 'software', 'interface', 'screen', 'display', 'ad',
-      'banner', 'graphic', 'graphics', 'product',
+      'screenshot',
+      'poster',
+      'flyer',
+      'document',
+      'text',
+      'font',
+      'logo',
+      'website',
+      'app',
+      'software',
+      'interface',
+      'screen',
+      'display',
+      'ad',
+      'banner',
+      'graphic',
+      'graphics',
+      'product',
     ];
     const sceneryTerms = [
-      'sky', 'cloud', 'tree', 'forest', 'mountain', 'beach', 'ocean', 'river',
-      'sunset', 'sunrise', 'rain', 'storm', 'grass', 'nature', 'landscape',
-      'night', 'moon', 'star', 'flower', 'lake', 'waterfall', 'road',
+      'sky',
+      'cloud',
+      'tree',
+      'forest',
+      'mountain',
+      'beach',
+      'ocean',
+      'river',
+      'sunset',
+      'sunrise',
+      'rain',
+      'storm',
+      'grass',
+      'nature',
+      'landscape',
+      'night',
+      'moon',
+      'star',
+      'flower',
+      'lake',
+      'waterfall',
+      'road',
     ];
 
     final nonSceneryScore = _scoreTerms(weightedKeywords, nonSceneryTerms);
@@ -699,24 +891,72 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
   _SceneMode _detectSceneMode(Map<String, double> weightedKeywords) {
     final urbanScore = _scoreTerms(weightedKeywords, [
-      'city', 'urban', 'street', 'traffic', 'downtown', 'car', 'subway',
-      'thanh pho', 'thành phố', 'duong pho', 'đường phố',
+      'city',
+      'urban',
+      'street',
+      'traffic',
+      'downtown',
+      'car',
+      'subway',
+      'thanh pho',
+      'thành phố',
+      'duong pho',
+      'đường phố',
     ]);
     final natureScore = _scoreTerms(weightedKeywords, [
-      'forest', 'jungle', 'tree', 'nature', 'wildlife', 'bird', 'mountain',
-      'river', 'waterfall', 'grass', 'field', 'rung', 'rừng',
+      'forest',
+      'jungle',
+      'tree',
+      'nature',
+      'wildlife',
+      'bird',
+      'mountain',
+      'river',
+      'waterfall',
+      'grass',
+      'field',
+      'rung',
+      'rừng',
     ]);
     final beachScore = _scoreTerms(weightedKeywords, [
-      'beach', 'ocean', 'sea', 'coast', 'wave', 'shore', 'lake',
-      'bien', 'biển', 'song', 'sóng',
+      'beach',
+      'ocean',
+      'sea',
+      'coast',
+      'wave',
+      'shore',
+      'lake',
+      'bien',
+      'biển',
+      'song',
+      'sóng',
     ]);
     final petIndoorScore = _scoreTerms(weightedKeywords, [
-      'cat', 'kitten', 'dog', 'puppy', 'pet', 'fur', 'indoor', 'home',
-      'room', 'sofa', 'house',
+      'cat',
+      'kitten',
+      'dog',
+      'puppy',
+      'pet',
+      'fur',
+      'indoor',
+      'home',
+      'room',
+      'sofa',
+      'house',
     ]);
     final weatherScore = _scoreTerms(weightedKeywords, [
-      'rain', 'storm', 'thunder', 'lightning', 'snow', 'winter',
-      'wind', 'fog', 'mist', 'drizzle', 'mua', 'mưa',
+      'rain',
+      'storm',
+      'thunder',
+      'lightning',
+      'snow',
+      'winter',
+      'wind',
+      'fog',
+      'mist',
+      'drizzle',
+      'mua',
+      'mưa',
     ]);
 
     final scored = <MapEntry<_SceneMode, double>>[
@@ -738,15 +978,51 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   List<String> _sceneIncludeTerms(_SceneMode mode) {
     switch (mode) {
       case _SceneMode.urbanTraffic:
-        return ['city', 'urban', 'street', 'traffic', 'car', 'downtown', 'cafe', 'office'];
+        return [
+          'city',
+          'urban',
+          'street',
+          'traffic',
+          'car',
+          'downtown',
+          'cafe',
+          'office',
+        ];
       case _SceneMode.natureWild:
-        return ['forest', 'nature', 'tree', 'wildlife', 'bird', 'river', 'mountain', 'wind'];
+        return [
+          'forest',
+          'nature',
+          'tree',
+          'wildlife',
+          'bird',
+          'river',
+          'mountain',
+          'wind',
+        ];
       case _SceneMode.beachWater:
         return ['beach', 'ocean', 'sea', 'wave', 'coast', 'shore', 'water'];
       case _SceneMode.indoorPet:
-        return ['cat', 'dog', 'pet', 'purring', 'home', 'indoor', 'cozy', 'room'];
+        return [
+          'cat',
+          'dog',
+          'pet',
+          'purring',
+          'home',
+          'indoor',
+          'cozy',
+          'room',
+        ];
       case _SceneMode.weatherStorm:
-        return ['rain', 'storm', 'thunder', 'wind', 'snow', 'winter', 'mist', 'fog'];
+        return [
+          'rain',
+          'storm',
+          'thunder',
+          'wind',
+          'snow',
+          'winter',
+          'mist',
+          'fog',
+        ];
       case _SceneMode.mixed:
         return const [];
     }
@@ -755,13 +1031,28 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   List<String> _sceneExcludeTerms(_SceneMode mode) {
     switch (mode) {
       case _SceneMode.urbanTraffic:
-        return ['forest', 'jungle', 'wildlife', 'bird calls', 'natural habitat', 'waterfall', 'ocean'];
+        return [
+          'forest',
+          'jungle',
+          'wildlife',
+          'bird calls',
+          'natural habitat',
+          'waterfall',
+          'ocean',
+        ];
       case _SceneMode.natureWild:
         return ['traffic', 'subway', 'downtown', 'nightclub', 'city drive'];
       case _SceneMode.beachWater:
         return ['traffic', 'city street', 'subway', 'office'];
       case _SceneMode.indoorPet:
-        return ['bird calls', 'natural habitat', 'forest birds', 'jungle', 'wildlife', 'city traffic'];
+        return [
+          'bird calls',
+          'natural habitat',
+          'forest birds',
+          'jungle',
+          'wildlife',
+          'city traffic',
+        ];
       case _SceneMode.weatherStorm:
         return ['festival crowd', 'nightclub', 'sports hype'];
       case _SceneMode.mixed:
@@ -817,10 +1108,12 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     ranked.sort((a, b) {
       final textA = '${a.name} ${a.artistName} ${a.albumName}'.toLowerCase();
       final textB = '${b.name} ${b.artistName} ${b.albumName}'.toLowerCase();
-      final scoreA = _textSceneAffinity(textA, weightedKeywords) +
+      final scoreA =
+          _textSceneAffinity(textA, weightedKeywords) +
           ((a.popularity > 0 ? a.popularity : 45) / 1000.0) -
           _sceneMismatchPenalty(textA, sceneMode);
-      final scoreB = _textSceneAffinity(textB, weightedKeywords) +
+      final scoreB =
+          _textSceneAffinity(textB, weightedKeywords) +
           ((b.popularity > 0 ? b.popularity : 45) / 1000.0) -
           _sceneMismatchPenalty(textB, sceneMode);
       return scoreB.compareTo(scoreA);
@@ -838,10 +1131,12 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       final textA = '${a.title} ${a.query} ${a.provider}'.toLowerCase();
       final textB = '${b.title} ${b.query} ${b.provider}'.toLowerCase();
 
-      final scoreA = _textSceneAffinity(textA, weightedKeywords) +
+      final scoreA =
+          _textSceneAffinity(textA, weightedKeywords) +
           (a.previewUrl?.isNotEmpty == true ? 1.2 : 0.0) -
           _sceneMismatchPenalty(textA, sceneMode);
-      final scoreB = _textSceneAffinity(textB, weightedKeywords) +
+      final scoreB =
+          _textSceneAffinity(textB, weightedKeywords) +
           (b.previewUrl?.isNotEmpty == true ? 1.2 : 0.0) -
           _sceneMismatchPenalty(textB, sceneMode);
       return scoreB.compareTo(scoreA);
@@ -853,7 +1148,15 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   List<String> _labelsToJamendoTags(Map<String, double> weightedKeywords) {
     bool has(List<String> terms) => _scoreTerms(weightedKeywords, terms) >= 0.7;
 
-    if (has(['storm', 'thunder', 'lightning', 'rain', 'downpour', 'wet', 'umbrella'])) {
+    if (has([
+      'storm',
+      'thunder',
+      'lightning',
+      'rain',
+      'downpour',
+      'wet',
+      'umbrella',
+    ])) {
       return ['ambient', 'piano', 'cinematic'];
     }
     if (has(['drizzle', 'mist', 'fog', 'cloudy', 'overcast'])) {
@@ -868,13 +1171,31 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     if (has(['night', 'moon', 'star', 'milky', 'galaxy', 'aurora'])) {
       return ['ambient', 'downtempo', 'lofi'];
     }
-    if (has(['beach', 'sea', 'ocean', 'wave', 'coast', 'lake', 'river', 'water'])) {
+    if (has([
+      'beach',
+      'sea',
+      'ocean',
+      'wave',
+      'coast',
+      'lake',
+      'river',
+      'water',
+    ])) {
       return ['ambient', 'instrumental', 'relaxing'];
     }
     if (has(['waterfall', 'stream', 'creek', 'brook'])) {
       return ['nature', 'meditation', 'ambient'];
     }
-    if (has(['forest', 'tree', 'nature', 'leaf', 'green', 'grass', 'plant', 'field'])) {
+    if (has([
+      'forest',
+      'tree',
+      'nature',
+      'leaf',
+      'green',
+      'grass',
+      'plant',
+      'field',
+    ])) {
       return ['nature', 'acoustic', 'instrumental'];
     }
     if (has(['jungle', 'tropical', 'rainforest', 'bamboo'])) {
@@ -924,7 +1245,8 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     if (has(['smile', 'happy', 'joy', 'laugh'])) return 'happy upbeat pop';
     if (has(['sad', 'cry', 'tear'])) return 'sad emotional ballad';
     if (has(['face', 'person', 'selfie', 'portrait'])) return 'pop rnb hits';
-    if (has(['city', 'building', 'street', 'road', 'urban'])) return 'urban hip hop beats';
+    if (has(['city', 'building', 'street', 'road', 'urban']))
+      return 'urban hip hop beats';
     if (has(['traffic', 'subway', 'downtown', 'crosswalk'])) {
       return 'city drive synthwave electronic';
     }
@@ -945,11 +1267,13 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     if (has(['sun', 'park', 'picnic', 'outdoor'])) {
       return 'indie feel good pop';
     }
-    if (has(['gym', 'sport', 'exercise', 'fitness', 'run'])) return 'workout motivation';
+    if (has(['gym', 'sport', 'exercise', 'fitness', 'run']))
+      return 'workout motivation';
     if (has(['basketball', 'football', 'match', 'stadium'])) {
       return 'sports hype rap';
     }
-    if (has(['party', 'dance', 'club', 'celebration'])) return 'dance party edm';
+    if (has(['party', 'dance', 'club', 'celebration']))
+      return 'dance party edm';
     if (has(['romance', 'couple', 'wedding', 'date', 'love'])) {
       return 'romantic acoustic love songs';
     }
@@ -975,7 +1299,6 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   Future<List<AmbientSuggestion>> _getAmbientSuggestionsFromWeightedKeywords(
     Map<String, double> weightedKeywords,
   ) async {
-
     bool has(List<String> terms) => _scoreTerms(weightedKeywords, terms) >= 0.7;
     final sceneMode = _detectSceneMode(weightedKeywords);
     final birdScore = _scoreTerms(weightedKeywords, [
@@ -1020,26 +1343,62 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     // Weather
     if (has(['rain', 'storm', 'thunder', 'lightning', 'drizzle'])) {
       add('Rain Ambience', 'rain ambience loop', 'Freesound', Icons.grain);
-      add('Thunder Atmosphere', 'distant thunder rumble', 'Pixabay', Icons.flash_on);
+      add(
+        'Thunder Atmosphere',
+        'distant thunder rumble',
+        'Pixabay',
+        Icons.flash_on,
+      );
     }
     if (has(['wind', 'breeze', 'gust', 'fog', 'mist'])) {
-      add('Wind Through Trees', 'wind in trees ambience', 'Freesound', Icons.air);
+      add(
+        'Wind Through Trees',
+        'wind in trees ambience',
+        'Freesound',
+        Icons.air,
+      );
     }
     if (has(['snow', 'winter', 'ice', 'cold', 'frost'])) {
       add('Winter Wind', 'cold winter wind ambience', 'Pixabay', Icons.ac_unit);
-      add('Fireplace Crackle', 'fireplace crackling', 'Freesound', Icons.local_fire_department);
+      add(
+        'Fireplace Crackle',
+        'fireplace crackling',
+        'Freesound',
+        Icons.local_fire_department,
+      );
     }
 
     // Nature
     if (has(['forest', 'tree', 'wood', 'jungle', 'rainforest'])) {
-      add('Forest Birds', 'forest birds dawn chorus', 'Xeno-canto', Icons.forest);
-      add('Forest Atmosphere', 'forest ambience leaves wind', 'Freesound', Icons.park);
+      add(
+        'Forest Birds',
+        'forest birds dawn chorus',
+        'Xeno-canto',
+        Icons.forest,
+      );
+      add(
+        'Forest Atmosphere',
+        'forest ambience leaves wind',
+        'Freesound',
+        Icons.park,
+      );
     }
-    if (!preferPetScene && has(['bird', 'sparrow', 'eagle', 'owl', 'wildlife'])) {
-      add('Bird Calls', 'bird calls natural habitat', 'Xeno-canto', Icons.flutter_dash);
+    if (!preferPetScene &&
+        has(['bird', 'sparrow', 'eagle', 'owl', 'wildlife'])) {
+      add(
+        'Bird Calls',
+        'bird calls natural habitat',
+        'Xeno-canto',
+        Icons.flutter_dash,
+      );
     }
     if (has(['river', 'stream', 'creek', 'brook', 'waterfall'])) {
-      add('Running Water', 'river stream water ambience', 'Freesound', Icons.waves);
+      add(
+        'Running Water',
+        'river stream water ambience',
+        'Freesound',
+        Icons.waves,
+      );
     }
     if (has(['beach', 'sea', 'ocean', 'wave', 'coast'])) {
       add('Ocean Waves', 'ocean waves shoreline', 'Pixabay', Icons.surfing);
@@ -1048,39 +1407,84 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
     // Urban / human scene
     if (has(['city', 'street', 'traffic', 'urban', 'downtown'])) {
-      add('City Night', 'city night ambience traffic', 'Pixabay', Icons.location_city);
-      add('Street Atmosphere', 'street ambience people footsteps', 'Freesound', Icons.directions_walk);
+      add(
+        'City Night',
+        'city night ambience traffic',
+        'Pixabay',
+        Icons.location_city,
+      );
+      add(
+        'Street Atmosphere',
+        'street ambience people footsteps',
+        'Freesound',
+        Icons.directions_walk,
+      );
     }
     if (has(['cafe', 'coffee', 'restaurant', 'indoor'])) {
-      add('Cafe Background', 'coffee shop ambience chatter', 'Freesound', Icons.local_cafe);
+      add(
+        'Cafe Background',
+        'coffee shop ambience chatter',
+        'Freesound',
+        Icons.local_cafe,
+      );
     }
     if (has(['party', 'dance', 'club', 'festival', 'crowd'])) {
-      add('Crowd Atmosphere', 'festival crowd ambience', 'Pixabay', Icons.celebration);
+      add(
+        'Crowd Atmosphere',
+        'festival crowd ambience',
+        'Pixabay',
+        Icons.celebration,
+      );
     }
 
     // Pet / indoor scene
     if (has(['cat', 'kitten', 'dog', 'puppy', 'pet', 'fur'])) {
       add('Cat Purring', 'cat purring cozy room', 'Freesound', Icons.pets);
       add('Home Ambience', 'quiet home indoor ambience', 'Pixabay', Icons.home);
-      add('Cozy Room Tone', 'cozy room ambience soft', 'Freesound', Icons.weekend);
+      add(
+        'Cozy Room Tone',
+        'cozy room ambience soft',
+        'Freesound',
+        Icons.weekend,
+      );
     }
 
     // Time of day
     if (has(['night', 'moon', 'star', 'dark'])) {
-      add('Night Crickets', 'night crickets ambience', 'Freesound', Icons.nights_stay);
+      add(
+        'Night Crickets',
+        'night crickets ambience',
+        'Freesound',
+        Icons.nights_stay,
+      );
     }
     if (has(['sunrise', 'dawn', 'morning'])) {
-      add('Morning Birds', 'morning bird song', 'Xeno-canto', Icons.wb_sunny_outlined);
+      add(
+        'Morning Birds',
+        'morning bird song',
+        'Xeno-canto',
+        Icons.wb_sunny_outlined,
+      );
     }
 
     // Fallback for scenes not strongly detected
     if (suggestions.isEmpty) {
       if (preferPetScene) {
         add('Cat Purring', 'cat purring cozy room', 'Freesound', Icons.pets);
-        add('Home Ambience', 'quiet home indoor ambience', 'Pixabay', Icons.home);
+        add(
+          'Home Ambience',
+          'quiet home indoor ambience',
+          'Pixabay',
+          Icons.home,
+        );
       }
       add('Soft Nature Bed', 'soft nature ambience loop', 'Pixabay', Icons.spa);
-      add('Light Rain Texture', 'light rain ambience', 'Freesound', Icons.umbrella);
+      add(
+        'Light Rain Texture',
+        'light rain ambience',
+        'Freesound',
+        Icons.umbrella,
+      );
     }
 
     final genericTopUp = <AmbientSuggestion>[
@@ -1118,7 +1522,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
     for (final item in genericTopUp) {
       if (suggestions.length >= 10) break;
-      if (suggestions.any((s) => s.query == item.query && s.provider == item.provider)) {
+      if (suggestions.any(
+        (s) => s.query == item.query && s.provider == item.provider,
+      )) {
         continue;
       }
       suggestions.add(item);
@@ -1127,9 +1533,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     final localSuggestions = suggestions.take(10).toList();
 
     if (!_ambientSoundService.isConfigured) {
-      return _rankAmbientByScene(localSuggestions, weightedKeywords, sceneMode)
-          .take(12)
-          .toList();
+      return _rankAmbientByScene(
+        localSuggestions,
+        weightedKeywords,
+        sceneMode,
+      ).take(12).toList();
     }
 
     final queries = localSuggestions.map((e) => e.query).toList();
@@ -1151,7 +1559,8 @@ class _ChatBotScreenState extends State<ChatBotScreen>
         continue;
       }
       final exists = merged.any(
-        (e) => e.previewUrl == r.previewUrl ||
+        (e) =>
+            e.previewUrl == r.previewUrl ||
             (e.title == r.title && e.provider == r.provider),
       );
       if (exists) continue;
@@ -1180,9 +1589,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       }
     }
 
-    return _rankAmbientByScene(merged, weightedKeywords, sceneMode)
-      .take(12)
-      .toList();
+    return _rankAmbientByScene(
+      merged,
+      weightedKeywords,
+      sceneMode,
+    ).take(12).toList();
   }
 
   IconData _providerIcon(String provider) {
@@ -1204,37 +1615,158 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     );
 
     const natureTerms = [
-      'beach', 'sea', 'ocean', 'wave', 'coast', 'water', 'lake', 'river',
-      'waterfall', 'stream', 'creek', 'brook',
-      'forest', 'tree', 'nature', 'leaf', 'green', 'grass', 'plant',
-      'jungle', 'rainforest', 'tropical',
-      'mountain', 'hill', 'rock', 'cliff', 'valley',
-      'sunset', 'sunrise', 'golden', 'dusk', 'dawn',
-      'sky', 'cloud', 'horizon',
-      'rain', 'storm', 'thunder', 'lightning', 'fog', 'mist', 'drizzle',
-      'snow', 'winter', 'ice', 'cold', 'frost',
-      'desert', 'sand', 'dune', 'canyon',
-      'flower', 'garden', 'spring', 'blossom', 'field',
-      'autumn', 'fall',
-      'night', 'star', 'moon', 'galaxy',
-      'bird', 'wildlife', 'landscape', 'scenery', 'countryside',
-      'camping', 'adventure', 'trail', 'hiking', 'serene', 'calm',
-      'mưa', 'mua', 'biển', 'bien', 'rừng', 'rung', 'chim', 'đêm', 'dem',
-      'gió', 'gio', 'sóng', 'song', 'suối', 'suoi', 'thác', 'thac',
-      'hoàng hôn', 'hoang hon', 'tuyết', 'tuyet', 'thư giãn', 'thu gian',
+      'beach',
+      'sea',
+      'ocean',
+      'wave',
+      'coast',
+      'water',
+      'lake',
+      'river',
+      'waterfall',
+      'stream',
+      'creek',
+      'brook',
+      'forest',
+      'tree',
+      'nature',
+      'leaf',
+      'green',
+      'grass',
+      'plant',
+      'jungle',
+      'rainforest',
+      'tropical',
+      'mountain',
+      'hill',
+      'rock',
+      'cliff',
+      'valley',
+      'sunset',
+      'sunrise',
+      'golden',
+      'dusk',
+      'dawn',
+      'sky',
+      'cloud',
+      'horizon',
+      'rain',
+      'storm',
+      'thunder',
+      'lightning',
+      'fog',
+      'mist',
+      'drizzle',
+      'snow',
+      'winter',
+      'ice',
+      'cold',
+      'frost',
+      'desert',
+      'sand',
+      'dune',
+      'canyon',
+      'flower',
+      'garden',
+      'spring',
+      'blossom',
+      'field',
+      'autumn',
+      'fall',
+      'night',
+      'star',
+      'moon',
+      'galaxy',
+      'bird',
+      'wildlife',
+      'landscape',
+      'scenery',
+      'countryside',
+      'camping',
+      'adventure',
+      'trail',
+      'hiking',
+      'serene',
+      'calm',
+      'mưa',
+      'mua',
+      'biển',
+      'bien',
+      'rừng',
+      'rung',
+      'chim',
+      'đêm',
+      'dem',
+      'gió',
+      'gio',
+      'sóng',
+      'song',
+      'suối',
+      'suoi',
+      'thác',
+      'thac',
+      'hoàng hôn',
+      'hoang hon',
+      'tuyết',
+      'tuyet',
+      'thư giãn',
+      'thu gian',
     ];
     const urbanTerms = [
-      'person', 'people', 'human', 'man', 'woman', 'face', 'selfie', 'portrait',
-      'city', 'building', 'street', 'road', 'traffic', 'urban',
-      'subway', 'downtown', 'crosswalk',
-      'indoor', 'room', 'office', 'table', 'wall',
-      'party', 'dance', 'club', 'fashion', 'shopping', 'festival', 'dj',
-      'car', 'highway', 'motorcycle',
-      'cafe', 'coffee', 'restaurant', 'meal',
-      'gym', 'fitness', 'stadium', 'sport',
-      'wedding', 'couple', 'family',
-      'thành phố', 'thanh pho', 'đường phố', 'duong pho', 'quán cà phê', 'cafe',
-      'tập trung', 'tap trung', 'study', 'focus', 'workout',
+      'person',
+      'people',
+      'human',
+      'man',
+      'woman',
+      'face',
+      'selfie',
+      'portrait',
+      'city',
+      'building',
+      'street',
+      'road',
+      'traffic',
+      'urban',
+      'subway',
+      'downtown',
+      'crosswalk',
+      'indoor',
+      'room',
+      'office',
+      'table',
+      'wall',
+      'party',
+      'dance',
+      'club',
+      'fashion',
+      'shopping',
+      'festival',
+      'dj',
+      'car',
+      'highway',
+      'motorcycle',
+      'cafe',
+      'coffee',
+      'restaurant',
+      'meal',
+      'gym',
+      'fitness',
+      'stadium',
+      'sport',
+      'wedding',
+      'couple',
+      'family',
+      'thành phố',
+      'thanh pho',
+      'đường phố',
+      'duong pho',
+      'quán cà phê',
+      'cafe',
+      'tập trung',
+      'tap trung',
+      'study',
+      'focus',
+      'workout',
     ];
 
     final natureScore = _scoreTerms(weightedKeywords, natureTerms);
@@ -1244,17 +1776,26 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       '🌄 text/scene scores => nature: ${natureScore.toStringAsFixed(2)}, urban: ${urbanScore.toStringAsFixed(2)}, preferNature: $preferNature',
     );
 
-    final preferNatureScene = sceneMode == _SceneMode.natureWild ||
+    final preferNatureScene =
+        sceneMode == _SceneMode.natureWild ||
         sceneMode == _SceneMode.beachWater ||
         sceneMode == _SceneMode.weatherStorm;
 
     if ((preferNature || preferNatureScene) && JamendoService().isConfigured) {
       final tags = _labelsToJamendoTags(weightedKeywords);
       debugPrint('🌿 Nature scene → Jamendo tags: $tags');
-      final tracks = await JamendoService().getInstrumentalTracks(tags: tags, limit: 35);
+      final tracks = await JamendoService().getInstrumentalTracks(
+        tags: tags,
+        limit: 35,
+      );
       if (tracks.isNotEmpty) {
         return _rankTracksByScene(tracks, weightedKeywords, sceneMode)
-            .where((t) => _isTextAllowedForScene('${t.name} ${t.artistName} ${t.albumName}', sceneMode))
+            .where(
+              (t) => _isTextAllowedForScene(
+                '${t.name} ${t.artistName} ${t.albumName}',
+                sceneMode,
+              ),
+            )
             .take(15)
             .toList();
       }
@@ -1266,13 +1807,23 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       final tracks = await DeezerService().searchTracks(query, limit: 35);
       if (tracks.isNotEmpty) {
         return _rankTracksByScene(tracks, weightedKeywords, sceneMode)
-            .where((t) => _isTextAllowedForScene('${t.name} ${t.artistName} ${t.albumName}', sceneMode))
+            .where(
+              (t) => _isTextAllowedForScene(
+                '${t.name} ${t.artistName} ${t.albumName}',
+                sceneMode,
+              ),
+            )
             .take(15)
             .toList();
       }
       final fallback = await DeezerService().searchTracks('chill', limit: 35);
       return _rankTracksByScene(fallback, weightedKeywords, sceneMode)
-          .where((t) => _isTextAllowedForScene('${t.name} ${t.artistName} ${t.albumName}', sceneMode))
+          .where(
+            (t) => _isTextAllowedForScene(
+              '${t.name} ${t.artistName} ${t.albumName}',
+              sceneMode,
+            ),
+          )
           .take(15)
           .toList();
     } catch (e) {
@@ -1282,9 +1833,14 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   }
 
   /// Maps ML Kit labels → Jamendo (nature/scenery) or Deezer (people/urban)
-  Future<List<Track>> _getRecommendationsFromLabels(List<ImageLabel> labels) async {
+  Future<List<Track>> _getRecommendationsFromLabels(
+    List<ImageLabel> labels,
+  ) async {
     if (labels.isEmpty) {
-      final fallback = await DeezerService().searchTracks('chill popular', limit: 30);
+      final fallback = await DeezerService().searchTracks(
+        'chill popular',
+        limit: 30,
+      );
       return fallback.take(15).toList();
     }
 
@@ -1320,8 +1876,12 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
   Future<void> _addSceneRecommendationFromText(String text) async {
     final weightedKeywords = _extractWeightedKeywordsFromText(text);
-    final tracks = await _getRecommendationsFromWeightedKeywords(weightedKeywords);
-    final ambience = await _getAmbientSuggestionsFromWeightedKeywords(weightedKeywords);
+    final tracks = await _getRecommendationsFromWeightedKeywords(
+      weightedKeywords,
+    );
+    final ambience = await _getAmbientSuggestionsFromWeightedKeywords(
+      weightedKeywords,
+    );
 
     final topKeywords = weightedKeywords.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -1511,20 +2071,90 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   bool _looksLikeSceneTextRequest(String input) {
     final weightedKeywords = _extractWeightedKeywordsFromText(input);
     const sceneTerms = [
-      'mưa', 'mua', 'rain', 'rainy', 'storm', 'biển', 'bien', 'beach',
-      'ocean', 'forest', 'rừng', 'rung', 'bird', 'chim', 'night', 'đêm',
-      'dem', 'city', 'thành phố', 'thanh pho', 'cafe', 'coffee', 'snow',
-      'tuyết', 'tuyet', 'wind', 'gió', 'gio', 'wave', 'sóng', 'song',
-      'waterfall', 'thác', 'thac', 'stream', 'suối', 'suoi', 'sunset',
-      'hoàng hôn', 'hoang hon', 'focus', 'study', 'relax', 'chill',
-      'nature', 'thiên nhiên', 'thien nhien', 'urban', 'downtown',
-      'traffic', 'winter', 'fog', 'mist', 'river', 'lake', 'sunrise',
-      'dawn', 'dusk', 'roadtrip', 'driving', 'gym', 'yoga', 'workout',
-      'meditation', 'calm', 'peaceful', 'cozy', 'romantic', 'sad', 'happy',
+      'mưa',
+      'mua',
+      'rain',
+      'rainy',
+      'storm',
+      'biển',
+      'bien',
+      'beach',
+      'ocean',
+      'forest',
+      'rừng',
+      'rung',
+      'bird',
+      'chim',
+      'night',
+      'đêm',
+      'dem',
+      'city',
+      'thành phố',
+      'thanh pho',
+      'cafe',
+      'coffee',
+      'snow',
+      'tuyết',
+      'tuyet',
+      'wind',
+      'gió',
+      'gio',
+      'wave',
+      'sóng',
+      'song',
+      'waterfall',
+      'thác',
+      'thac',
+      'stream',
+      'suối',
+      'suoi',
+      'sunset',
+      'hoàng hôn',
+      'hoang hon',
+      'focus',
+      'study',
+      'relax',
+      'chill',
+      'nature',
+      'thiên nhiên',
+      'thien nhien',
+      'urban',
+      'downtown',
+      'traffic',
+      'winter',
+      'fog',
+      'mist',
+      'river',
+      'lake',
+      'sunrise',
+      'dawn',
+      'dusk',
+      'roadtrip',
+      'driving',
+      'gym',
+      'yoga',
+      'workout',
+      'meditation',
+      'calm',
+      'peaceful',
+      'cozy',
+      'romantic',
+      'sad',
+      'happy',
     ];
     const requestTerms = [
-      'muốn', 'muon', 'nghe', 'hear', 'listen', 'want', 'today', 'hôm nay',
-      'hom nay', 'related', 'liên quan', 'lien quan',
+      'muốn',
+      'muon',
+      'nghe',
+      'hear',
+      'listen',
+      'want',
+      'today',
+      'hôm nay',
+      'hom nay',
+      'related',
+      'liên quan',
+      'lien quan',
     ];
 
     final sceneScore = _scoreTerms(weightedKeywords, sceneTerms);
@@ -1587,11 +2217,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
       final header = _isVietnamese
           ? '📅 **Bài hát hôm nay cho bạn:**\n\n'
-            '🎵 ${result.songName} — ${result.artistName}\n'
-            '💬 ${result.reason}'
+                '🎵 ${result.songName} — ${result.artistName}\n'
+                '💬 ${result.reason}'
           : '📅 **Song of the Day:**\n\n'
-            '🎵 ${result.songName} — ${result.artistName}\n'
-            '💬 ${result.reason}';
+                '🎵 ${result.songName} — ${result.artistName}\n'
+                '💬 ${result.reason}';
 
       // Search and show the track
       final query = '${result.songName} ${result.artistName}';
@@ -1669,7 +2299,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     final emojis = emojiPattern.allMatches(input);
     final strippedText = input.replaceAll(emojiPattern, '').trim();
     // Consider emoji mood if: mostly emojis with little/no text
-    return emojis.length >= 1 && strippedText.length <= 10;
+    return emojis.isNotEmpty && strippedText.length <= 10;
   }
 
   Future<void> _handleEmojiMood(String input) async {
@@ -1710,7 +2340,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           unawaited(_persistMessage(msg));
         });
         _scrollToBottom();
-        await AudioPlayerService.instance.setQueue(tracks.take(8).toList(), startIndex: 0);
+        await AudioPlayerService.instance.setQueue(
+          tracks.take(8).toList(),
+          startIndex: 0,
+        );
         await AudioPlayerService.instance.play();
       }
     } catch (e) {
@@ -1722,9 +2355,19 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   bool _looksLikeQuizRequest(String input) {
     final lower = input.toLowerCase();
     const quizKeywords = [
-      'quiz', 'đoán bài', 'doan bai', 'guess', 'chơi game',
-      'choi game', 'trò chơi', 'tro choi', 'play game', 'music game',
-      '🎲', 'đố', 'do ',
+      'quiz',
+      'đoán bài',
+      'doan bai',
+      'guess',
+      'chơi game',
+      'choi game',
+      'trò chơi',
+      'tro choi',
+      'play game',
+      'music game',
+      '🎲',
+      'đố',
+      'do ',
     ];
     return quizKeywords.any((kw) => lower.contains(kw));
   }
@@ -1747,11 +2390,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
       final quizMsg = _isVietnamese
           ? '🎲 **ĐỐ VUI ÂM NHẠC!**\n\n'
-            '📌 Gợi ý 1: ${quiz.hint1}\n\n'
-            'Bạn đoán được bài gì không? Gõ tên bài hát hoặc gõ **"gợi ý"** để xem thêm gợi ý!'
+                '📌 Gợi ý 1: ${quiz.hint1}\n\n'
+                'Bạn đoán được bài gì không? Gõ tên bài hát hoặc gõ **"gợi ý"** để xem thêm gợi ý!'
           : '🎲 **MUSIC QUIZ!**\n\n'
-            '📌 Hint 1: ${quiz.hint1}\n\n'
-            'Can you guess the song? Type the name or type **"hint"** for more clues!';
+                '📌 Hint 1: ${quiz.hint1}\n\n'
+                'Can you guess the song? Type the name or type **"hint"** for more clues!';
       _addBotMessage(quizMsg);
     } catch (e) {
       debugPrint('Quiz start error: $e');
@@ -1768,7 +2411,12 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     final lower = text.toLowerCase().trim();
 
     // Check if user wants more hints
-    final wantsHint = lower == 'hint' || lower == 'gợi ý' || lower == 'goi y' || lower == 'tiếp' || lower == 'tiep';
+    final wantsHint =
+        lower == 'hint' ||
+        lower == 'gợi ý' ||
+        lower == 'goi y' ||
+        lower == 'tiếp' ||
+        lower == 'tiep';
 
     if (wantsHint) {
       _quizHintLevel++;
@@ -1787,44 +2435,49 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     }
 
     // Check if user gives up
-    final givesUp = lower == 'bỏ cuộc' || lower == 'bo cuoc' || lower == 'give up' || lower == 'skip';
+    final givesUp =
+        lower == 'bỏ cuộc' ||
+        lower == 'bo cuoc' ||
+        lower == 'give up' ||
+        lower == 'skip';
 
     // Check if answer is correct (fuzzy match)
     final songLower = quiz.songName.toLowerCase();
-    final isCorrect = !givesUp && (
-      lower.contains(songLower) ||
-      songLower.contains(lower) ||
-      _fuzzyMatch(lower, songLower)
-    );
+    final isCorrect =
+        !givesUp &&
+        (lower.contains(songLower) ||
+            songLower.contains(lower) ||
+            _fuzzyMatch(lower, songLower));
 
     if (isCorrect) {
       final correctMsg = _isVietnamese
           ? '🎉🎉 **CHÍNH XÁC!** 🎉🎉\n\n'
-            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
-            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
-            '\nĐể tôi phát bài này cho bạn nghe!'
+                '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+                '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+                '\nĐể tôi phát bài này cho bạn nghe!'
           : '🎉🎉 **CORRECT!** 🎉🎉\n\n'
-            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
-            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
-            '\nLet me play it for you!';
+                '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+                '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+                '\nLet me play it for you!';
       _addBotMessage(correctMsg);
     } else {
       final revealMsg = _isVietnamese
           ? '${givesUp ? '😅' : '❌ Chưa đúng rồi!'} Đáp án là:\n\n'
-            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
-            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
-            '\nĐể tôi phát cho bạn nghe nhé!'
+                '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+                '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+                '\nĐể tôi phát cho bạn nghe nhé!'
           : '${givesUp ? '😅' : '❌ Not quite!'} The answer is:\n\n'
-            '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
-            '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
-            '\nLet me play it for you!';
+                '🎵 **${quiz.songName}** — ${quiz.artistName}\n'
+                '${quiz.funFact.isNotEmpty ? '💡 ${quiz.funFact}\n' : ''}'
+                '\nLet me play it for you!';
       _addBotMessage(revealMsg);
     }
 
     // Search and play the song
     try {
       final tracks = await DeezerService().searchTracks(
-        '${quiz.songName} ${quiz.artistName}', limit: 5,
+        '${quiz.songName} ${quiz.artistName}',
+        limit: 5,
       );
       if (tracks.isNotEmpty && mounted) {
         setState(() {
@@ -1838,7 +2491,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           unawaited(_persistMessage(msg));
         });
         _scrollToBottom();
-        await AudioPlayerService.instance.setQueue(tracks.take(3).toList(), startIndex: 0);
+        await AudioPlayerService.instance.setQueue(
+          tracks.take(3).toList(),
+          startIndex: 0,
+        );
         await AudioPlayerService.instance.play();
       }
     } catch (e) {
@@ -1862,8 +2518,14 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   bool _fuzzyMatch(String input, String target) {
     if (input.length < 3) return false;
     // Remove common words and compare key parts
-    final inputWords = input.split(RegExp(r'\s+')).where((w) => w.length > 2).toSet();
-    final targetWords = target.split(RegExp(r'\s+')).where((w) => w.length > 2).toSet();
+    final inputWords = input
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 2)
+        .toSet();
+    final targetWords = target
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 2)
+        .toSet();
     if (inputWords.isEmpty || targetWords.isEmpty) return false;
     final overlap = inputWords.intersection(targetWords);
     return overlap.length >= (targetWords.length * 0.5).ceil();
@@ -1907,7 +2569,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       _addBotMessage('$moodIcon ${result.message}');
 
       // Search and show music
-      final tracks = await DeezerService().searchTracks(result.searchQuery, limit: 15);
+      final tracks = await DeezerService().searchTracks(
+        result.searchQuery,
+        limit: 15,
+      );
       if (tracks.isNotEmpty && mounted) {
         final musicMsg = _isVietnamese
             ? '🎵 Nhạc phù hợp với tâm trạng "${result.mood}" của bạn:'
@@ -1923,7 +2588,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           unawaited(_persistMessage(msg));
         });
         _scrollToBottom();
-        await AudioPlayerService.instance.setQueue(tracks.take(8).toList(), startIndex: 0);
+        await AudioPlayerService.instance.setQueue(
+          tracks.take(8).toList(),
+          startIndex: 0,
+        );
         await AudioPlayerService.instance.play();
       }
     } catch (e) {
@@ -1961,20 +2629,42 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
     // Exclude recommendation patterns  ("tìm bài giống", "find songs like")
     const excludePatterns = [
-      'giống', 'giong', 'tương tự', 'tuong tu', 'like', 'similar',
-      'gợi ý', 'goi y', 'recommend', 'suggest',
+      'giống',
+      'giong',
+      'tương tự',
+      'tuong tu',
+      'like',
+      'similar',
+      'gợi ý',
+      'goi y',
+      'recommend',
+      'suggest',
     ];
     if (excludePatterns.any((p) => lower.contains(p))) return false;
 
     const lyricsKeywords = [
-      'lời bài hát', 'loi bai hat', 'lyrics', 'lyric',
-      'quên tên', 'quen ten', 'forget name', 'forgot name',
-      'nhớ lời', 'nho loi', 'remember lyrics',
-      'bài hát có lời', 'bai hat co loi',
-      'tìm bài', 'tim bai', 'find song',
-      'bài nào có', 'bai nao co',
-      'hát như thế nào', 'hat nhu the nao',
-      'có đoạn', 'co doan',
+      'lời bài hát',
+      'loi bai hat',
+      'lyrics',
+      'lyric',
+      'quên tên',
+      'quen ten',
+      'forget name',
+      'forgot name',
+      'nhớ lời',
+      'nho loi',
+      'remember lyrics',
+      'bài hát có lời',
+      'bai hat co loi',
+      'tìm bài',
+      'tim bai',
+      'find song',
+      'bài nào có',
+      'bai nao co',
+      'hát như thế nào',
+      'hat nhu the nao',
+      'có đoạn',
+      'co doan',
     ];
     return lyricsKeywords.any((kw) => lower.contains(kw));
   }
@@ -2003,7 +2693,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
             ? '$songName $artistName'
             : songName;
         try {
-          final tracks = await DeezerService().searchTracks(searchQuery, limit: 10);
+          final tracks = await DeezerService().searchTracks(
+            searchQuery,
+            limit: 10,
+          );
           if (tracks.isNotEmpty && mounted) {
             final foundMsg = _isVietnamese
                 ? '🎵 Tôi đã tìm thấy bài hát trên Deezer:'
@@ -2019,7 +2712,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
               unawaited(_persistMessage(musicMessage));
             });
             _scrollToBottom();
-            await AudioPlayerService.instance.setQueue(tracks.take(5).toList(), startIndex: 0);
+            await AudioPlayerService.instance.setQueue(
+              tracks.take(5).toList(),
+              startIndex: 0,
+            );
             await AudioPlayerService.instance.play();
           }
         } catch (e) {
@@ -2380,9 +3076,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     if (sessions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isVietnamese
-              ? 'Chưa có lịch sử chat nào'
-              : 'No chat history yet'),
+          content: Text(
+            _isVietnamese ? 'Chưa có lịch sử chat nào' : 'No chat history yet',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -2398,7 +3094,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   }
 
   Widget _buildChatHistorySheet(
-      BuildContext ctx, List<Map<String, dynamic>> sessions) {
+    BuildContext ctx,
+    List<Map<String, dynamic>> sessions,
+  ) {
     return Container(
       height: MediaQuery.of(ctx).size.height * 0.65,
       decoration: const BoxDecoration(
@@ -2422,8 +3120,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.history_rounded,
-                    color: AppColors.primary, size: 24),
+                Icon(Icons.history_rounded, color: AppColors.primary, size: 24),
                 const SizedBox(width: 10),
                 Text(
                   _isVietnamese ? 'Lịch sử Chat' : 'Chat History',
@@ -2467,8 +3164,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 }
 
                 return ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 4,
+                  ),
                   leading: Container(
                     width: 44,
                     height: 44,
@@ -2496,20 +3195,27 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight:
-                          isCurrentSession ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isCurrentSession
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                       color: Colors.black87,
                     ),
                   ),
                   subtitle: timeLabel.isNotEmpty
-                      ? Text(timeLabel,
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.grey[500]))
+                      ? Text(
+                          timeLabel,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        )
                       : null,
                   trailing: isCurrentSession
                       ? Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
@@ -2524,8 +3230,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                           ),
                         )
                       : IconButton(
-                          icon: Icon(Icons.delete_outline_rounded,
-                              size: 20, color: Colors.red[300]),
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 20,
+                            color: Colors.red[300],
+                          ),
                           onPressed: () async {
                             Navigator.pop(ctx);
                             await context
@@ -2534,9 +3243,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(_isVietnamese
-                                      ? 'Đã xóa cuộc trò chuyện'
-                                      : 'Chat deleted'),
+                                  content: Text(
+                                    _isVietnamese
+                                        ? 'Đã xóa cuộc trò chuyện'
+                                        : 'Chat deleted',
+                                  ),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
@@ -2663,7 +3374,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                       final previewUrl = ambient.previewUrl?.trim() ?? '';
                       final hasPreview = previewUrl.isNotEmpty;
                       final isPlayingThis =
-                          hasPreview && _ambientPreviewUrl == previewUrl && _ambientPreviewPlayer.playing;
+                          hasPreview &&
+                          _ambientPreviewUrl == previewUrl &&
+                          _ambientPreviewPlayer.playing;
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.symmetric(
@@ -2677,7 +3390,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                         ),
                         child: Row(
                           children: [
-                            Icon(ambient.icon, size: 18, color: AppColors.primary),
+                            Icon(
+                              ambient.icon,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
@@ -2716,20 +3433,28 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: hasPreview ? () => _toggleAmbientPreview(ambient) : null,
+                              onTap: hasPreview
+                                  ? () => _toggleAmbientPreview(ambient)
+                                  : null,
                               child: Container(
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
                                   color: hasPreview
-                                      ? AppColors.primary.withValues(alpha: 0.12)
+                                      ? AppColors.primary.withValues(
+                                          alpha: 0.12,
+                                        )
                                       : Colors.grey.withValues(alpha: 0.18),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  isPlayingThis ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                  isPlayingThis
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
                                   size: 20,
-                                  color: hasPreview ? AppColors.primary : Colors.grey,
+                                  color: hasPreview
+                                      ? AppColors.primary
+                                      : Colors.grey,
                                 ),
                               ),
                             ),
@@ -3046,7 +3771,10 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 decoration: InputDecoration(
                   hintText: 'chat_hint'.tr(),
                   border: InputBorder.none,
-                  hintStyle: const TextStyle(color: Colors.black38, fontSize: 15),
+                  hintStyle: const TextStyle(
+                    color: Colors.black38,
+                    fontSize: 15,
+                  ),
                 ),
                 onSubmitted: _handleSubmitted,
                 textInputAction: TextInputAction.send,
