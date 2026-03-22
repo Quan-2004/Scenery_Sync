@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../screens/now_playing_screen.dart';
+import '../screens/artist_detail_screen.dart';
 import '../services/audio_player_service.dart';
 import '../models/music_models.dart';
 
@@ -151,22 +152,41 @@ class _MiniPlayerState extends State<MiniPlayer> with SingleTickerProviderStateM
                                   ),
                                   SizedBox(width: 4),
                                   Expanded(
-                                    child: StreamBuilder<Track?>(
-                                      stream: player.trackStream,
-                                      builder: (context, snapshot) {
-                                        final subtitle = snapshot.data?.artistName ?? 'Choose a song';
-                                        return Text(
-                                          subtitle,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.textMuted,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        );
-                                      },
-                                    ),
+                                      child: StreamBuilder<Track?>(
+                                        stream: player.trackStream,
+                                        builder: (context, snapshot) {
+                                          final track = snapshot.data;
+                                          final subtitle = track?.artistName ?? 'Choose a song';
+                                          return GestureDetector(
+                                            onTap: () {
+                                              if (track != null && track.artistName.isNotEmpty) {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => ArtistDetailScreen(
+                                                      artistName: track.artistName,
+                                                      artistImage: track.imageUrl,
+                                                      artistId: track.artistId,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            child: Text(
+                                              subtitle,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: AppColors.textMain, // Make more visible
+                                                fontWeight: FontWeight.w500,
+                                                decoration: TextDecoration.underline,
+                                                decorationColor: AppColors.textMain,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                   ),
                                 ],
                               ),

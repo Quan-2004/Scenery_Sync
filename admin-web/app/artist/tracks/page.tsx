@@ -57,6 +57,7 @@ export default function ArtistTracksPage() {
   const [lyrics, setLyrics]           = useState('');
   const [lyricsMode, setLyricsMode]   = useState<'plain' | 'synced'>('plain');
   const [audioFile, setAudioFile]     = useState<File | null>(null);
+  const [audioPreview, setAudioPreview] = useState('');
   const [coverFile, setCoverFile]     = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [uploading, setUploading]     = useState<string>(''); // step description
@@ -80,6 +81,34 @@ export default function ArtistTracksPage() {
     } else {
       setCoverPreview('');
     }
+  }
+
+  function handleAudioChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setAudioFile(file);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAudioPreview(url);
+    } else {
+      setAudioPreview('');
+    }
+  }
+
+  function handleLrcUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const content = ev.target?.result;
+      if (typeof content === 'string') {
+        setLyrics(content);
+        setLyricsMode('synced');
+      }
+    };
+    reader.readAsText(file);
+    // Reset to allow re-upload if needed
+    e.target.value = '';
   }
 
   async function handleUpload(e: React.FormEvent) {
@@ -133,7 +162,7 @@ export default function ArtistTracksPage() {
       setTitle(''); setGenre(''); setCustomGenre(''); setDescription('');
       setReleaseYear(new Date().getFullYear().toString()); setLanguage('Tiếng Việt');
       setTags(''); setLyrics(''); setLyricsMode('plain');
-      setAudioFile(null); setCoverFile(null); setCoverPreview('');
+      setAudioFile(null); setCoverFile(null); setCoverPreview(''); setAudioPreview('');
       if (audioRef.current) audioRef.current.value = '';
       if (coverRef.current) coverRef.current.value = '';
       setShowUpload(false);
@@ -260,7 +289,7 @@ export default function ArtistTracksPage() {
                     padding: '20px 16px', background: audioFile ? 'rgba(212,114,42,0.06)' : 'var(--bg-sidebar)',
                     borderColor: audioFile ? 'var(--primary)' : 'var(--border-solid)', transition: 'all 0.2s',
                   }}>
-                    <input ref={audioRef} type="file" accept="audio/*" style={{ display: 'none' }} required onChange={e => setAudioFile(e.target.files?.[0] ?? null)} />
+                    <input ref={audioRef} type="file" accept="audio/*" style={{ display: 'none' }} required onChange={handleAudioChange} />
                     <span style={{ fontSize: 28 }}>{audioFile ? '🎵' : '🎧'}</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: audioFile ? 'var(--primary)' : 'var(--text-muted)' }}>
                       {audioFile ? audioFile.name : 'Nhấn để chọn file nhạc'}
@@ -271,6 +300,9 @@ export default function ArtistTracksPage() {
                       </span>
                     )}
                   </label>
+                  {audioPreview && (
+                    <audio controls src={audioPreview} style={{ width: '100%', marginTop: 12, height: 40, borderRadius: 8 }} />
+                  )}
                 </div>
 
                 {/* Cover */}
@@ -297,13 +329,20 @@ export default function ArtistTracksPage() {
               </div>
             </div>
 
-            {/* ── SECTION 3: Lyrics ── */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   📝 Lời bài hát
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <label htmlFor="lrc-upload" style={{
+                    border: '1px dashed var(--primary)', borderRadius: 6, padding: '3px 10px',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', color: 'var(--primary)',
+                    display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(212,114,42,0.08)'
+                  }}>
+                    📁 Tải lên .lrc
+                    <input id="lrc-upload" type="file" accept=".lrc,text/plain" style={{ display: 'none' }} onChange={handleLrcUpload} />
+                  </label>
                   {(['plain', 'synced'] as const).map(m => (
                     <button
                       key={m} type="button"

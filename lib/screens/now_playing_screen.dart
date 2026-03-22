@@ -7,6 +7,7 @@ import 'lyrics_screen.dart';
 import 'queue_screen.dart';
 import 'equalizer_screen.dart';
 import 'audio_visualizer_screen.dart';
+import 'artist_detail_screen.dart';
 import '../widgets/share_widgets.dart';
 import '../services/audio_player_service.dart';
 import '../services/firebase_service.dart';
@@ -707,12 +708,34 @@ class _TrackInfoState extends State<_TrackInfo> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    track?.artistName ?? '',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted,
+                  InkWell(
+                    onTap: () {
+                      if (track != null && track.artistName.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ArtistDetailScreen(
+                              artistName: track.artistName,
+                              artistImage: track.imageUrl,
+                              artistId: track.artistId,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Text(
+                        track?.artistName ?? '',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textMain,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.textMain,
+                        ),
+                      ),
                     ),
                   ),
                 ],
