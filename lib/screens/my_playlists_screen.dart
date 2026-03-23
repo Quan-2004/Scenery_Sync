@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
+import 'package:provider/provider.dart';
+import '../services/firebase_service.dart';
 
 class MyPlaylistsScreen extends StatefulWidget {
   const MyPlaylistsScreen({super.key});
@@ -10,8 +12,6 @@ class MyPlaylistsScreen extends StatefulWidget {
 }
 
 class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
-  final List<Map<String, dynamic>> _playlists = [];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,28 +74,52 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
           ),
           SliverPadding(
             padding: const EdgeInsets.all(16),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.85,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final playlist = _playlists[index];
-                  return _PlaylistCard(
-                    playlist: playlist,
-                    onTap: () {
-                      // Navigate to playlist detail
-                    },
-                    onMoreTap: () {
-                      _showPlaylistOptions(context, playlist);
-                    },
+            sliver: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: context.read<FirebaseService>().getUserPlaylists(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
                   );
-                },
-                childCount: _playlists.length,
-              ),
+                }
+                
+                final playlists = snapshot.data ?? [];
+                
+                if (playlists.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        'no_playlists'.tr(),
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final playlist = playlists[index];
+                      return _PlaylistCard(
+                        playlist: playlist,
+                        onTap: () {
+                          // Navigate to playlist detail
+                        },
+                        onMoreTap: () {
+                          _showPlaylistOptions(context, playlist);
+                        },
+                      );
+                    },
+                    childCount: playlists.length,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -134,17 +158,36 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
             child: Text('cancel'.tr(), style: const TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                // Create playlist
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('playlist_created'.tr(namedArgs: {'name': nameController.text})),
-                    backgroundColor: AppColors.primary,
-                    behavior: SnackBarBehavior.floating,
-                  ),
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty) {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final firebaseService = context.read<FirebaseService>();
+                final navigator = Navigator.of(context);
+
+                final error = await firebaseService.createPlaylist(
+                  name: nameController.text.trim(),
+                  coverImage: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400',
                 );
+
+                navigator.pop(); // Close dialog
+
+                if (error == null) {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('playlist_created'.tr(namedArgs: {'name': nameController.text.trim()})),
+                      backgroundColor: AppColors.primary,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -250,11 +293,21 @@ class _PlaylistCard extends StatelessWidget {
                   height: 140,
                   decoration: BoxDecoration(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    image: DecorationImage(
-                      image: NetworkImage(playlist['image']),
-                      fit: BoxFit.cover,
-                    ),
+                    image: playlist['coverImage'] != null && playlist['coverImage'].toString().isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(playlist['coverImage']),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                    color: playlist['coverImage'] == null || playlist['coverImage'].toString().isEmpty
+                        ? AppColors.primary.withValues(alpha: 0.3) // Or any fallback color
+                        : null,
                   ),
+                  child: playlist['coverImage'] == null || playlist['coverImage'].toString().isEmpty
+                      ? const Center(
+                          child: Icon(Icons.music_note, color: Colors.white, size: 50),
+                        )
+                      : null,
                 ),
                 Positioned(
                   top: 8,
@@ -292,7 +345,7 @@ class _PlaylistCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'song_count'.tr(
-                      namedArgs: {'count': playlist['songCount'].toString()},
+                      namedArgs: {'count': (playlist['trackCount'] ?? 0).toString()},
                     ),
                     style: const TextStyle(
                       color: AppColors.textSecondary,

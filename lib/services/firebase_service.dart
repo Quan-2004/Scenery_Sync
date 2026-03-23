@@ -411,6 +411,8 @@ class FirebaseService extends ChangeNotifier {
           'playedAt': FieldValue.serverTimestamp(),
           'playCount': FieldValue.increment(1),
         }, SetOptions(merge: true));
+    // Update track stats for artist dashboard
+    incrementPlayCount(trackId);
   }
 
   Stream<List<Map<String, dynamic>>> getRecentlyPlayed({int limit = 50}) {
@@ -587,8 +589,9 @@ class FirebaseService extends ChangeNotifier {
       await _firestore.collection('tracks').doc(trackId).update({
         'stats.playCount': FieldValue.increment(1),
       });
-    } catch (_) {
-      // Non-critical — don't surface errors to user
+      debugPrint('✅ incrementPlayCount: $trackId');
+    } catch (e) {
+      debugPrint('❌ incrementPlayCount error: $e');
     }
   }
 
@@ -599,8 +602,8 @@ class FirebaseService extends ChangeNotifier {
       await _firestore.collection('tracks').doc(trackId).update({
         'stats.sceneryMatchCount': FieldValue.increment(1),
       });
-    } catch (_) {
-      // Non-critical
+    } catch (e) {
+      debugPrint('❌ incrementSceneryMatch error: $e');
     }
   }
 
@@ -611,7 +614,10 @@ class FirebaseService extends ChangeNotifier {
       await _firestore.collection('tracks').doc(trackId).update({
         'stats.favoriteCount': FieldValue.increment(1),
       });
-    } catch (_) {}
+      debugPrint('✅ incrementFavoriteCount: $trackId');
+    } catch (e) {
+      debugPrint('❌ incrementFavoriteCount error: $e');
+    }
   }
 
   /// Decrement favorite count when user unlikes a track.
@@ -621,7 +627,19 @@ class FirebaseService extends ChangeNotifier {
       await _firestore.collection('tracks').doc(trackId).update({
         'stats.favoriteCount': FieldValue.increment(-1),
       });
-    } catch (_) {}
+      debugPrint('✅ decrementFavoriteCount: $trackId');
+    } catch (e) {
+      debugPrint('❌ decrementFavoriteCount error: $e');
+    }
+  }
+
+  String _removeDiacritics(String str) {
+    const withDia = 'áàảãạăắằẳẵặâấầẩẫậđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ';
+    const withoutDia = 'aaaaaaaaaaaaaaaaadeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyAAAAAAAAAAAAAAAAADEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY';
+    for (int i = 0; i < withDia.length; i++) {
+      str = str.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return str;
   }
 
   Future<List<Map<String, dynamic>>> searchTracks(
@@ -631,8 +649,11 @@ class FirebaseService extends ChangeNotifier {
     try {
       final snapshot = await _firestore
           .collection('tracks')
+          .orderBy('createdAt', descending: true)
           .limit(100) // Increase limit for local filtering
           .get();
+
+      final searchNormalized = _removeDiacritics(query.toLowerCase());
 
       final results = snapshot.docs
           .map((doc) {
@@ -645,16 +666,58 @@ class FirebaseService extends ChangeNotifier {
             final isPublicField = track['isPublic'];
             if (!isPublished || isPublicField == false) return false;
 
-            final title = (track['title'] as String? ?? '').toLowerCase();
-            final artist = (track['artist'] as String? ?? '').toLowerCase();
-            final search = query.toLowerCase();
-            return title.contains(search) || artist.contains(search);
+            final title = _removeDiacritics((track['title'] as String? ?? '').toLowerCase());
+            final artist = _removeDiacritics((track['artist'] as String? ?? '').toLowerCase());
+            
+            return title.contains(searchNormalized) || artist.contains(searchNormalized);
           })
           .toList();
 
       return results.take(limit).toList();
     } catch (e) {
       debugPrint('Error searching tracks: $e');
+      return [];
+    }
+  }
+
+  /// Fetch ALL published tracks from Firestore, sorted by createdAt descending (client-side).
+  /// This avoids needing a Firestore composite index.
+  Future<List<Map<String, dynamic>>> getLatestTracks({int limit = 20}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('tracks')
+          .where('status', isEqualTo: 'published')
+          .get();
+
+      final results = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          })
+          .where((track) {
+            final isPublished = track['status'] == 'published';
+            final isPublicField = track['isPublic'];
+            if (!isPublished || isPublicField == false) return false;
+            if (track['isHidden'] == true) return false;
+            return true;
+          })
+          .toList();
+
+      // Sort by createdAt descending (newest first) client-side
+      results.sort((a, b) {
+        final aDate = _parseCreatedAt(a['createdAt']);
+        final bDate = _parseCreatedAt(b['createdAt']);
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+
+      debugPrint('🎵 getLatestTracks: found ${results.length} published tracks');
+      return results.take(limit).toList();
+    } catch (e) {
+      debugPrint('❌ Error getLatestTracks: $e');
       return [];
     }
   }

@@ -39,6 +39,10 @@ class AudioPlayerService {
   bool _isShuffleOn = false;
   RepeatMode _repeatMode = RepeatMode.off;
 
+  /// Callback được gọi mỗi khi bài nhạc thay đổi.
+  /// Dùng để lưu lịch sử nghe tập trung tại một chỗ.
+  void Function(Track track)? onTrackChanged;
+
   Stream<Track?> get trackStream => _trackController.stream;
   Stream<bool> get playingStream => _playingController.stream;
   Stream<double> get progressStream => _progressController.stream;
@@ -267,6 +271,9 @@ class AudioPlayerService {
 
     _currentTrack = track;
     _trackController.add(track);
+
+    // Gọi callback lưu lịch sử nghe (nếu có)
+    onTrackChanged?.call(track);
 
     try {
       if (track.localPath != null && track.localPath!.isNotEmpty) {

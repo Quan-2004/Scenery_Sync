@@ -57,7 +57,6 @@ export default function ArtistDashboardPage() {
       <div className="stats-grid">
         {[
           { label: 'Tổng lượt nghe', value: data?.totalPlays ?? 0, icon: '▶️', color: 'var(--primary)' },
-          { label: 'Tổng lượt yêu thích', value: data?.totalFavorites ?? 0, icon: '❤️', color: '#ff5c8a' },
           { label: 'Gợi ý AI (Scenery)', value: data?.totalScenery ?? 0, icon: '🔍', color: 'var(--info)' },
           { label: 'Tổng sáng tác', value: data?.tracks.length ?? 0, icon: '🎵', color: 'var(--success)' },
         ].map(s => (

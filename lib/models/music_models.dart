@@ -13,6 +13,7 @@ class Track {
   final int popularity;
   final String? lyrics;
   final String? lyricsMode; // 'plain' | 'synced'
+  final bool isSceneryArtist;
 
   Track({
     required this.id,
@@ -29,6 +30,7 @@ class Track {
     required this.popularity,
     this.lyrics,
     this.lyricsMode,
+    this.isSceneryArtist = false,
   });
 
   factory Track.fromDeezerJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class Track {
       isDownloaded: false,
       durationMs: (json['duration'] ?? 0) * 1000,
       popularity: json['rank'] ?? 0,
+      isSceneryArtist: false,
     );
   }
 
@@ -97,6 +100,7 @@ class Track {
       popularity: readInt(json['popularity']),
       lyrics: json['lyrics'] as String?,
       lyricsMode: json['lyricsMode'] as String?,
+      isSceneryArtist: true,
     );
   }
 
@@ -120,6 +124,7 @@ class Track {
       isDownloaded: isDownloaded ?? this.isDownloaded,
       durationMs: durationMs,
       popularity: popularity,
+      isSceneryArtist: isSceneryArtist,
     );
   }
 }

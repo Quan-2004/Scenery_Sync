@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -168,6 +169,28 @@ class LyricsPanel extends StatefulWidget {
 class _LyricsPanelState extends State<LyricsPanel> {
   final ScrollController _scroll = ScrollController();
   int _activeIndex = 0;
+  bool _isAnimating = false;
+  List<Map<String, dynamic>> _synced = [];
+  late final StreamSubscription<Duration> _positionSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final player = AudioPlayerService.instance;
+    // Listen to position stream OUTSIDE of build
+    _positionSub = player.player.positionStream.listen((pos) {
+      if (!mounted || _synced.isEmpty) return;
+      final posMs = pos.inMilliseconds;
+      int idx = 0;
+      for (int i = 0; i < _synced.length; i++) {
+        if (posMs >= (_synced[i]['ms'] as int)) idx = i;
+      }
+      if (idx != _activeIndex) {
+        setState(() => _activeIndex = idx);
+        _scrollToIndex(idx);
+      }
+    });
+  }
 
   /// Parse synced lyrics: '[mm:ss.xx] text' -> list of {ms, text}
   List<Map<String, dynamic>> _parseSynced(String raw) {
@@ -186,25 +209,24 @@ class _LyricsPanelState extends State<LyricsPanel> {
     return lines;
   }
 
-  void _syncToPosition(int posMs, List<Map<String, dynamic>> synced) {
-    int idx = 0;
-    for (int i = 0; i < synced.length; i++) {
-      if (posMs >= (synced[i]['ms'] as int)) idx = i;
-    }
-    if (idx != _activeIndex) {
-      setState(() => _activeIndex = idx);
-      if (_scroll.hasClients) {
-        _scroll.animateTo(
-          (idx * 72.0).clamp(0, _scroll.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-        );
-      }
-    }
+  void _scrollToIndex(int idx) {
+    if (!_scroll.hasClients || _isAnimating) return;
+    final target = (idx * 72.0).clamp(0.0, _scroll.position.maxScrollExtent);
+    _isAnimating = true;
+    _scroll.animateTo(
+      target,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    ).then((_) {
+      _isAnimating = false;
+    }).catchError((_) {
+      _isAnimating = false;
+    });
   }
 
   @override
   void dispose() {
+    _positionSub.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -220,7 +242,8 @@ class _LyricsPanelState extends State<LyricsPanel> {
         final track = snapshot.data;
         final lyrics = track?.lyrics ?? '';
         final mode = track?.lyricsMode ?? 'plain';
-        final synced = mode == 'synced' && lyrics.isNotEmpty
+        // Update synced lyrics for the position listener
+        _synced = mode == 'synced' && lyrics.isNotEmpty
             ? _parseSynced(lyrics)
             : <Map<String, dynamic>>[];
         final plainLines = lyrics.isNotEmpty
@@ -314,52 +337,45 @@ class _LyricsPanelState extends State<LyricsPanel> {
                             ],
                           ),
                         )
-                      : mode == 'synced' && synced.isNotEmpty
-                          // ── Synced lyrics with position tracking ──
-                          ? StreamBuilder<Duration>(
-                              stream: player.player.positionStream,
-                              builder: (context, posSnap) {
-                                final posMs = (posSnap.data ?? Duration.zero).inMilliseconds;
-                                _syncToPosition(posMs, synced);
-                                return ShaderMask(
-                                  shaderCallback: (r) => const LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
-                                    stops: [0.0, 0.08, 0.92, 1.0],
-                                  ).createShader(r),
-                                  blendMode: BlendMode.dstIn,
-                                  child: ListView.builder(
-                                    controller: _scroll,
-                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
-                                    itemCount: synced.length,
-                                    itemBuilder: (ctx, i) {
-                                      final active = i == _activeIndex;
-                                      final past = i < _activeIndex;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 10),
-                                        child: AnimatedDefaultTextStyle(
-                                          duration: const Duration(milliseconds: 300),
-                                          style: TextStyle(
-                                            fontSize: active ? 26 : 19,
-                                            fontWeight: active ? FontWeight.w800 : FontWeight.w500,
-                                            color: active
-                                                ? AppColors.textMain
-                                                : past
-                                                    ? AppColors.textMuted.withValues(alpha: 0.45)
-                                                    : AppColors.textMuted.withValues(alpha: 0.25),
-                                            height: 1.4,
-                                          ),
-                                          child: Text(
-                                            synced[i]['text'] as String,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
+                      : mode == 'synced' && _synced.isNotEmpty
+                          // ── Synced lyrics ── (no more nested StreamBuilder!)
+                          ? ShaderMask(
+                              shaderCallback: (r) => const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+                                stops: [0.0, 0.08, 0.92, 1.0],
+                              ).createShader(r),
+                              blendMode: BlendMode.dstIn,
+                              child: ListView.builder(
+                                controller: _scroll,
+                                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+                                itemCount: _synced.length,
+                                itemBuilder: (ctx, i) {
+                                  final active = i == _activeIndex;
+                                  final past = i < _activeIndex;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    child: AnimatedDefaultTextStyle(
+                                      duration: const Duration(milliseconds: 300),
+                                      style: TextStyle(
+                                        fontSize: active ? 26 : 19,
+                                        fontWeight: active ? FontWeight.w800 : FontWeight.w500,
+                                        color: active
+                                            ? AppColors.textMain
+                                            : past
+                                                ? AppColors.textMuted.withValues(alpha: 0.45)
+                                                : AppColors.textMuted.withValues(alpha: 0.25),
+                                        height: 1.4,
+                                      ),
+                                      child: Text(
+                                        _synced[i]['text'] as String,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             )
                           // ── Plain lyrics ──
                           : ShaderMask(

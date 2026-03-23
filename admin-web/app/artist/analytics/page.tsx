@@ -46,7 +46,6 @@ export default function ArtistAnalyticsPage() {
   const chartData = (data?.tracks ?? []).slice(0, 12).map(t => ({
     name: t.title.length > 18 ? t.title.slice(0, 16) + '…' : t.title,
     'Lượt nghe': t.playCount,
-    'Yêu thích': t.favoriteCount,
     'Gợi ý AI': t.sceneryMatchCount,
   }));
 
@@ -67,7 +66,6 @@ export default function ArtistAnalyticsPage() {
       <div className="analytics-summary">
         {[
           { label: 'Tổng lượt nghe', value: data?.totalPlays ?? 0, icon: '▶️', c: 'var(--primary)' },
-          { label: 'Tổng yêu thích', value: data?.totalFavorites ?? 0, icon: '❤️', c: '#ff5c8a' },
           { label: 'Gợi ý bởi AI', value: data?.totalScenery ?? 0, icon: '🔍', c: 'var(--info)' },
           { label: 'Tổng sáng tác', value: data?.tracks.length ?? 0, icon: '🎵', c: 'var(--success)' },
         ].map(s => (
@@ -111,7 +109,6 @@ export default function ArtistAnalyticsPage() {
               />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
               <Bar dataKey="Lượt nghe" fill="#e48744" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Yêu thích" fill="#ff5c8a" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Gợi ý AI" fill="#5bc0eb" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: _fadeAnimations[4],
                     child: SlideTransition(
                       position: _slideAnimations[4],
-                      child: const SizedBox.shrink(),
+                      child: const _LatestArtistTracksSection(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -474,14 +474,28 @@ class _SearchResultTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    track.artistName,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      if (track.isSceneryArtist) ...[
+                        const Icon(
+                          Icons.verified,
+                          color: AppColors.primary,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Expanded(
+                        child: Text(
+                          track.artistName,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1568,6 +1582,315 @@ class _ArtistCardState extends State<_ArtistCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─── Latest Artist Tracks Section ────────────────────────────────────────────
+
+class _LatestArtistTracksSection extends StatefulWidget {
+  const _LatestArtistTracksSection();
+
+  @override
+  State<_LatestArtistTracksSection> createState() => _LatestArtistTracksSectionState();
+}
+
+class _LatestArtistTracksSectionState extends State<_LatestArtistTracksSection> {
+  List<Track> _tracks = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Delay slightly to ensure auth state is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _loadTracks();
+    });
+  }
+
+  Future<void> _loadTracks() async {
+    try {
+      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+      
+      // Wait for user to be logged in
+      if (!firebaseService.isLoggedIn) {
+        debugPrint('⚠️ ScenerySyncArtists: User not logged in, retrying in 2s...');
+        await Future.delayed(const Duration(seconds: 2));
+        if (!mounted) return;
+        if (!firebaseService.isLoggedIn) {
+          debugPrint('❌ ScenerySyncArtists: User still not logged in, giving up');
+          setState(() { _isLoading = false; });
+          return;
+        }
+      }
+      
+      debugPrint('🔍 ScenerySyncArtists: Querying Firestore tracks collection...');
+      final results = await firebaseService.getLatestTracks(limit: 20);
+      debugPrint('🎵 ScenerySyncArtists: Got ${results.length} tracks from Firestore');
+      
+      if (mounted) {
+        setState(() {
+          _tracks = results.map((data) {
+            final track = Track.fromFirestore(data, id: (data['id'] ?? '').toString());
+            debugPrint('  → Track: ${track.name} by ${track.artistName}');
+            return track;
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ ScenerySyncArtists ERROR: $e');
+      if (mounted) setState(() { _isLoading = false; _hasError = true; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    if (_tracks.isEmpty) {
+      // Show a placeholder message so user sees the section exists
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                const Icon(Icons.verified, color: AppColors.primary, size: 22),
+                const SizedBox(width: 8),
+                const Text(
+                  'Scenery Sync Artists',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textMain,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.music_note_rounded, color: AppColors.primary, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    _hasError 
+                      ? 'Không thể tải nhạc. Hãy đăng nhập để xem.' 
+                      : 'Chưa có bài hát nào được upload.',
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              const Icon(Icons.verified, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              const Text(
+                'Scenery Sync Artists',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textMain,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            scrollDirection: Axis.horizontal,
+            itemCount: _tracks.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              return _LatestTrackCard(
+                track: _tracks[index],
+                index: index,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LatestTrackCard extends StatefulWidget {
+  final Track track;
+  final int index;
+
+  const _LatestTrackCard({required this.track, required this.index});
+
+  @override
+  State<_LatestTrackCard> createState() => _LatestTrackCardState();
+}
+
+class _LatestTrackCardState extends State<_LatestTrackCard> {
+  bool _isPressed = false;
+
+  Future<void> _playTrack() async {
+    final player = AudioPlayerService.instance;
+    await player.setTrack(widget.track);
+    await player.play();
+    
+    if (!mounted) return;
+    final firebaseService = context.read<FirebaseService>();
+    await firebaseService.saveRecentlyPlayed({
+      'id': widget.track.id,
+      'name': widget.track.name,
+      'artistName': widget.track.artistName,
+      'imageUrl': widget.track.imageUrl,
+      'previewUrl': widget.track.previewUrl,
+      'durationMs': widget.track.durationMs,
+      'popularity': widget.track.popularity,
+    });
+    
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NowPlayingScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: _playTrack,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: Duration(milliseconds: 400 + (widget.index * 100)),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: child,
+            ),
+          );
+        },
+        child: AnimatedScale(
+          scale: _isPressed ? 0.95 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          child: SizedBox(
+            width: 150,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Track Art
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: widget.track.imageUrl.isNotEmpty
+                        ? Image.network(
+                            widget.track.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _artPlaceholder(),
+                          )
+                        : _artPlaceholder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Track Name
+                Text(
+                  widget.track.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMain,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                // Artist Name
+                Row(
+                  children: [
+                    if (widget.track.isSceneryArtist) ...[
+                      const Icon(
+                        Icons.verified,
+                        color: AppColors.primary,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: Text(
+                        widget.track.artistName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _artPlaceholder() {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.15),
+      child: const Icon(Icons.music_note, color: AppColors.primary, size: 32),
     );
   }
 }

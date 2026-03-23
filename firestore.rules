@@ -78,16 +78,12 @@ service cloud.firestore {
     // TRACKS COLLECTION
     // ═══════════════════════════════════════════
     match /tracks/{trackId} {
-      // Regular users: read published, non-hidden tracks
-      // Artist: read their own tracks (any status/hidden)
+      // Regular users: read published tracks (isHidden filtering done client-side)
+      // Artist: read their own tracks (any status)
       // Admin: read everything
       allow read: if isAdmin()
         || (isArtist() && resource.data.ownerId == request.auth.uid)
-        || (
-          isLoggedIn()
-          && (resource.data.isHidden == false || resource.data.isHidden == null)
-          && resource.data.status == 'published'
-        );
+        || (isLoggedIn() && resource.data.status == 'published');
 
       // Artists can create tracks (must set their own ownerId)
       allow create: if isArtist()
@@ -104,7 +100,16 @@ service cloud.firestore {
         || (isArtist()
           && resource.data.ownerId == request.auth.uid
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isHidden'])
-              || request.resource.data.hiddenBy == 'artist'));
+              || request.resource.data.hiddenBy == 'artist'))
+        // Any logged-in user can update stats (play count, favorites, etc.)
+        // We block sensitive fields instead of allowlisting — more robust
+        || (isLoggedIn()
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['title', 'name', 'artist', 'artistName', 'ownerId', 'ownerName',
+                       'audioUrl', 'previewUrl', 'imageUrl', 'artworkUrl',
+                       'status', 'isHidden', 'isPublic', 'hiddenBy',
+                       'genre', 'description', 'lyrics', 'lyricsMode', 'tags',
+                       'createdAt', 'updatedAt']));
 
       // Only admin can delete tracks permanently
       allow delete: if isAdmin();

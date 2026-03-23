@@ -18,8 +18,8 @@ interface Track {
 }
 
 const CLOUDINARY_CLOUD = 'dvcebine7';
-const AUDIO_PRESET = 'scenery_audio_upload';
-const COVER_PRESET = 'scenery_track_cover';
+const AUDIO_PRESET = 'scenery_upload';
+const COVER_PRESET = 'scenery_upload';
 
 async function cloudinaryUpload(file: File, preset: string, resourceType = 'auto'): Promise<string> {
   const form = new FormData();
@@ -29,7 +29,11 @@ async function cloudinaryUpload(file: File, preset: string, resourceType = 'auto
     method: 'POST', body: form,
   });
   const json = await res.json();
-  if (!json.secure_url) throw new Error(json.error?.message ?? 'Upload failed');
+  if (!res.ok || !json.secure_url) {
+    const apiMessage = json?.error?.message;
+    const fallback = `Upload failed (HTTP ${res.status})`;
+    throw new Error(typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : fallback);
+  }
   return json.secure_url as string;
 }
 
@@ -118,7 +122,7 @@ export default function ArtistTracksPage() {
     setUploadError('');
 
     try {
-      const audioUrl = await cloudinaryUpload(audioFile, AUDIO_PRESET, 'video');
+      const audioUrl = await cloudinaryUpload(audioFile, AUDIO_PRESET, 'auto');
       let coverUrl = '';
       if (coverFile) {
         setUploading('Đang upload ảnh bìa…');

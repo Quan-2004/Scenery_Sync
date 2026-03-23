@@ -14,6 +14,7 @@ import 'theme/colors.dart';
 import 'services/theme_provider.dart';
 import 'services/audio_player_service.dart';
 import 'services/firebase_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // HTTP Override để bypass SSL certificate validation (chỉ dùng cho development)
 class MyHttpOverrides extends HttpOverrides {
@@ -70,8 +71,56 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppContent extends StatelessWidget {
+class MyAppContent extends StatefulWidget {
   const MyAppContent({super.key});
+
+  @override
+  State<MyAppContent> createState() => _MyAppContentState();
+}
+
+class _MyAppContentState extends State<MyAppContent> {
+  @override
+  void initState() {
+    super.initState();
+    // Request all permissions on app startup
+    _requestAllPermissions();
+    // Kết nối AudioPlayerService với FirebaseService để tự động lưu lịch sử nghe
+    // cho MỌI nguồn nhạc (Deezer, Firebase, ChatBot, Album, Artist...)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final firebaseService = context.read<FirebaseService>();
+      AudioPlayerService.instance.onTrackChanged = (track) {
+        if (firebaseService.isLoggedIn && track.id.isNotEmpty) {
+          firebaseService.saveRecentlyPlayed({
+            'id': track.id,
+            'title': track.name,
+            'artist': track.artistName,
+            'imageUrl': track.imageUrl,
+            'previewUrl': track.previewUrl ?? '',
+            'durationMs': track.durationMs,
+          });
+        }
+      };
+    });
+  }
+
+  Future<void> _requestAllPermissions() async {
+    // Request Camera
+    await Permission.camera.request();
+    // Request Microphone
+    await Permission.microphone.request();
+    // Request Notification
+    await Permission.notification.request();
+    // Request Photos / Storage (platform-dependent)
+    if (Platform.isAndroid) {
+      final androidInfo = await Permission.photos.request();
+      if (androidInfo.isDenied) {
+        // Fallback for older Android
+        await Permission.storage.request();
+      }
+    } else if (Platform.isIOS) {
+      await Permission.photos.request();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,3 +171,4 @@ class MyAppContent extends StatelessWidget {
     );
   }
 }
+
